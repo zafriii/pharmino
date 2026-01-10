@@ -250,8 +250,8 @@ export async function updatePurchaseOrderStatusAction(id: string, status: string
     // revalidateTag('purchases');
     revalidatePath("/admin/purchase/purchase-list");
     revalidatePath("/admin/purchase/received-products");
-    revalidatePath("admin/purchase/purchase-history/ordered-items")
-    revalidatePath("admin/purchase/purchase-history/received-items")
+    revalidatePath("/admin/purchase/purchase-history/ordered-items")
+    revalidatePath("/admin/purchase/purchase-history/received-items")
     
     return {
       success: true,
