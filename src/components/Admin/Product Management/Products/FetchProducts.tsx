@@ -32,12 +32,11 @@ async function fetchProducts(
   // });
 
     const queryParams = new URLSearchParams({
-    page: String(page),
-    status: params.status || "ALL",
-    stockStatus: params.stockStatus || "ALL",
-    categoryId: params.categoryId || "ALL",
-    search: params.search || "",
-  });
+      page: String(page),
+      ...(params.status && { status: params.status }),
+      ...(params.categoryId && params.categoryId !== "ALL" && { categoryId: params.categoryId }),
+      ...(params.search && { search: params.search }),
+    });
 
   try {
     // Get session token 
@@ -62,7 +61,7 @@ async function fetchProducts(
       next: {
         revalidate: 60, // 5 minutes
         // tags: ["products"], // For instant revalidation on mutations
-        tags: [`products-${params.status || "ALL"}-${params.stockStatus || "ALL"}`],
+        tags: [`products-${params.status || "ALL"}-${params.stockStatus || "ALL"}-${params.categoryId || "ALL"}`]
       },
       headers: {
         "Content-Type": "application/json",
