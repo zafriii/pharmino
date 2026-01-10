@@ -60,7 +60,9 @@ export default function AllSalesList({
                     <span className="font-medium">
                       {item.item?.itemName || `Item ${item.itemId}`}
                     </span>
-                    <span className="text-gray-500">x {item.quantity}</span>
+                    <span className="text-gray-500">
+                      x {item.quantity} {item.sellType === 'SINGLE_TABLET' ? 'tablets' : ''}
+                    </span>
                   </div>
                   {item.batches && item.batches.length > 0 && (
                     <div className="ml-0 space-y-1">
@@ -130,7 +132,10 @@ export default function AllSalesList({
           variant={
             row.paymentStatus === "PAID"
               ? "green"
+              : row.paymentStatus === "PARTIALLY_REFUNDED"
+              ? "yellow"
               : "red"
+              // : "red"
           }
         >
           {row.paymentStatus}

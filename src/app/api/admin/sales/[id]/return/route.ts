@@ -49,7 +49,6 @@ export async function PUT(
         where: { id: parseInt(id) },
         data: {
           status: 'RETURNED',
-          paymentStatus: 'REFUNDED',
           returnReason: validatedData.returnReason
         }
       });
