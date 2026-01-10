@@ -136,6 +136,7 @@ export async function createProductAction(
 
     // revalidateTag("products");
     revalidatePath("/admin/product-management/products");
+    revalidatePath("/admin/purchase/purchase-list");
 
     return { success: true, message: "Product created successfully!" };
   } catch (error: any) {
