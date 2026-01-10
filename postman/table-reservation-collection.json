@@ -1,0 +1,294 @@
+{
+  "info": {
+    "name": "RestroFly - Table & Reservation Management",
+    "description": "API collection for Table and Reservation Management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Tables",
+      "item": [
+        {
+          "name": "Get All Tables",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/counter/tables?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "tables"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "isAvailable",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Table",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableNumber\": \"T-01\",\n  \"seatingCapacity\": 4,\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/counter/tables",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "tables"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Table",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/counter/tables/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "tables", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Table",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableNumber\": \"T-01\",\n  \"seatingCapacity\": 6,\n  \"isAvailable\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/counter/tables/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "tables", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Table",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/counter/tables/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "tables", "1"]
+            }
+          }
+        },
+        {
+          "name": "Check Table Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/counter/tables/availability?startTime=2024-12-01T18:00:00Z&endTime=2024-12-01T20:00:00Z&minCapacity=4",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "tables", "availability"],
+              "query": [
+                {
+                  "key": "startTime",
+                  "value": "2024-12-01T18:00:00Z"
+                },
+                {
+                  "key": "endTime",
+                  "value": "2024-12-01T20:00:00Z"
+                },
+                {
+                  "key": "minCapacity",
+                  "value": "4"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Get All Reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/counter/reservations?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "reservations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "tableId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "date",
+                  "value": "2024-12-01",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Reservation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": {\n    \"name\": \"John Doe\",\n    \"phone\": \"1234567890\",\n    \"address\": \"123 Main St\"\n  },\n  \"numGuests\": 4,\n  \"tableId\": 1,\n  \"reservationDate\": \"2024-12-01\",\n  \"startTime\": \"2024-12-01T18:00:00Z\",\n  \"endTime\": \"2024-12-01T20:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/counter/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Reservation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/counter/reservations/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "reservations", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numGuests\": 6,\n  \"startTime\": \"2024-12-01T19:00:00Z\",\n  \"endTime\": \"2024-12-01T21:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/counter/reservations/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "reservations", "1"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Reservation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancellationReason\": \"Customer called to cancel due to emergency\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/counter/reservations/1/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "counter", "reservations", "1", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cron Jobs",
+      "item": [
+        {
+          "name": "Update Reservation Statuses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cron_secret}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cron/update-reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cron", "update-reservations"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "cron_secret",
+      "value": "your-cron-secret",
+      "type": "string"
+    }
+  ]
+}

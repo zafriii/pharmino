@@ -1,0 +1,1320 @@
+{
+  "info": {
+    "name": "RestroFly POS - Complete API Collection",
+    "description": "Complete API collection for RestroFly POS System including Employee Management, Menu & Modifiers, Tables & Reservations, Discounts, and Inventory Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "restrofly",
+    "version": "3.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{session_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "session_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employee_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "discount_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "inventory_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "modifier_group_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "menu_item_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "table_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cron_secret",
+      "value": "your-cron-secret-key",
+      "type": "string"
+    },
+    {
+      "key": "expense_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const cookies = pm.cookies.all();",
+                  "    const sessionCookie = cookies.find(c => c.name.includes('session'));",
+                  "    if (sessionCookie) {",
+                  "        pm.collectionVariables.set('session_token', sessionCookie.value);",
+                  "        console.log('Session token saved:', sessionCookie.value);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@restrofly.com\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/sign-in/email",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            },
+            "description": "Login with admin credentials. Session cookie will be automatically saved."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/get-session",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "get-session"]
+            },
+            "description": "Get current session information"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/sign-out",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "sign-out"]
+            },
+            "description": "Logout current user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Employee Management",
+      "item": [
+        {
+          "name": "Create Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('employee_id', response.employee.id);",
+                  "    console.log('Employee ID saved:', response.employee.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@restrofly.com\",\n  \"phone\": \"+8801712345678\",\n  \"role\": \"COUNTER\",\n  \"status\": \"ACTIVE\",\n  \"dutyType\": \"FULL_TIME\",\n  \"shift\": \"DAY\",\n  \"joiningDate\": \"2025-01-01\",\n  \"monthlySalary\": 25000,\n  \"imageUrl\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees"]
+            },
+            "description": "Create a new employee. Admin access required. Password will be NULL initially."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Employees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "role",
+                  "value": "COUNTER",
+                  "description": "Filter by role (ADMIN|COUNTER|KITCHEN)",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter by status (ACTIVE|ON_LEAVE)",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "john",
+                  "description": "Search by name, email, or phone",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all employees with pagination and filters. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Employee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees", "{{employee_id}}"]
+            },
+            "description": "Get single employee details by ID. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Employee Full Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees/{{employee_id}}/full",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees", "{{employee_id}}", "full"]
+            },
+            "description": "Get employee full profile including attendance, payroll, and audit logs. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Employee",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Smith\",\n  \"phone\": \"+8801712345679\",\n  \"role\": \"KITCHEN\",\n  \"status\": \"ACTIVE\",\n  \"monthlySalary\": 30000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees", "{{employee_id}}"]
+            },
+            "description": "Update employee information. All fields are optional. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Employee Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"SecurePass123\",\n  \"confirmPassword\": \"SecurePass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees/{{employee_id}}/set-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees", "{{employee_id}}", "set-password"]
+            },
+            "description": "Admin sets password for employee. Employee can login after this. Password must be at least 8 characters with uppercase, lowercase, and number."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees/{{employee_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees", "{{employee_id}}"]
+            },
+            "description": "Soft delete employee. Status changed to ON_LEAVE and email/phone modified. Attendance and payroll history preserved. Admin access required."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Expense Management",
+      "item": [
+        {
+          "name": "Get All Expenses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/expenses?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "expenses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "office",
+                  "disabled": true,
+                  "description": "Search by reason"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-11-01",
+                  "disabled": true,
+                  "description": "Filter from date (YYYY-MM-DD)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-11-30",
+                  "disabled": true,
+                  "description": "Filter to date (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "Get all expenses with pagination and filters. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Expense",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('expense_id', response.data.id);",
+                  "    console.log('Expense ID saved:', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Office Supplies\",\n  \"amount\": 150.50,\n  \"expenseDate\": \"2025-11-26\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/expenses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "expenses"]
+            },
+            "description": "Create new expense. Admin access required. Created by current admin user."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Expense",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/expenses/{{expense_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "expenses", "{{expense_id}}"]
+            },
+            "description": "Get single expense details with creator information. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Office Supplies - Updated\",\n  \"amount\": 175.00,\n  \"expenseDate\": \"2025-11-26\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/expenses/{{expense_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "expenses", "{{expense_id}}"]
+            },
+            "description": "Update expense. All fields optional. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/expenses/{{expense_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "expenses", "{{expense_id}}"]
+            },
+            "description": "Delete expense. Admin access required."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Discount Management",
+      "item": [
+        {
+          "name": "Get All Discounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/discounts?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "discounts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "disabled": true,
+                  "description": "Filter by status (ACTIVE|EXPIRED)"
+                },
+                {
+                  "key": "type",
+                  "value": "PERCENTAGE",
+                  "disabled": true,
+                  "description": "Filter by type (FLAT|PERCENTAGE)"
+                }
+              ]
+            },
+            "description": "Get all discounts with pagination. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Discount - Category Level",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('discount_id', response.data.id);",
+                  "    console.log('Discount ID saved:', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza Category 20% Off\",\n  \"description\": \"20% discount on all pizzas\",\n  \"type\": \"PERCENTAGE\",\n  \"value\": 20,\n  \"applicableTo\": \"CATEGORY\",\n  \"categoryId\": 1,\n  \"startDate\": \"2025-11-26T00:00:00Z\",\n  \"endDate\": \"2025-12-31T23:59:59Z\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/discounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "discounts"]
+            },
+            "description": "Create discount for entire category. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Discount - Menu Item Level",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Margherita Special $5 Off\",\n  \"description\": \"Flat $5 discount on Margherita Pizza\",\n  \"type\": \"FLAT\",\n  \"value\": 5,\n  \"applicableTo\": \"MENU_ITEM\",\n  \"menuItemId\": 1,\n  \"startDate\": \"2025-11-26T00:00:00Z\",\n  \"endDate\": \"2025-12-10T23:59:59Z\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/discounts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "discounts"]
+            },
+            "description": "Create discount for specific menu item (higher priority than category discount)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Discount",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/discounts/{{discount_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "discounts", "{{discount_id}}"]
+            },
+            "description": "Get single discount details. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Discount",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza Category 25% Off\",\n  \"value\": 25,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/discounts/{{discount_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "discounts", "{{discount_id}}"]
+            },
+            "description": "Update discount. All fields optional. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Discount",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/discounts/{{discount_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "discounts", "{{discount_id}}"]
+            },
+            "description": "Delete discount. Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menu Items with Discounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/menu-items?includeDiscounts=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "menu-items"],
+              "query": [
+                {
+                  "key": "includeDiscounts",
+                  "value": "true",
+                  "description": "Include active discounts in response"
+                }
+              ]
+            },
+            "description": "Get menu items with their active discounts and discounted prices."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inventory Management (Kitchen)",
+      "item": [
+        {
+          "name": "Get All Inventory Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/inventory?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kitchen", "inventory"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "tomato",
+                  "disabled": true,
+                  "description": "Search by item name"
+                },
+                {
+                  "key": "status",
+                  "value": "LOW_STOCK",
+                  "disabled": true,
+                  "description": "Filter by status (IN_STOCK|LOW_STOCK|OUT_OF_STOCK)"
+                }
+              ]
+            },
+            "description": "Get all inventory items with filters. Kitchen or Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Inventory Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('inventory_id', response.data.id);",
+                  "    console.log('Inventory ID saved:', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemName\": \"Tomatoes\",\n  \"unit\": \"kg\",\n  \"quantity\": 50,\n  \"lowStockThreshold\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/inventory",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kitchen", "inventory"]
+            },
+            "description": "Create new inventory item. Status and required amount calculated automatically. Kitchen or Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Inventory Item",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/inventory/{{inventory_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kitchen", "inventory", "{{inventory_id}}"]
+            },
+            "description": "Get single inventory item details. Kitchen or Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Inventory Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 30,\n  \"lowStockThreshold\": 15\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/inventory/{{inventory_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kitchen", "inventory", "{{inventory_id}}"]
+            },
+            "description": "Update inventory item. Status recalculated automatically. Kitchen or Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Inventory Item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/inventory/{{inventory_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kitchen", "inventory", "{{inventory_id}}"]
+            },
+            "description": "Delete inventory item. Kitchen or Admin access required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/inventory/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kitchen", "inventory", "dashboard"]
+            },
+            "description": "Get inventory dashboard statistics including counts by status and health percentage."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Low Stock Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/kitchen/inventory/low-stock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "kitchen", "inventory", "low-stock"]
+            },
+            "description": "Get all low stock and out of stock items sorted by urgency."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Menu & Modifiers",
+      "item": [
+        {
+          "name": "Modifier Groups",
+          "item": [
+            {
+              "name": "Get All Modifier Groups",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/modifier-groups",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "modifier-groups"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Modifier Group",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    pm.collectionVariables.set('modifier_group_id', pm.response.json().data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Choose Size\",\n  \"description\": \"Select your preferred size\",\n  \"isRequired\": true,\n  \"allowMultiple\": false,\n  \"minSelection\": 1,\n  \"maxSelection\": 1,\n  \"sortOrder\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/modifier-groups",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "modifier-groups"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Categories",
+          "item": [
+            {
+              "name": "Get All Categories",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/categories",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "categories"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Category",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    pm.collectionVariables.set('category_id', pm.response.json().id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Pizza\",\n  \"imageUrl\": \"https://example.com/pizza.jpg\",\n  \"sortOrder\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/categories",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "categories"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Menu Items",
+          "item": [
+            {
+              "name": "Get All Menu Items",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/menu-items?page=1&limit=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "menu-items"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Menu Item",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    pm.collectionVariables.set('menu_item_id', pm.response.json().id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Margherita Pizza\",\n  \"categoryId\": 1,\n  \"basePrice\": 10.00,\n  \"serviceCharge\": 0,\n  \"description\": \"Classic Italian pizza\",\n  \"isAvailable\": true,\n  \"usesCategoryDefaults\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/menu-items",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "menu-items"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tables & Reservations",
+      "item": [
+        {
+          "name": "Tables",
+          "item": [
+            {
+              "name": "Get All Tables",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/counter/tables?page=1&limit=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "counter", "tables"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Table",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    pm.collectionVariables.set('table_id', pm.response.json().data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tableNumber\": \"T-01\",\n  \"seatingCapacity\": 4,\n  \"isAvailable\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/counter/tables",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "counter", "tables"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Check Table Availability",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/counter/tables/availability?startTime=2025-12-01T18:00:00Z&endTime=2025-12-01T20:00:00Z&minCapacity=4",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "counter", "tables", "availability"],
+                  "query": [
+                    {
+                      "key": "startTime",
+                      "value": "2025-12-01T18:00:00Z"
+                    },
+                    {
+                      "key": "endTime",
+                      "value": "2025-12-01T20:00:00Z"
+                    },
+                    {
+                      "key": "minCapacity",
+                      "value": "4"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reservations",
+          "item": [
+            {
+              "name": "Get All Reservations",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/counter/reservations?page=1&limit=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "counter", "reservations"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Reservation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    pm.collectionVariables.set('reservation_id', pm.response.json().data.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"customer\": {\n    \"name\": \"John Doe\",\n    \"phone\": \"1234567890\",\n    \"address\": \"123 Main St\"\n  },\n  \"numGuests\": 4,\n  \"tableId\": 1,\n  \"reservationDate\": \"2025-12-01\",\n  \"startTime\": \"2025-12-01T18:00:00Z\",\n  \"endTime\": \"2025-12-01T20:00:00Z\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/counter/reservations",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "counter", "reservations"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel Reservation",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"cancellationReason\": \"Customer called to cancel\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/counter/reservations/{{reservation_id}}/cancel",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "counter", "reservations", "{{reservation_id}}", "cancel"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cron Jobs",
+      "item": [
+        {
+          "name": "Update Reservation Statuses",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cron_secret}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cron/update-reservations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cron", "update-reservations"]
+            },
+            "description": "Cron job to update reservation statuses (PENDING → CONFIRMED → COMPLETED)"
+          },
+          "response": []
+        },
+        {
+          "name": "Expire Discounts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cron_secret}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/test/trigger-cron?type=discount",
+              "host": ["{{base_url}}"],
+              "path": ["api", "test", "trigger-cron"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "discount"
+                }
+              ]
+            },
+            "description": "Manually trigger discount expiry job (for testing)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Complete Workflow Examples",
+      "item": [
+        {
+          "name": "1. Create Counter Staff",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('employee_id', pm.response.json().employee.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sarah Counter\",\n  \"email\": \"sarah.counter@restrofly.com\",\n  \"phone\": \"+8801712345001\",\n  \"role\": \"COUNTER\",\n  \"status\": \"ACTIVE\",\n  \"dutyType\": \"FULL_TIME\",\n  \"shift\": \"DAY\",\n  \"joiningDate\": \"2025-11-20\",\n  \"monthlySalary\": 20000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Kitchen Staff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mike Kitchen\",\n  \"email\": \"mike.kitchen@restrofly.com\",\n  \"phone\": \"+8801712345002\",\n  \"role\": \"KITCHEN\",\n  \"status\": \"ACTIVE\",\n  \"dutyType\": \"PART_TIME\",\n  \"shift\": \"NIGHT\",\n  \"joiningDate\": \"2025-11-20\",\n  \"monthlySalary\": 18000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Set Password for New Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"Welcome123\",\n  \"confirmPassword\": \"Welcome123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees/{{employee_id}}/set-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees", "{{employee_id}}", "set-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Search Employees",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/employees?search=sarah&role=COUNTER",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "employees"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "sarah"
+                },
+                {
+                  "key": "role",
+                  "value": "COUNTER"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

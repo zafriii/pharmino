@@ -1,0 +1,808 @@
+{
+  "info": {
+    "name": "RestroFly POS - Menu & Modifier System",
+    "description": "Complete API collection for RestroFly POS Menu and Modifier management system with hybrid inheritance",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "modifierGroupId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "modifierOptionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "menuItemId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.token) {",
+                  "        pm.collectionVariables.set('authToken', jsonData.token);",
+                  "        console.log('Auth token saved:', jsonData.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@restrofly.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in"]
+            },
+            "description": "Login as admin to get authentication token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1. Modifier Groups",
+      "item": [
+        {
+          "name": "Get All Modifier Groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups"]
+            },
+            "description": "Retrieves all modifier groups with their usage statistics"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Modifier Group - Choose Size",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('modifierGroupId', jsonData.data.id);",
+                  "    console.log('Modifier Group ID saved:', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Choose Size\",\n  \"description\": \"Select your preferred size\",\n  \"isRequired\": true,\n  \"allowMultiple\": false,\n  \"minSelection\": 1,\n  \"maxSelection\": 1,\n  \"sortOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups"]
+            },
+            "description": "Creates a new modifier group for size selection"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Modifier Group - Extra Toppings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Extra Toppings\",\n  \"description\": \"Add extra toppings (up to 5)\",\n  \"isRequired\": false,\n  \"allowMultiple\": true,\n  \"minSelection\": 0,\n  \"maxSelection\": 5,\n  \"sortOrder\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Modifier Group - Spice Level",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Spice Level\",\n  \"description\": \"Choose your heat preference\",\n  \"isRequired\": false,\n  \"allowMultiple\": false,\n  \"minSelection\": 0,\n  \"maxSelection\": 1,\n  \"sortOrder\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Modifier Group",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups/{{modifierGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups", "{{modifierGroupId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Modifier Group",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Choose Your Size\",\n  \"description\": \"Pick the perfect size for you\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups/{{modifierGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups", "{{modifierGroupId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Modifier Group",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups/{{modifierGroupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups", "{{modifierGroupId}}"]
+            },
+            "description": "Cannot delete if assigned to any category or menu item"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Modifier Options",
+      "item": [
+        {
+          "name": "Get Options for Group",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups/{{modifierGroupId}}/options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups", "{{modifierGroupId}}", "options"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Single Option",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('modifierOptionId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Extra Large\",\n  \"priceAdjustment\": 7.00,\n  \"isDefault\": false,\n  \"isAvailable\": true,\n  \"sortOrder\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups/{{modifierGroupId}}/options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups", "{{modifierGroupId}}", "options"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Bulk Options - Sizes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"name\": \"Small (8 inch)\",\n    \"priceAdjustment\": 0,\n    \"isDefault\": true,\n    \"sortOrder\": 1\n  },\n  {\n    \"name\": \"Medium (12 inch)\",\n    \"priceAdjustment\": 3.00,\n    \"isDefault\": false,\n    \"sortOrder\": 2\n  },\n  {\n    \"name\": \"Large (16 inch)\",\n    \"priceAdjustment\": 5.00,\n    \"isDefault\": false,\n    \"sortOrder\": 3\n  }\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-groups/{{modifierGroupId}}/options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-groups", "{{modifierGroupId}}", "options"]
+            },
+            "description": "Bulk creates size options"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Option",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Large (18 inch)\",\n  \"priceAdjustment\": 6.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-options/{{modifierOptionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-options", "{{modifierOptionId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Option",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/modifier-options/{{modifierOptionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "modifier-options", "{{modifierOptionId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Categories with Modifiers",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('categoryId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza\",\n  \"imageUrl\": \"https://example.com/pizza.jpg\",\n  \"sortOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category Modifier Groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "categories", "{{categoryId}}", "modifier-groups"]
+            },
+            "description": "Gets default modifiers for this category"
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Modifiers to Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modifierGroupIds\": [1, 2]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "categories", "{{categoryId}}", "modifier-groups"]
+            },
+            "description": "Sets default modifiers for all items in this category (replaces existing)"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Category Modifiers",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "categories", "{{categoryId}}", "modifier-groups"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Menu Items with Modifiers",
+      "item": [
+        {
+          "name": "Get All Menu Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/menu-items?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "menu-items"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "pizza",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "isAvailable",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "includeArchived",
+                  "value": "false",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Item (Inherits Category Defaults)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('menuItemId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Margherita Pizza\",\n  \"categoryId\": {{categoryId}},\n  \"basePrice\": 10.00,\n  \"serviceCharge\": 0,\n  \"description\": \"Classic Italian pizza with fresh mozzarella\",\n  \"imageUrl\": \"https://example.com/margherita.jpg\",\n  \"isAvailable\": true,\n  \"sortOrder\": 1,\n  \"usesCategoryDefaults\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/menu-items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "menu-items"]
+            },
+            "description": "Creates item that inherits category modifiers"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Item (Custom Modifiers)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Personal Flatbread\",\n  \"categoryId\": {{categoryId}},\n  \"basePrice\": 7.00,\n  \"serviceCharge\": 0,\n  \"description\": \"Single-serving flatbread (no size options)\",\n  \"isAvailable\": true,\n  \"sortOrder\": 5,\n  \"usesCategoryDefaults\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/menu-items",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "menu-items"]
+            },
+            "description": "Creates item that does NOT inherit category defaults"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Item Modifier Groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/menu-items/{{menuItemId}}/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "menu-items", "{{menuItemId}}", "modifier-groups"]
+            },
+            "description": "Gets custom modifiers for this item (excludes category defaults)"
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Custom Modifiers to Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modifierGroupIds\": [3]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/menu-items/{{menuItemId}}/modifier-groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "menu-items", "{{menuItemId}}", "modifier-groups"]
+            },
+            "description": "Adds custom modifiers (extends category defaults if usesCategoryDefaults=true)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Menu Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"basePrice\": 12.00,\n  \"usesCategoryDefaults\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/menu-items/{{menuItemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "menu-items", "{{menuItemId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Archive Menu Item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/menu-items/{{menuItemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "menu-items", "{{menuItemId}}"]
+            },
+            "description": "Soft delete (sets isArchived=true)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Public Menu (Customer-Facing)",
+      "item": [
+        {
+          "name": "Get Menu Item with Modifiers",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menu-items/{{menuItemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menu-items", "{{menuItemId}}"]
+            },
+            "description": "Public endpoint - Returns item with merged modifiers (category defaults + custom)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Test Scenarios",
+      "item": [
+        {
+          "name": "Scenario 1: Standard Item (Inherits)",
+          "item": [
+            {
+              "name": "1. Create Size Group",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Choose Size\",\n  \"isRequired\": true,\n  \"allowMultiple\": false,\n  \"minSelection\": 1,\n  \"maxSelection\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/modifier-groups",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "modifier-groups"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Add Size Options",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  { \"name\": \"Small\", \"priceAdjustment\": 0, \"isDefault\": true },\n  { \"name\": \"Large\", \"priceAdjustment\": 5 }\n]"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/modifier-groups/{{modifierGroupId}}/options",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "modifier-groups", "{{modifierGroupId}}", "options"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "3. Create Category",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Pizza\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/categories",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "categories"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "4. Assign Modifiers to Category",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"modifierGroupIds\": [{{modifierGroupId}}]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}/modifier-groups",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "categories", "{{categoryId}}", "modifier-groups"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "5. Create Item (Inherits)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Margherita\",\n  \"categoryId\": {{categoryId}},\n  \"basePrice\": 10,\n  \"usesCategoryDefaults\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/menu-items",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "menu-items"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "6. Verify Public Endpoint",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/menu-items/{{menuItemId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "menu-items", "{{menuItemId}}"]
+                },
+                "description": "Should show Choose Size modifier from category"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,702 @@
+{
+  "info": {
+    "name": "RestroFly Analytics API",
+    "description": "Complete API collection for Loss & Profit Analysis, Revenue Breakdown, Expense Analysis, and PDF Export functionality",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "restrofly-analytics"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "startDate",
+      "value": "2025-11-01",
+      "type": "string"
+    },
+    {
+      "key": "endDate",
+      "value": "2025-11-27",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Analytics Endpoints",
+      "item": [
+        {
+          "name": "1. Profit & Loss Analytics (Daily)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate={{startDate}}&endDate={{endDate}}&groupBy=daily",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "profit-loss"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Start date in YYYY-MM-DD format"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}",
+                  "description": "End date in YYYY-MM-DD format"
+                },
+                {
+                  "key": "groupBy",
+                  "value": "daily",
+                  "description": "Grouping: daily, weekly, or monthly"
+                }
+              ]
+            },
+            "description": "Get comprehensive profit and loss analysis with time-series data grouped by day.\n\n**Features:**\n- Total revenue from PAID orders\n- Refunds deducted from net revenue\n- Operational expenses and payroll costs\n- Profit margins and KPIs\n- Daily time-series data for charts\n\n**Auth Required:** Admin only"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate=2025-11-01&endDate=2025-11-27&groupBy=daily",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "profit-loss"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2025-11-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2025-11-27"
+                    },
+                    {
+                      "key": "groupBy",
+                      "value": "daily"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"summary\": {\n      \"totalRevenue\": \"45000.00\",\n      \"totalExpenses\": \"12000.00\",\n      \"totalPayroll\": \"8000.00\",\n      \"totalRefunds\": \"500.00\",\n      \"netRevenue\": \"44500.00\",\n      \"netProfit\": \"24500.00\",\n      \"profitMargin\": \"55.06\",\n      \"orderCount\": 350,\n      \"averageOrderValue\": \"128.57\"\n    },\n    \"timeSeries\": [\n      {\n        \"date\": \"2025-11-01\",\n        \"revenue\": \"1500.00\",\n        \"expenses\": \"800.00\",\n        \"profit\": \"700.00\"\n      },\n      {\n        \"date\": \"2025-11-02\",\n        \"revenue\": \"1800.00\",\n        \"expenses\": \"750.00\",\n        \"profit\": \"1050.00\"\n      }\n    ],\n    \"metadata\": {\n      \"startDate\": \"2025-11-01\",\n      \"endDate\": \"2025-11-27\",\n      \"groupBy\": \"daily\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Profit & Loss Analytics (Weekly)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate={{startDate}}&endDate={{endDate}}&groupBy=weekly",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "profit-loss"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                },
+                {
+                  "key": "groupBy",
+                  "value": "weekly"
+                }
+              ]
+            },
+            "description": "Get profit and loss data grouped by week using PostgreSQL DATE_TRUNC function."
+          },
+          "response": []
+        },
+        {
+          "name": "3. Profit & Loss Analytics (Monthly)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate={{startDate}}&endDate={{endDate}}&groupBy=monthly",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "profit-loss"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                },
+                {
+                  "key": "groupBy",
+                  "value": "monthly"
+                }
+              ]
+            },
+            "description": "Get profit and loss data grouped by month for long-term trend analysis."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Revenue Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/revenue-breakdown?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "revenue-breakdown"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            },
+            "description": "Get detailed breakdown of revenue by:\n- Order type (DINE_IN, TAKEAWAY, DELIVERY)\n- Payment method (CASH, CARD)\n- Discount analysis\n- Service charge analysis\n- Top 10 selling menu items\n\n**Auth Required:** Admin only"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/revenue-breakdown?startDate=2025-11-01&endDate=2025-11-27",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "revenue-breakdown"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2025-11-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2025-11-27"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"revenueByOrderType\": [\n      {\n        \"orderType\": \"DINE_IN\",\n        \"revenue\": \"25000.00\",\n        \"orderCount\": 180,\n        \"averageOrderValue\": \"138.89\",\n        \"percentage\": \"55.56\"\n      }\n    ],\n    \"revenueByPaymentMethod\": [\n      {\n        \"method\": \"CASH\",\n        \"revenue\": \"28000.00\",\n        \"transactionCount\": 220,\n        \"percentage\": \"62.22\"\n      }\n    ],\n    \"discountAnalysis\": {\n      \"totalDiscountGiven\": \"3500.00\",\n      \"totalOrdersWithDiscount\": 85,\n      \"averageDiscountPerOrder\": \"41.18\",\n      \"discountPercentageOfRevenue\": \"7.22\"\n    },\n    \"serviceChargeAnalysis\": {\n      \"totalServiceCharge\": \"4500.00\",\n      \"serviceChargePercentageOfRevenue\": \"10.00\"\n    },\n    \"topSellingMenuItems\": [\n      {\n        \"menuItemId\": 15,\n        \"menuItemName\": \"Margherita Pizza\",\n        \"categoryName\": \"Pizza\",\n        \"revenue\": \"4500.00\",\n        \"quantitySold\": 90,\n        \"orderCount\": 75,\n        \"percentage\": \"10.00\"\n      }\n    ],\n    \"metadata\": {\n      \"startDate\": \"2025-11-01\",\n      \"endDate\": \"2025-11-27\",\n      \"totalRevenue\": \"45000.00\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Expense Breakdown (Daily)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/expense-breakdown?startDate={{startDate}}&endDate={{endDate}}&groupBy=daily",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "expense-breakdown"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                },
+                {
+                  "key": "groupBy",
+                  "value": "daily"
+                }
+              ]
+            },
+            "description": "Get detailed expense analysis with:\n- Expense categories by reason\n- Payroll by employee\n- Payroll by role\n- Expense trends over time\n- Operational vs payroll expenses split\n\n**Auth Required:** Admin only"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/expense-breakdown?startDate=2025-11-01&endDate=2025-11-27&groupBy=daily",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "expense-breakdown"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2025-11-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2025-11-27"
+                    },
+                    {
+                      "key": "groupBy",
+                      "value": "daily"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"summary\": {\n      \"totalOperationalExpenses\": \"12000.00\",\n      \"totalPayrollExpenses\": \"8000.00\",\n      \"totalExpenses\": \"20000.00\",\n      \"operationalPercentage\": \"60.00\",\n      \"payrollPercentage\": \"40.00\"\n    },\n    \"expenseCategories\": [\n      {\n        \"reason\": \"Office Supplies\",\n        \"totalAmount\": \"3500.00\",\n        \"count\": 15,\n        \"percentage\": \"29.17\",\n        \"averageAmount\": \"233.33\"\n      }\n    ],\n    \"payrollByEmployee\": [\n      {\n        \"userId\": \"cm3x...\",\n        \"employeeName\": \"John Doe\",\n        \"employeeRole\": \"COUNTER\",\n        \"totalPayroll\": \"2500.00\",\n        \"payrollCount\": 1,\n        \"averagePayroll\": \"2500.00\"\n      }\n    ],\n    \"payrollByRole\": [\n      {\n        \"role\": \"ADMIN\",\n        \"totalPayroll\": \"4000.00\",\n        \"employeeCount\": 1,\n        \"averagePayroll\": \"4000.00\",\n        \"percentage\": \"50.00\"\n      }\n    ],\n    \"expenseTrends\": [\n      {\n        \"date\": \"2025-11-01\",\n        \"operationalExpenses\": \"800.00\",\n        \"payrollExpenses\": \"0.00\",\n        \"totalExpenses\": \"800.00\"\n      }\n    ],\n    \"metadata\": {\n      \"startDate\": \"2025-11-01\",\n      \"endDate\": \"2025-11-27\",\n      \"groupBy\": \"daily\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "6. Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/dashboard?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "dashboard"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            },
+            "description": "Get comprehensive dashboard KPIs including:\n- All key financial metrics\n- Period-over-period growth percentages\n- Today's quick stats\n- 30-day revenue vs expense comparison\n\n**Features:**\n- Automatic previous period calculation\n- Growth percentage comparison\n- Real-time today's data\n\n**Auth Required:** Admin only"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/dashboard?startDate=2025-11-01&endDate=2025-11-27",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "dashboard"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2025-11-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2025-11-27"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"kpis\": {\n      \"totalRevenue\": \"45000.00\",\n      \"netRevenue\": \"44500.00\",\n      \"totalRefunds\": \"500.00\",\n      \"orderCount\": 350,\n      \"averageOrderValue\": \"128.57\",\n      \"totalExpenses\": \"20000.00\",\n      \"operationalExpenses\": \"12000.00\",\n      \"payrollExpenses\": \"8000.00\",\n      \"grossProfit\": \"24500.00\",\n      \"profitMargin\": \"55.06\",\n      \"revenueGrowth\": \"15.50\",\n      \"expenseGrowth\": \"8.20\",\n      \"profitGrowth\": \"22.30\",\n      \"orderGrowth\": \"12.00\"\n    },\n    \"quickStats\": {\n      \"todayRevenue\": \"1800.00\",\n      \"todayOrders\": 15,\n      \"pendingPayments\": 3,\n      \"activeOrders\": 5\n    },\n    \"revenueExpenseComparison\": [\n      {\n        \"date\": \"2025-11-01\",\n        \"revenue\": \"1500.00\",\n        \"expenses\": \"800.00\",\n        \"profit\": \"700.00\"\n      }\n    ],\n    \"metadata\": {\n      \"currentPeriod\": {\n        \"startDate\": \"2025-11-01\",\n        \"endDate\": \"2025-11-27\"\n      },\n      \"previousPeriod\": {\n        \"startDate\": \"2025-10-05\",\n        \"endDate\": \"2025-10-31\"\n      }\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "7. Export PDF Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"{{startDate}}\",\n  \"endDate\": \"{{endDate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "export"]
+            },
+            "description": "Generate and download a comprehensive PDF report containing:\n- Executive summary with all KPIs\n- Revenue breakdown by order type\n- Top 10 expense categories\n- Payroll summary\n- Professional formatting with tables\n\n**Response Type:** PDF file (application/pdf)\n**File Name:** profit-loss-report-{startDate}-to-{endDate}.pdf\n\n**How to Test in Postman:**\n1. Send the request\n2. Click \"Save Response\" → \"Save to a file\"\n3. Open the downloaded PDF\n\n**Auth Required:** Admin only"
+          },
+          "response": [
+            {
+              "name": "Success Response (PDF Binary)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"startDate\": \"2025-11-01\",\n  \"endDate\": \"2025-11-27\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/export",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "export"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "pdf",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/pdf"
+                },
+                {
+                  "key": "Content-Disposition",
+                  "value": "attachment; filename=\"profit-loss-report-2025-11-01-to-2025-11-27.pdf\""
+                }
+              ],
+              "body": "[PDF Binary Content]"
+            }
+          ]
+        }
+      ],
+      "description": "All analytics endpoints require Admin authentication. Ensure you're logged in with an admin account before testing these endpoints."
+    },
+    {
+      "name": "Error Responses",
+      "item": [
+        {
+          "name": "400 - Missing Parameters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate={{startDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "profit-loss"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                }
+              ]
+            },
+            "description": "Example of missing required parameter (endDate)"
+          },
+          "response": [
+            {
+              "name": "Missing Parameters",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate=2025-11-01",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "profit-loss"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2025-11-01"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": \"startDate and endDate are required\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "400 - Invalid Date Format",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate=11/01/2025&endDate=11/27/2025",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "profit-loss"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "11/01/2025"
+                },
+                {
+                  "key": "endDate",
+                  "value": "11/27/2025"
+                }
+              ]
+            },
+            "description": "Example of invalid date format (should be YYYY-MM-DD)"
+          },
+          "response": [
+            {
+              "name": "Invalid Date Format",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate=11/01/2025&endDate=11/27/2025",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "profit-loss"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "11/01/2025"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "11/27/2025"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": \"Invalid date format. Use YYYY-MM-DD\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "401 - Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "profit-loss"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            },
+            "description": "Example when no session cookie is provided"
+          },
+          "response": [
+            {
+              "name": "Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate=2025-11-01&endDate=2025-11-27",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "profit-loss"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2025-11-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2025-11-27"
+                    }
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": \"Unauthorized\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "403 - Forbidden (Non-Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "profit-loss"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}"
+                }
+              ]
+            },
+            "description": "Example when logged in but not as admin"
+          },
+          "response": [
+            {
+              "name": "Forbidden",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/analytics/profit-loss?startDate=2025-11-01&endDate=2025-11-27",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "admin", "analytics", "profit-loss"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2025-11-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2025-11-27"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": \"Forbidden - Admin access required\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Common error responses across all analytics endpoints"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// This collection uses cookie-based authentication",
+          "// Make sure to:",
+          "// 1. Login through the auth endpoint first",
+          "// 2. Postman will automatically save the session cookie",
+          "// 3. All subsequent requests will include the cookie",
+          "",
+          "// You can also manually set the cookie in Postman:",
+          "// Cookies → Add Cookie → better-auth.session_token=<your_token>"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test scripts",
+          "pm.test(\"Response time is less than 5000ms\", function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Check for JSON response (except PDF export)",
+          "if (pm.response.headers.get('Content-Type') === 'application/json') {",
+          "    pm.test(\"Response has JSON body\", function () {",
+          "        pm.response.to.have.jsonBody();",
+          "    });",
+          "",
+          "    pm.test(\"Response has success field\", function () {",
+          "        pm.expect(pm.response.json()).to.have.property('success');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

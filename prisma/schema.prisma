@@ -1,0 +1,512 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  ON_LEAVE
+  INACTIVE
+  DELETED
+}
+
+enum DutyType {
+  FULL_TIME
+  PART_TIME
+}
+
+enum ShiftType {
+  DAY
+  NIGHT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+enum EmployeePaymentStatus {
+  PENDING
+  PAID
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+}
+
+enum RefundMethod {
+  CASH
+  CARD
+}
+
+enum PaymentStatus {
+  PAID
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum DeliveryStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+  CANCELLED
+}
+
+enum Role {
+  ADMIN
+  DELIVERY
+  OWNER
+  PHARMACIST
+  CASHIER
+  STOREKEEPER
+}
+
+enum SalePaymentStatus { 
+  PAID
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+} 
+
+enum PurchaseStatus {
+  LISTED
+  ORDERED
+  RECEIVED
+}
+
+enum BatchStatus {
+  ACTIVE
+  INACTIVE
+  SOLD_OUT
+  EXPIRED
+}
+
+enum SellType {
+  FULL_STRIP
+  SINGLE_TABLET
+  ML
+}
+
+enum SaleStatus {
+  COMPLETED
+  RETURNED
+}
+
+enum InventoryStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+
+model User {
+  id             String      @id
+  name           String
+  email          String
+  emailVerified  Boolean     @default(false)
+  image          String?
+  phone          String?     @unique
+  password       String?
+  role           Role?       @default(PHARMACIST)
+  status         UserStatus? @default(ACTIVE)
+  dutyType       DutyType?
+  shift          ShiftType?
+  joiningDate    DateTime?
+  monthlySalary  Decimal?    @db.Decimal(10, 2)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  sessions       Session[]
+  accounts       Account[]
+  attendances    Attendance[]
+  payrolls       Payroll[]
+  auditLogs      AuditLog[]
+  
+  sales          Sale[]
+  damages        Damage[]
+  
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@unique([providerId, accountId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@map("verification")
+}
+
+model Attendance {
+  id        Int              @id @default(autoincrement())
+  userId    String
+  date      DateTime         @db.Date
+  status    AttendanceStatus
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([date])
+}
+
+model Payroll {
+  id              Int                    @id @default(autoincrement())
+  userId          String
+  baseSalary      Decimal                @db.Decimal(10, 2)
+  allowances      Decimal                @default(0) @db.Decimal(10, 2)
+  deductions      Decimal                @default(0) @db.Decimal(10, 2)
+  netPay          Decimal                @db.Decimal(10, 2)
+  paymentStatus   EmployeePaymentStatus
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  action    String
+  entity    String
+  entityId  String
+  details   Json
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([entity, entityId])
+}
+
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  imageUrl  String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  items Product[]
+  
+  @@map("category") 
+  @@index([sortOrder])
+}
+
+model Product {
+  id                 Int           @id @default(autoincrement())
+  categoryId         Int
+  itemName           String
+  imageUrl           String?
+  genericName        String?
+  brand              String?
+  strength           String?
+  tabletsPerStrip    Int?          // tablet
+  unitPerBox         Int?          // optional: units per box (strips for tablets, bottles for syrup, etc.)
+  baseUnit           String        // "TABLET", "STRIP", "BOTTLE", "VIAL", "TUBE" 
+  rackLocation       String?
+  lowStockThreshold  Int           @default(0)
+
+
+  pricePerUnit       Decimal?      @db.Decimal(10, 2) // tablet, ml, vial, etc. per base unit
+  sellingPrice       Decimal?      @db.Decimal(10, 2) // strip, bottle, tube, vial (whole pack)
+
+  status             ProductStatus @default(ACTIVE)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  category           Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  purchaseItems      PurchaseItem[]
+  batches            ProductBatch[]
+  saleItems          SaleItem[]
+  damageRecords      Damage[]
+  inventory          Inventory?
+  
+  @@index([categoryId])
+  @@index([status])
+  // Performance index for category and status queries
+  @@index([categoryId, status])
+  @@map("product")
+}
+
+model PurchaseOrder {
+  id          String   @id @default(cuid())
+  totalAmount Decimal  @db.Decimal(10, 2)
+  status      PurchaseStatus @default(LISTED)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items PurchaseItem[]
+  
+  @@map("purchase_order")
+}
+
+model PurchaseItem {
+  id              Int      @id @default(autoincrement())
+  purchaseOrderId String
+  itemId          Int
+  supplier        String
+  quantity        Int
+  puchasePrice   Decimal   @db.Decimal(10, 2)
+  totalAmount     Decimal  @db.Decimal(10, 2)
+  status          PurchaseStatus @default(LISTED)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  item          Product          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  receivedItems ReceivedItem[]
+  
+  @@index([purchaseOrderId])
+  @@index([itemId])
+  @@map("purchase_item")
+}
+
+model ReceivedItem {
+  id               Int      @id @default(autoincrement())
+  purchaseItemId   Int
+  receivedQuantity Int
+  receivedAt       DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  purchaseItem PurchaseItem @relation(fields: [purchaseItemId], references: [id], onDelete: Cascade)
+  batches      ProductBatch[]
+  
+  @@index([purchaseItemId])
+  @@map("received_item")
+}
+
+model Inventory {
+  id                Int              @id @default(autoincrement())
+  productId         Int
+  totalQuantity     Int              @default(0)
+  availableQuantity Int              @default(0)
+  reservedQuantity  Int              @default(0)
+  lowStockThreshold Int              @default(0)
+  status            InventoryStatus  @default(IN_STOCK)
+  lastUpdated       DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  batches           ProductBatch[]
+  
+  @@unique([productId])
+  @@index([status])
+  @@index([productId])
+  // Performance index for status queries
+  @@index([status, productId])
+  @@map("inventory")
+}
+
+model ProductBatch {
+  id               Int         @id @default(autoincrement())
+  itemId           Int
+  inventoryId      Int?
+  receivedItemId   Int?
+  batchNumber      String      @unique
+  expiryDate       DateTime?   @db.Date
+  purchasePrice    Decimal     @db.Decimal(10, 2)
+  sellingPrice     Decimal     @db.Decimal(10, 2)
+  quantity         Int
+  remainingTablets Int?        // For tablet tracking: NULL = complete strips, 0-N = tablets in opened strip
+  supplier         String
+  status           BatchStatus @default(INACTIVE)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  item         Product          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  inventory    Inventory?       @relation(fields: [inventoryId], references: [id], onDelete: SetNull)
+  receivedItem ReceivedItem? @relation(fields: [receivedItemId], references: [id], onDelete: SetNull)
+  saleItems    SaleBatch[]
+  damageRecords Damage[]
+  
+  @@index([itemId])
+  @@index([inventoryId])
+  @@index([receivedItemId])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([remainingTablets])
+  // Performance indexes for sales operations
+  @@index([itemId, status, quantity, expiryDate, createdAt])
+  @@index([itemId, status, expiryDate, createdAt])
+  @@map("product_batch")
+}
+
+
+model Damage {
+  id          Int      @id @default(autoincrement())
+  itemId      Int
+  batchId     Int
+  quantity    Int
+  reason      String
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  item    Product  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  batch   ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  creator User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  
+  @@index([itemId])
+  @@index([batchId])
+  @@index([createdBy])
+  @@map("damage")
+}
+
+model Sale {
+  id            Int                 @id @default(autoincrement())
+  customerId    Int?
+  subtotal      Decimal             @db.Decimal(10, 2)
+  discountAmount Decimal            @default(0) @db.Decimal(10, 2)
+  grandTotal    Decimal             @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  paymentStatus SalePaymentStatus  @default(PAID)
+  status        SaleStatus  @default(COMPLETED)
+  returnReason  String?
+  createdBy     String
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  customer  Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  creator   User                @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  saleItems SaleItem[]
+  payments  Payment[]
+  
+  @@index([customerId])
+  @@index([createdBy])
+  @@index([status])
+  @@index([createdAt])
+  @@map("sale")
+}
+
+model SaleItem {
+  id           Int       @id @default(autoincrement())
+  saleId       Int
+  itemId       Int
+  sellType     SellType?
+  quantity     Int
+  unitPrice    Decimal   @db.Decimal(10, 2)
+  totalPrice   Decimal   @db.Decimal(10, 2)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sale      Sale        @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  item      Product     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  batches   SaleBatch[]
+  
+  @@index([saleId])
+  @@index([itemId])
+  @@map("sale_item")
+}
+
+model SaleBatch {
+  id           Int     @id @default(autoincrement())
+  saleItemId   Int
+  batchId      Int
+  quantity     Int
+  purchasePrice Decimal @db.Decimal(10, 2)
+  sellingPrice Decimal @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+
+  saleItem SaleItem @relation(fields: [saleItemId], references: [id], onDelete: Cascade)
+  batch    ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  
+  @@index([saleItemId])
+  @@index([batchId])
+  @@map("sale_batch")
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String?  @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sales     Sale[]
+}
+
+model Payment {
+  id                   Int           @id @default(autoincrement())
+  saleId               Int
+  amount               Decimal       @db.Decimal(10, 2)
+  method               PaymentMethod
+  status               PaymentStatus @default(PAID)
+  transactionReference String?
+  refundReason         String?
+  refundMethod         RefundMethod?
+  refundedAmount       Decimal?      @db.Decimal(10, 2)
+  refundedAt           DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  @@index([saleId])
+  @@index([status])
+}
+
+model Delivery {
+  id                Int            @id @default(autoincrement())
+  deliveryStatus    DeliveryStatus @default(PENDING)
+  returnReason      String?
+  cancellationReason String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+}
