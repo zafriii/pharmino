@@ -23,20 +23,13 @@ async function fetchProducts(
 ): Promise<{ products: Product[]; totalPages: number; currentPage: number }> {
   const page = Number(params.page) || 1;
 
-  // const queryParams = new URLSearchParams({
-  //   page: String(page),
-  //   ...(params.search && { search: params.search }),
-  //   ...(params.categoryId && { categoryId: params.categoryId }),
-  //   ...(params.status && { status: params.status }),
-  //   ...(params.stockStatus && { stockStatus: params.stockStatus }),
-  // });
-
-    const queryParams = new URLSearchParams({
-      page: String(page),
-      ...(params.status && { status: params.status }),
-      ...(params.categoryId && params.categoryId !== "ALL" && { categoryId: params.categoryId }),
-      ...(params.search && { search: params.search }),
-    });
+  const queryParams = new URLSearchParams({
+    page: String(page),
+    ...(params.search && { search: params.search }),
+    ...(params.categoryId && { categoryId: params.categoryId }),
+    ...(params.status && { status: params.status }),
+    ...(params.stockStatus && { stockStatus: params.stockStatus }),
+  });
 
   try {
     // Get session token 

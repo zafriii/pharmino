@@ -101,7 +101,7 @@ export default function ProductWrapper({ categories }: ProductWrapperProps) {
       </div>
 
       {/* Product Filters - Category and Status (API), Stock Status (Client-side) */}
-      {/* <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3">
         <CustomDropdown
           options={categoryOptions}
           selectedValue={searchParams.get('categoryId') || ''}
@@ -114,22 +114,6 @@ export default function ProductWrapper({ categories }: ProductWrapperProps) {
           onSelect={(value) => updateURL('status', value.toString())}
           placeholder="All Status"
         />
-      </div> */}
-
-      <div className="flex flex-wrap gap-3">
-            <CustomDropdown
-            options={categoryOptions}
-            selectedValue={searchParams.get('categoryId') || 'ALL'}
-            onSelect={(value) => updateURL('categoryId', value === 'ALL' ? '' : value.toString())}
-            placeholder="All Categories"
-          />
-
-          <CustomDropdown
-            options={statusOptions}
-            selectedValue={searchParams.get('status') || 'ALL'}
-            onSelect={(value) => updateURL('status', value === 'ALL' ? '' : value.toString())}
-            placeholder="All Status"
-          />
       </div>
       
       {/* Product Create Form Modal */}
