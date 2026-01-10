@@ -116,9 +116,9 @@ const RefundForm: React.FC<RefundFormProps> = ({
         <div className="flex flex-col gap-2 text-gray-900 items-end">
           <span># {payment.id}</span>
           <span># {payment.saleId}</span>
-          <span>${Number(payment.amount).toFixed(2)}</span>
-          <span>${Number(payment.refundedAmount || 0).toFixed(2)}</span>
-          <span className="font-semibold text-green-600">${remainingAmount.toFixed(2)}</span>
+          <span>{Number(payment.amount).toFixed(2)}</span>
+          <span>{Number(payment.refundedAmount || 0).toFixed(2)}</span>
+          <span className="font-semibold text-green-600">{remainingAmount.toFixed(2)}</span>
           <span>{payment.sale?.customer?.name || "Walk-in Customer"}</span>
           <span>
             <Badge variant={payment.method === "CASH" ? "yellow" : "blue"}>
@@ -147,7 +147,7 @@ const RefundForm: React.FC<RefundFormProps> = ({
           min="0"
           max={maxRefundAmount}
           className="w-full p-3 rounded-lg bg-[#F1F5F9] outline-none"
-          placeholder={`Enter amount (Max: $${maxRefundAmount.toFixed(2)})`}
+          placeholder={`Enter amount (Max:${maxRefundAmount.toFixed(2)})`}
           value={refundAmount}
           onChange={(e) => setRefundAmount(e.target.value)}
         />
