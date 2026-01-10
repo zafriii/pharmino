@@ -23,12 +23,20 @@ async function fetchProducts(
 ): Promise<{ products: Product[]; totalPages: number; currentPage: number }> {
   const page = Number(params.page) || 1;
 
-  const queryParams = new URLSearchParams({
+  // const queryParams = new URLSearchParams({
+  //   page: String(page),
+  //   ...(params.search && { search: params.search }),
+  //   ...(params.categoryId && { categoryId: params.categoryId }),
+  //   ...(params.status && { status: params.status }),
+  //   ...(params.stockStatus && { stockStatus: params.stockStatus }),
+  // });
+
+    const queryParams = new URLSearchParams({
     page: String(page),
-    ...(params.search && { search: params.search }),
-    ...(params.categoryId && { categoryId: params.categoryId }),
-    ...(params.status && { status: params.status }),
-    ...(params.stockStatus && { stockStatus: params.stockStatus }),
+    status: params.status || "ALL",
+    stockStatus: params.stockStatus || "ALL",
+    categoryId: params.categoryId || "ALL",
+    search: params.search || "",
   });
 
   try {
@@ -53,7 +61,8 @@ async function fetchProducts(
       //  Cache strategy 
       next: {
         revalidate: 60, // 5 minutes
-        tags: ["products"], // For instant revalidation on mutations
+        // tags: ["products"], // For instant revalidation on mutations
+        tags: [`products-${params.status || "ALL"}-${params.stockStatus || "ALL"}`],
       },
       headers: {
         "Content-Type": "application/json",
