@@ -34,7 +34,7 @@ export default function PurchaseStats({ purchases = [] }: PurchaseStatsProps) {
       <StatsCard
         title="Total Amount"
         // value={formatCurrency(totalAmount)}
-        value={totalAmount.toString()}
+        value={totalAmount.toFixed(2)}
         description="Total purchase value"
         variant="green"
       />

@@ -7,6 +7,8 @@ import Badge from "@/components/shared ui/Badge";
 import CustomSelector from "@/components/shared ui/CustomSelector";
 import { Payment } from "@/types/payment.types";
 import { refundPaymentAction } from "@/actions/payment.actions";
+import { GrFormRefresh } from "react-icons/gr";
+import { ImSpinner2 } from 'react-icons/im';
 
 interface RefundFormProps {
   isOpen: boolean;
@@ -95,8 +97,19 @@ const RefundForm: React.FC<RefundFormProps> = ({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleRefund} disabled={isPending}>
-            {isPending ? "Processing..." : "Process Refund"}
+          <Button 
+           variant="danger"
+            leftIcon={
+            isPending ? (
+            <ImSpinner2 className="animate-spin" />
+            ) : (
+            <GrFormRefresh size={20}/>
+            )}
+           onClick={handleRefund} 
+           disabled={isPending}
+           >
+        
+          {isPending ? "Processing" : "Process Refund"}
           </Button>
         </>
       }

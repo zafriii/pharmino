@@ -92,18 +92,18 @@ export default function SinglePayment({ isOpen, onClose, payment }: SinglePaymen
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-gray-600">Original Amount:</span>
-              <span className="font-medium">{formatCurrency(payment.amount)}</span>
+              <span className="font-medium">{(payment.amount)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Refunded Amount:</span>
               <span className="font-medium text-red-600">
-                {payment.refundedAmount ? formatCurrency(payment.refundedAmount) : '$0.00'}
+                {payment.refundedAmount ? (payment.refundedAmount) : '$0.00'}
               </span>
             </div>
             <div className="border-t pt-2 flex justify-between">
               <span className="font-semibold text-lg">Remaining Amount:</span>
               <span className="font-bold text-lg text-green-600">
-                {formatCurrency(remainingAmount)}
+                {(remainingAmount.toFixed(2))}
               </span>
             </div>
           </div>

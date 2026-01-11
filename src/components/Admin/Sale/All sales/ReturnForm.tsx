@@ -6,6 +6,8 @@ import Button from "@/components/shared ui/Button";
 import Badge from "@/components/shared ui/Badge";
 import { Sale } from "@/types/sale.types";
 import { returnSaleAction } from "@/actions/sale.actions";
+import { GrFormRefresh } from "react-icons/gr";
+import { ImSpinner2 } from 'react-icons/im';
 
 interface ReturnFormProps {
   isOpen: boolean;
@@ -60,8 +62,18 @@ const ReturnForm: React.FC<ReturnFormProps> = ({
           <Button variant="secondary" onClick={onClose}>
             No, Don't Return
           </Button>
-          <Button variant="danger" onClick={handleReturn} disabled={isPending}>
-            {isPending ? "Processing..." : "Yes, Return"}
+          <Button 
+          variant="danger" 
+          leftIcon={
+            isPending ? (
+            <ImSpinner2 className="animate-spin" />
+            ) : (
+            <GrFormRefresh size={20}/>
+            )
+           }
+          onClick={handleReturn} 
+          disabled={isPending}>
+            {isPending ? "Processing" : "Yes, Return"}
           </Button>
         </>
       }
