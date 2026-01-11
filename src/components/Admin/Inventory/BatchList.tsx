@@ -232,9 +232,13 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
     {
       key: "actions",
       header: "Actions",
-      render: (row: ProductBatch) => (
-        <BatchListAction batch={row} />
-      ),
+      render: (row: ProductBatch) => {
+        // Don't show actions for expired or sold out batches
+        if (row.status === "EXPIRED" || row.status === "SOLD_OUT") {
+          return null;
+        }
+        return <BatchListAction batch={row} />;
+      },
     },
   ];
 
