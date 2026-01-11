@@ -58,7 +58,7 @@ export async function deductFromInventory(
     });
 
     console.log(`Available batches: ${availableBatches.length}`);
-    availableBatches.forEach(batch => {
+    availableBatches.forEach((batch: any) => {
       console.log(`  - Batch ${batch.id} (${batch.batchNumber}): ${batch.quantity} units, status: ${batch.status}`);
     });
 
@@ -171,7 +171,7 @@ export async function deductFromInventory(
       // Activate them all at once
       if (inactiveBatches.length > 0) {
         console.log(`Activating ${inactiveBatches.length} inactive batches`);
-        inactiveBatches.forEach(batch => {
+        inactiveBatches.forEach((batch: any) => {
           console.log(`  - Activating Batch ${batch.id} (${batch.batchNumber})`);
         });
         await client.productBatch.updateMany({
