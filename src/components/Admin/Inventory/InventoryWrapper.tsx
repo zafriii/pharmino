@@ -64,23 +64,25 @@ export default function InventoryWrapper() {
             onSearch={handleSearch}
           />
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3">
         <CustomDropdown
           options={stockStatusOptions}
           selectedValue={searchParams.get('stockStatus') || ''}
           onSelect={(value) => updateURL('stockStatus', value.toString())}
           placeholder="All Stock Status"
         />
-        {/* <CustomDropdown
-          options={itemStatusOptions}
-          selectedValue={searchParams.get('itemStatus') || ''}
-          onSelect={(value) => updateURL('itemStatus', value.toString())}
-          placeholder="All Item Status"
-        /> */}
       </div>
+      </div>
+
+      {/* Filters */}
+      {/* <div className="flex flex-wrap gap-3">
+        <CustomDropdown
+          options={stockStatusOptions}
+          selectedValue={searchParams.get('stockStatus') || ''}
+          onSelect={(value) => updateURL('stockStatus', value.toString())}
+          placeholder="All Stock Status"
+        />
+      </div> */}
     </div>
   );
 }
