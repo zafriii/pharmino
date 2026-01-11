@@ -106,10 +106,12 @@ export default function SingleItemInventoryForm({
             type: 'success',
           });
 
+          // Reset form and close modal
+          reset();
           setOpen(false);
           onSuccess?.();
           
-          // Immediately refresh to get updated data
+          // Refresh the page to get updated data
           router.refresh();
         } else {
           setToastMessage({

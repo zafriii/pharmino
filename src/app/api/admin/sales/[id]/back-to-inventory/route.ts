@@ -211,7 +211,9 @@ export async function PUT(
         throw new Error("Sale items already restored to inventory");
       }
 
-      // Return stock to batches
+      // Return stock to batches and update inventory directly
+      const inventoryUpdates = new Map<number, number>();
+      
       for (const saleItem of sale.saleItems) {
         for (const saleBatch of saleItem.batches) {
           const currentBatch = await tx.productBatch.findUnique({
@@ -239,6 +241,39 @@ export async function PUT(
                   : currentBatch.status,
             },
           });
+
+          // Accumulate inventory updates by itemId
+          const currentUpdate = inventoryUpdates.get(currentBatch.itemId) || 0;
+          inventoryUpdates.set(currentBatch.itemId, currentUpdate + saleBatch.quantity);
+        }
+      }
+
+      // Update inventory records directly (faster than sync)
+      for (const [itemId, quantityToAdd] of inventoryUpdates.entries()) {
+        const inventory = await tx.inventory.findUnique({
+          where: { productId: itemId }
+        });
+
+        if (inventory) {
+          const newTotalQuantity = inventory.totalQuantity + quantityToAdd;
+          const newAvailableQuantity = inventory.availableQuantity + quantityToAdd;
+
+          let newStatus = inventory.status;
+          if (newTotalQuantity >= inventory.lowStockThreshold) {
+            newStatus = 'IN_STOCK';
+          } else if (newTotalQuantity > 0) {
+            newStatus = 'LOW_STOCK';
+          }
+
+          await tx.inventory.update({
+            where: { productId: itemId },
+            data: {
+              totalQuantity: newTotalQuantity,
+              availableQuantity: newAvailableQuantity,
+              status: newStatus,
+              lastUpdated: new Date()
+            }
+          });
         }
       }
 
@@ -258,6 +293,8 @@ export async function PUT(
       });
 
       return sale;
+    }, {
+      timeout: 15000, // 15 second timeout
     });
 
     // Fetch updated sale

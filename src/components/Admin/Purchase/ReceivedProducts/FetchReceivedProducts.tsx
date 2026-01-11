@@ -19,6 +19,7 @@ async function fetchReceivedProducts(
 
   const queryParams = new URLSearchParams({
     page: String(page),
+    _t: Date.now().toString(), // Cache busting timestamp
     ...(params.search && { search: params.search }),
   });
 
@@ -43,10 +44,7 @@ async function fetchReceivedProducts(
     const response = await fetch(
       `${baseUrl}/api/admin/received-items?${queryParams}`,
       {
-        next: {
-          revalidate: 60, // Always fetch fresh data
-          tags: ["received-items"],
-        },
+        cache: 'no-store', // Force no caching
         headers: {
           "Content-Type": "application/json",
           Cookie: cookieHeader,

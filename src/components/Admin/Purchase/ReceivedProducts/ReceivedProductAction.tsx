@@ -15,32 +15,25 @@ interface ReceivedProductActionProps {
 
 function ReceivedProductAction({ receivedItem }: ReceivedProductActionProps) {
   const [openInventoryForm, setOpenInventoryForm] = useState(false);
-  const [isProcessed, setIsProcessed] = useState(receivedItem.isFullyProcessed);
-  const [canAdd, setCanAdd] = useState(receivedItem.canAddToInventory);
-  const [remaining, setRemaining] = useState(receivedItem.remainingQuantity);
+  
+  // Use the actual server data directly instead of local state
+  const isProcessed = receivedItem.isFullyProcessed;
+  const canAdd = receivedItem.canAddToInventory;
+  const remaining = receivedItem.remainingQuantity;
 
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'fail';
   } | null>(null);
 
-  // Update local state when receivedItem prop changes
-  useEffect(() => {
-    setIsProcessed(receivedItem.isFullyProcessed);
-    setCanAdd(receivedItem.canAddToInventory);
-    setRemaining(receivedItem.remainingQuantity);
-  }, [receivedItem.isFullyProcessed, receivedItem.canAddToInventory, receivedItem.remainingQuantity]);
-
   const handleSuccessfulAddition = () => {
-    // Update local state to reflect the change immediately
-    setIsProcessed(true);
-    setCanAdd(false);
-    setRemaining(0);
-    
     setToastMessage({
       message: 'Item successfully added to inventory',
       type: 'success',
     });
+    
+    // Close the form
+    setOpenInventoryForm(false);
   };
 
   return (
@@ -49,7 +42,17 @@ function ReceivedProductAction({ receivedItem }: ReceivedProductActionProps) {
         <Button
           variant="primary"
           leftIcon={<MdOutlineInventory2 className="w-4 h-4" />}
-          onClick={() => setOpenInventoryForm(true)}
+          onClick={() => {
+            // Double-check before opening the form
+            if (receivedItem.canAddToInventory && receivedItem.remainingQuantity > 0 && !receivedItem.isFullyProcessed) {
+              setOpenInventoryForm(true);
+            } else {
+              setToastMessage({
+                message: 'This item has already been fully added to inventory.',
+                type: 'error',
+              });
+            }
+          }}
         >
           Add to Inventory
         </Button>
@@ -64,12 +67,14 @@ function ReceivedProductAction({ receivedItem }: ReceivedProductActionProps) {
       )}
 
       {/* Single Item Inventory Form Modal */}
-      <SingleItemInventoryForm
-        open={openInventoryForm}
-        setOpen={setOpenInventoryForm}
-        receivedItem={receivedItem}
-        onSuccess={handleSuccessfulAddition}
-      />
+      {canAdd && remaining > 0 && !isProcessed && (
+        <SingleItemInventoryForm
+          open={openInventoryForm}
+          setOpen={setOpenInventoryForm}
+          receivedItem={receivedItem}
+          onSuccess={handleSuccessfulAddition}
+        />
+      )}
 
       {/* Toast */}
       {toastMessage && (

@@ -54,25 +54,51 @@ export async function GET(request: NextRequest) {
 
     // Calculate stock information for each item
     const inventoryItems = items.map(item => {
-      // Calculate total stock including partial tablets
-      let totalStock = 0;
+      // Get inventory record for proper quantity tracking
+      const inventoryRecord = item.inventory;
+      
+      // Calculate batch-based quantities
+      let totalBatchStock = 0;
       let totalTablets = 0;
+      let activeBatchStock = 0;
+      let inactiveBatchStock = 0;
       
       if (item.tabletsPerStrip) {
         // For tablet products, calculate both strips and tablets
-        totalStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+        totalBatchStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
         totalTablets = item.batches.reduce((sum, batch) => {
           const completeStripTablets = batch.quantity * item.tabletsPerStrip!;
           const partialTablets = batch.remainingTablets || 0;
           return sum + completeStripTablets + partialTablets;
         }, 0);
+        
+        // Calculate active and inactive batch quantities
+        activeBatchStock = item.batches
+          .filter(batch => batch.status === 'ACTIVE')
+          .reduce((sum, batch) => sum + batch.quantity, 0);
+        inactiveBatchStock = item.batches
+          .filter(batch => batch.status === 'INACTIVE')
+          .reduce((sum, batch) => sum + batch.quantity, 0);
       } else {
         // For non-tablet products, use regular calculation
-        totalStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+        totalBatchStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+        
+        // Calculate active and inactive batch quantities
+        activeBatchStock = item.batches
+          .filter(batch => batch.status === 'ACTIVE')
+          .reduce((sum, batch) => sum + batch.quantity, 0);
+        inactiveBatchStock = item.batches
+          .filter(batch => batch.status === 'INACTIVE')
+          .reduce((sum, batch) => sum + batch.quantity, 0);
       }
       
       const activeBatches = item.batches.filter(batch => batch.status === 'ACTIVE');
       const inactiveBatches = item.batches.filter(batch => batch.status === 'INACTIVE');
+      
+      // Use inventory record quantities if available, otherwise fall back to batch calculations
+      const totalQuantity = inventoryRecord?.totalQuantity ?? totalBatchStock;
+      const availableQuantity = inventoryRecord?.availableQuantity ?? activeBatchStock;
+      const reservedQuantity = inventoryRecord?.reservedQuantity ?? inactiveBatchStock;
       
       let stockStatus = 'OUT_OF_STOCK';
       
@@ -90,9 +116,9 @@ export async function GET(request: NextRequest) {
           }
         }
       } else {
-        // For non-tablet products, use regular stock calculation
-        if (totalStock > 0) {
-          stockStatus = totalStock >= item.lowStockThreshold ? 'IN_STOCK' : 'LOW_STOCK';
+        // For non-tablet products, use available quantity for status calculation
+        if (availableQuantity > 0) {
+          stockStatus = availableQuantity >= item.lowStockThreshold ? 'IN_STOCK' : 'LOW_STOCK';
         }
       }
 
@@ -109,7 +135,9 @@ export async function GET(request: NextRequest) {
         sellingPrice: item.sellingPrice,
         status: item.status,
         tabletsPerStrip: item.tabletsPerStrip, 
-        totalStock,
+        totalStock: totalQuantity,
+        availableStock: availableQuantity,
+        reservedStock: reservedQuantity,
         totalTablets: item.tabletsPerStrip ? totalTablets : undefined,
         stockStatus,
         activeBatchesCount: activeBatches.length,

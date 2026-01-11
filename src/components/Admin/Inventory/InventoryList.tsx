@@ -226,6 +226,13 @@ export default function InventoryList({
           </div>
         )}
 
+        {row.reservedQuantity > 0 && (
+          <div>
+            <span className="font-medium text-blue-600">Reserved: </span>
+            {row.reservedQuantity} {row.reservedQuantity > 1 ? "units" : "unit"}
+          </div>
+        )}
+
         {expiredUnits > 0 && (
           <div>
             <span className="font-medium text-red-500">Expired: </span>

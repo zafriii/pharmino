@@ -53,7 +53,13 @@ export async function GET(request: NextRequest) {
             purchaseOrder: true
           }
         },
-        batches: true
+        batches: {
+          where: {
+            receivedItemId: {
+              not: null // Only include batches that are linked to this specific received item
+            }
+          }
+        }
       },
       orderBy: { receivedAt: 'desc' },
       skip: (page - 1) * limit,
@@ -61,17 +67,65 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter items that haven't been fully converted to batches and add status
-    const itemsWithStatus = receivedItems.map(receivedItem => {
-      const totalBatchQuantity = receivedItem.batches.reduce((sum, batch) => sum + batch.quantity, 0);
-      const remainingQuantity = receivedItem.receivedQuantity - totalBatchQuantity;
+    const itemsWithStatus = await Promise.all(receivedItems.map(async (receivedItem) => {
+      // Only count batches that were created from THIS specific received item
+      const relevantBatches = receivedItem.batches.filter(batch => batch.receivedItemId === receivedItem.id);
+      
+      // Calculate ORIGINAL batch quantities by adding current quantity + total sold
+      let originalBatchQuantity = 0;
+      
+      for (const batch of relevantBatches) {
+        // Get total sold from this batch
+        const soldFromBatch = await prisma.saleBatch.aggregate({
+          where: { batchId: batch.id },
+          _sum: { quantity: true }
+        });
+        
+        const totalSold = soldFromBatch._sum.quantity || 0;
+        const originalQuantity = batch.quantity + totalSold; // Current + Sold = Original
+        originalBatchQuantity += originalQuantity;
+      }
+      
+      const remainingQuantity = Math.max(0, receivedItem.receivedQuantity - originalBatchQuantity);
+      
+      // An item is fully processed if all received quantity has been converted to batches
+      // regardless of whether those batches have been sold or not
+      const isFullyProcessed = originalBatchQuantity >= receivedItem.receivedQuantity;
+      const canAddToInventory = !isFullyProcessed && remainingQuantity > 0;
+      
+      // Debug logging for Napa and Indever items
+      if (receivedItem.purchaseItem.item.itemName.toLowerCase().includes('napa') || 
+          receivedItem.purchaseItem.item.itemName.toLowerCase().includes('indever')) {
+        console.log(`=== ${receivedItem.purchaseItem.item.itemName.toUpperCase()} DEBUG ===`);
+        console.log('Received Item ID:', receivedItem.id);
+        console.log('PO ID:', receivedItem.purchaseItem.purchaseOrder.id);
+        console.log('Received Quantity:', receivedItem.receivedQuantity);
+        console.log('Relevant Batches Count:', relevantBatches.length);
+        console.log('Current Batch Quantities:', relevantBatches.map(b => b.quantity));
+        console.log('Original Batch Quantity (FIXED):', originalBatchQuantity);
+        console.log('Remaining Quantity:', remainingQuantity);
+        console.log('Is Fully Processed:', isFullyProcessed);
+        console.log('Can Add To Inventory:', canAddToInventory);
+        
+        // Show detailed batch info
+        for (const batch of relevantBatches) {
+          const soldFromBatch = await prisma.saleBatch.aggregate({
+            where: { batchId: batch.id },
+            _sum: { quantity: true }
+          });
+          const totalSold = soldFromBatch._sum.quantity || 0;
+          const originalQuantity = batch.quantity + totalSold;
+          console.log(`  Batch ${batch.id}: current=${batch.quantity}, sold=${totalSold}, original=${originalQuantity}`);
+        }
+      }
       
       return {
         ...receivedItem,
         remainingQuantity,
-        isFullyProcessed: remainingQuantity <= 0,
-        canAddToInventory: remainingQuantity > 0
+        isFullyProcessed,
+        canAddToInventory
       };
-    });
+    }));
 
     return successResponse({
       receivedItems: itemsWithStatus,

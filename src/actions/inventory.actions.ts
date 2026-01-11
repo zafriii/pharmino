@@ -93,6 +93,9 @@ export async function addSingleItemToInventoryAction(
     
     // Revalidate batches page for the specific item
     revalidatePath(`/admin/inventory/${validatedStockData.itemId}/batches`);
+    
+    // Revalidate the received-items cache tag
+    // revalidateTag('received-items');
 
     return {
       success: true,

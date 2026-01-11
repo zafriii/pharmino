@@ -235,47 +235,24 @@ export async function deductTabletsFromInventory(
       }
     }
 
-    // Update inventory record - for tablet sales, we need special handling
+    // Update inventory record directly for tablet products
     const inventory = await client.inventory.findUnique({
       where: { productId: itemId }
     });
 
     if (inventory) {
-      // For tablet sales, we still deduct strips but need to track remaining tablets
+      // For tablet sales, we deduct strips but need to track remaining tablets
       const totalStripsDeducted = batchDeductions.reduce((sum, bd) => sum + bd.quantity, 0);
       const newTotalQuantity = inventory.totalQuantity - totalStripsDeducted;
       const newAvailableQuantity = inventory.availableQuantity - totalStripsDeducted;
 
-      // Calculate status based on remaining tablets for tablet products
       let newStatus = inventory.status;
-      
-      // Get updated batches to calculate total remaining tablets
-      const updatedBatches = await client.productBatch.findMany({
-        where: { 
-          itemId,
-          OR: [
-            { quantity: { gt: 0 } },
-            { remainingTablets: { gt: 0 } }
-          ]
-        }
-      });
-      
-      const totalRemainingTablets = updatedBatches.reduce((sum: number, batch: any) => {
-        const completeStripTablets = batch.quantity * tabletsPerStrip;
-        const partialTablets = batch.remainingTablets || 0;
-        return sum + completeStripTablets + partialTablets;
-      }, 0);
-      
-      if (totalRemainingTablets === 0) {
+      if (newTotalQuantity === 0) {
         newStatus = 'OUT_OF_STOCK';
+      } else if (newTotalQuantity < inventory.lowStockThreshold) {
+        newStatus = 'LOW_STOCK';
       } else {
-        // Convert tablets to equivalent strips for threshold comparison
-        const equivalentStrips = Math.floor(totalRemainingTablets / tabletsPerStrip);
-        if (equivalentStrips < inventory.lowStockThreshold) {
-          newStatus = 'LOW_STOCK';
-        } else {
-          newStatus = 'IN_STOCK';
-        }
+        newStatus = 'IN_STOCK';
       }
 
       await client.inventory.update({
@@ -328,8 +305,8 @@ export async function addTabletsBackToInventory(
       where: { id: { in: batchIds } }
     });
 
-    // Group deductions by itemId for inventory updates
-    const inventoryUpdates = new Map<number, number>();
+    // Track affected products for inventory sync
+    const affectedProductIds = new Set<number>();
     const batchUpdates = [];
 
     for (const deduction of tabletDeductions) {
@@ -352,10 +329,8 @@ export async function addTabletsBackToInventory(
           status: batch.status === 'SOLD_OUT' ? 'ACTIVE' : batch.status
         });
 
-        // Accumulate inventory updates by itemId (in strips)
-        const stripsAdded = newCompleteStrips - batch.quantity;
-        const currentUpdate = inventoryUpdates.get(batch.itemId) || 0;
-        inventoryUpdates.set(batch.itemId, currentUpdate + stripsAdded);
+        // Track affected products
+        affectedProductIds.add(batch.itemId);
       }
     }
 
@@ -373,13 +348,33 @@ export async function addTabletsBackToInventory(
       )
     );
 
-    // Batch update all inventory records
-    const inventoryPromises = Array.from(inventoryUpdates.entries()).map(async ([itemId, stripsToAdd]) => {
+    // Update inventory for all affected products
+    const inventoryPromises = Array.from(affectedProductIds).map(async (productId) => {
       const inventory = await client.inventory.findUnique({
-        where: { productId: itemId }
+        where: { productId: productId }
       });
 
       if (inventory) {
+        // Calculate strips to add back for this product
+        const stripsToAdd = tabletDeductions
+          .filter(d => {
+            const batch = batches.find((b: any) => b.id === d.batchId);
+            return batch?.itemId === productId;
+          })
+          .reduce((sum, d) => {
+            // Convert tablets back to strips for inventory
+            const batch = batches.find((b: any) => b.id === d.batchId);
+            if (batch) {
+              const currentCompleteTablets = batch.quantity * tabletsPerStrip;
+              const currentPartialTablets = batch.remainingTablets || 0;
+              const totalCurrentTablets = currentCompleteTablets + currentPartialTablets;
+              const newTotalTablets = totalCurrentTablets + d.tabletsDeducted;
+              const newCompleteStrips = Math.floor(newTotalTablets / tabletsPerStrip);
+              return sum + (newCompleteStrips - batch.quantity);
+            }
+            return sum;
+          }, 0);
+
         const newTotalQuantity = inventory.totalQuantity + stripsToAdd;
         const newAvailableQuantity = inventory.availableQuantity + stripsToAdd;
 
@@ -391,7 +386,7 @@ export async function addTabletsBackToInventory(
         }
 
         return client.inventory.update({
-          where: { productId: itemId },
+          where: { productId: productId },
           data: {
             totalQuantity: newTotalQuantity,
             availableQuantity: newAvailableQuantity,

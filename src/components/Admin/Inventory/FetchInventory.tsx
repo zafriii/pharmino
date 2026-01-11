@@ -75,19 +75,20 @@ async function fetchInventory(
         brand: item.brand,
         genericName: item.genericName,
         imageUrl: item.imageUrl,
-        category: item.category,
+        category: item.category || { id: 0, name: "Uncategorized" },
         lowStockThreshold: item.lowStockThreshold,
         rackLocation: item.rackLocation,
         tabletsPerStrip: item.tabletsPerStrip, 
       },
       totalQuantity: item.totalStock || 0,
-      availableQuantity: item.totalStock || 0,
-      reservedQuantity: 0,
+      availableQuantity: item.availableStock || 0,
+      reservedQuantity: item.reservedStock || 0,
       lowStockThreshold: item.lowStockThreshold,
       status: item.stockStatus || "OUT_OF_STOCK",
       lastUpdated: item.updatedAt,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
+      // The API includes batches directly in the item, and also nested in inventory
       batches: item.inventory?.batches || item.batches || [],
     }));
 

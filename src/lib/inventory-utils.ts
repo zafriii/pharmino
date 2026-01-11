@@ -27,6 +27,16 @@ export async function deductFromInventory(
   const client = tx || prisma;
 
   try {
+    // Get product name for debugging
+    const product = await client.product.findUnique({
+      where: { id: itemId },
+      select: { itemName: true }
+    });
+
+    console.log(`\n🔍 DEDUCTING FROM INVENTORY:`);
+    console.log(`Product: ${product?.itemName} (ID: ${itemId})`);
+    console.log(`Quantity to deduct: ${quantityToDeduct}`);
+
     // Get only ACTIVE batches for the item, sorted by expiry date (FIFO)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -47,7 +57,13 @@ export async function deductFromInventory(
       ]
     });
 
+    console.log(`Available batches: ${availableBatches.length}`);
+    availableBatches.forEach(batch => {
+      console.log(`  - Batch ${batch.id} (${batch.batchNumber}): ${batch.quantity} units, status: ${batch.status}`);
+    });
+
     if (availableBatches.length === 0) {
+      console.log(`❌ No active batches available for ${product?.itemName}`);
       return {
         success: false,
         batchDeductions: [],
@@ -57,8 +73,10 @@ export async function deductFromInventory(
     }
 
     const totalAvailable = availableBatches.reduce((sum: number, batch: any) => sum + batch.quantity, 0);
+    console.log(`Total available: ${totalAvailable}`);
     
     if (totalAvailable < quantityToDeduct) {
+      console.log(`❌ Insufficient stock for ${product?.itemName}: Available ${totalAvailable}, Required ${quantityToDeduct}`);
       return {
         success: false,
         batchDeductions: [],
@@ -72,12 +90,16 @@ export async function deductFromInventory(
     const batchesToActivate: number[] = [];
     let remainingToDeduct = quantityToDeduct;
 
+    console.log(`\n📊 CALCULATING DEDUCTIONS:`);
+
     // Calculate all deductions first (no DB calls in loop)
     for (const batch of availableBatches) {
       if (remainingToDeduct <= 0) break;
 
       const deductFromThisBatch = Math.min(batch.quantity, remainingToDeduct);
       const newQuantity = batch.quantity - deductFromThisBatch;
+
+      console.log(`  - Batch ${batch.id} (${batch.batchNumber}): ${batch.quantity} -> ${newQuantity} (deducting ${deductFromThisBatch})`);
 
       batchUpdates.push({
         id: batch.id,
@@ -98,6 +120,8 @@ export async function deductFromInventory(
       }
     }
 
+    console.log(`\n💾 UPDATING BATCHES:`);
+
     // Perform all batch updates in a single transaction using updateMany where possible
     // For different statuses, we need separate updates
     const soldOutBatches = batchUpdates.filter((b: { status: string }) => b.status === 'SOLD_OUT');
@@ -105,26 +129,31 @@ export async function deductFromInventory(
 
     // Batch update sold out batches
     if (soldOutBatches.length > 0) {
-      await Promise.all(soldOutBatches.map(batch =>
-        client.productBatch.update({
+      console.log(`Updating ${soldOutBatches.length} batches to SOLD_OUT`);
+      await Promise.all(soldOutBatches.map(batch => {
+        console.log(`  - Batch ${batch.id}: quantity ${batch.quantity}, status SOLD_OUT`);
+        return client.productBatch.update({
           where: { id: batch.id },
           data: { quantity: batch.quantity, status: 'SOLD_OUT' }
-        })
-      ));
+        });
+      }));
     }
 
     // Batch update active batches
     if (activeBatches.length > 0) {
-      await Promise.all(activeBatches.map(batch =>
-        client.productBatch.update({
+      console.log(`Updating ${activeBatches.length} active batches`);
+      await Promise.all(activeBatches.map(batch => {
+        console.log(`  - Batch ${batch.id}: quantity ${batch.quantity}, status ACTIVE`);
+        return client.productBatch.update({
           where: { id: batch.id },
           data: { quantity: batch.quantity }
-        })
-      ));
+        });
+      }));
     }
 
     // Activate next inactive batches if needed (batch this too)
     if (batchesToActivate.length > 0) {
+      console.log(`Need to activate next batches for ${batchesToActivate.length} items`);
       // Get all inactive batches for this item at once
       const inactiveBatches = await client.productBatch.findMany({
         where: {
@@ -141,6 +170,10 @@ export async function deductFromInventory(
 
       // Activate them all at once
       if (inactiveBatches.length > 0) {
+        console.log(`Activating ${inactiveBatches.length} inactive batches`);
+        inactiveBatches.forEach(batch => {
+          console.log(`  - Activating Batch ${batch.id} (${batch.batchNumber})`);
+        });
         await client.productBatch.updateMany({
           where: {
             id: { in: inactiveBatches.map((b: any) => b.id) }
@@ -150,7 +183,7 @@ export async function deductFromInventory(
       }
     }
 
-    // Update inventory record (single query)
+    // Update inventory record directly
     const inventory = await client.inventory.findUnique({
       where: { productId: itemId }
     });
@@ -179,6 +212,8 @@ export async function deductFromInventory(
       });
     }
 
+    console.log(`✅ Successfully deducted ${quantityToDeduct} from ${product?.itemName}`);
+
     return {
       success: true,
       batchDeductions,
@@ -186,7 +221,7 @@ export async function deductFromInventory(
     };
 
   } catch (error) {
-    console.error("Error deducting from inventory:", error);
+    console.error("❌ Error deducting from inventory:", error);
     return {
       success: false,
       batchDeductions: [],
@@ -214,8 +249,8 @@ export async function addBackToInventory(
       where: { id: { in: batchIds } }
     });
 
-    // Group deductions by itemId for inventory updates
-    const inventoryUpdates = new Map<number, number>();
+    // Track affected products for inventory sync
+    const affectedProductIds = new Set<number>();
     const batchUpdates = [];
 
     for (const deduction of batchDeductions) {
@@ -229,9 +264,8 @@ export async function addBackToInventory(
           status: batch.status === 'SOLD_OUT' ? 'ACTIVE' : batch.status
         });
 
-        // Accumulate inventory updates by itemId
-        const currentUpdate = inventoryUpdates.get(batch.itemId) || 0;
-        inventoryUpdates.set(batch.itemId, currentUpdate + deduction.quantity);
+        // Track affected products
+        affectedProductIds.add(batch.itemId);
       }
     }
 
@@ -245,13 +279,21 @@ export async function addBackToInventory(
       )
     );
 
-    // Batch update all inventory records
-    const inventoryPromises = Array.from(inventoryUpdates.entries()).map(async ([itemId, quantityToAdd]) => {
+    // Update inventory for all affected products
+    const inventoryPromises = Array.from(affectedProductIds).map(async (productId) => {
       const inventory = await client.inventory.findUnique({
-        where: { productId: itemId }
+        where: { productId: productId }
       });
 
       if (inventory) {
+        // Calculate how much to add back for this product
+        const quantityToAdd = batchDeductions
+          .filter(d => {
+            const batch = batches.find((b: any) => b.id === d.batchId);
+            return batch?.itemId === productId;
+          })
+          .reduce((sum, d) => sum + d.quantity, 0);
+
         const newTotalQuantity = inventory.totalQuantity + quantityToAdd;
         const newAvailableQuantity = inventory.availableQuantity + quantityToAdd;
 
@@ -263,7 +305,7 @@ export async function addBackToInventory(
         }
 
         return client.inventory.update({
-          where: { productId: itemId },
+          where: { productId: productId },
           data: {
             totalQuantity: newTotalQuantity,
             availableQuantity: newAvailableQuantity,
