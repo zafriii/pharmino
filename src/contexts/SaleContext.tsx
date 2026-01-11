@@ -33,7 +33,29 @@ export const SaleProvider: React.FC<SaleProviderProps> = ({ children }) => {
 
   const getAvailableStock = (id: number) => {
     const product = getProductById(id);
-    return product?.totalStock || 0;
+    if (!product?.batches) return 0;
+    
+    // Calculate available stock from ACTIVE and non-expired batches only
+    let availableStock = 0;
+    product.batches.forEach((batch: any) => {
+      if (batch.status === "ACTIVE" && batch.quantity > 0) {
+        // Check if batch is not expired
+        let isNotExpired = true;
+        if (batch.expiryDate) {
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0);
+          const expiryDate = new Date(batch.expiryDate);
+          expiryDate.setHours(0, 0, 0, 0);
+          isNotExpired = expiryDate >= currentDate;
+        }
+        
+        if (isNotExpired) {
+          availableStock += batch.quantity;
+        }
+      }
+    });
+    
+    return availableStock;
   };
 
   const value: SaleContextType = {

@@ -873,7 +873,7 @@ const SalePanel: React.FC = () => {
             currentDate.setHours(0, 0, 0, 0);
             const expiryDate = new Date(batch.expiryDate);
             expiryDate.setHours(0, 0, 0, 0);
-            isNotExpired = expiryDate > currentDate;
+            isNotExpired = expiryDate >= currentDate;
           }
           
           if (isNotExpired) {
@@ -937,7 +937,7 @@ const SalePanel: React.FC = () => {
       currentDate.setHours(0, 0, 0, 0);
       const expiryDate = new Date(batch.expiryDate);
       expiryDate.setHours(0, 0, 0, 0);
-      return expiryDate > currentDate;
+      return expiryDate >= currentDate;
     });
   };
 
@@ -957,7 +957,7 @@ const SalePanel: React.FC = () => {
       currentDate.setHours(0, 0, 0, 0);
       const expiryDate = new Date(batch.expiryDate);
       expiryDate.setHours(0, 0, 0, 0);
-      return expiryDate > currentDate;
+      return expiryDate >= currentDate;
     });
   };
 
@@ -975,7 +975,7 @@ const SalePanel: React.FC = () => {
       currentDate.setHours(0, 0, 0, 0);
       const expiryDate = new Date(batch.expiryDate);
       expiryDate.setHours(0, 0, 0, 0);
-      return expiryDate > currentDate;
+      return expiryDate >= currentDate;
     });
     
     const hasActivePartialTablets = item.item.batches.some((batch: any) => {
@@ -988,7 +988,7 @@ const SalePanel: React.FC = () => {
       currentDate.setHours(0, 0, 0, 0);
       const expiryDate = new Date(batch.expiryDate);
       expiryDate.setHours(0, 0, 0, 0);
-      return expiryDate > currentDate;
+      return expiryDate >= currentDate;
     });
     
     return !hasActiveCompleteStrips && hasActivePartialTablets;
@@ -1022,7 +1022,7 @@ const SalePanel: React.FC = () => {
           currentDate.setHours(0, 0, 0, 0);
           const expiryDate = new Date(batch.expiryDate);
           expiryDate.setHours(0, 0, 0, 0);
-          isNotExpired = expiryDate > currentDate;
+          isNotExpired = expiryDate >= currentDate;
         }
         
         if (isNotExpired) {
@@ -1054,7 +1054,7 @@ const SalePanel: React.FC = () => {
             currentDate.setHours(0, 0, 0, 0);
             const expiryDate = new Date(batch.expiryDate);
             expiryDate.setHours(0, 0, 0, 0);
-            isNotExpired = expiryDate > currentDate;
+            isNotExpired = expiryDate >= currentDate;
           }
           
           if (isNotExpired) {

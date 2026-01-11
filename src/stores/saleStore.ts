@@ -38,10 +38,30 @@ export const useSaleStore = create<SaleState>((set, get) => ({
   addProduct: (product: ProductForSale) => {
     const { selectedProducts, showToast } = get();
     
-    // Check available stock
-    const availableStock = product.totalStock || 0;
+    // Calculate available stock from ACTIVE and non-expired batches only
+    let availableStock = 0;
+    if (product.batches) {
+      product.batches.forEach((batch: any) => {
+        if (batch.status === "ACTIVE" && batch.quantity > 0) {
+          // Check if batch is not expired
+          let isNotExpired = true;
+          if (batch.expiryDate) {
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0);
+            const expiryDate = new Date(batch.expiryDate);
+            expiryDate.setHours(0, 0, 0, 0);
+            isNotExpired = expiryDate >= currentDate;
+          }
+          
+          if (isNotExpired) {
+            availableStock += batch.quantity;
+          }
+        }
+      });
+    }
+    
     if (availableStock === 0) {
-      showToast(`${product.itemName} is out of stock`, 'error');
+      showToast(`${product.itemName} has no active stock available`, 'error');
       return;
     }
     
@@ -49,9 +69,9 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     const existingItem = selectedProducts.find(item => item.itemId === product.id);
     
     if (existingItem) {
-      // Check if we can increase quantity
+      // Check if we can increase quantity based on available stock from active batches
       if (existingItem.quantity >= availableStock) {
-        showToast(`Cannot add more ${product.itemName}. Only ${availableStock} available in stock`, 'error');
+        showToast(`Cannot add more ${product.itemName}. Only ${availableStock} available in active batches`, 'error');
         return;
       }
       // If already selected, increase quantity
@@ -64,8 +84,14 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     const hasOnlyRemainingTablets = (product: ProductForSale): boolean => {
       if (!product.batches || !product.tabletsPerStrip) return false;
       
-      const hasCompleteStrips = product.batches.some(batch => batch.quantity > 0);
-      const hasPartialTablets = product.batches.some(batch => (batch.remainingTablets || 0) > 0);
+      const hasCompleteStrips = product.batches.some(batch => 
+        batch.status === "ACTIVE" && batch.quantity > 0 && 
+        (!batch.expiryDate || new Date(batch.expiryDate) >= new Date())
+      );
+      const hasPartialTablets = product.batches.some(batch => 
+        batch.status === "ACTIVE" && (batch.remainingTablets || 0) > 0 &&
+        (!batch.expiryDate || new Date(batch.expiryDate) >= new Date())
+      );
       
       return !hasCompleteStrips && hasPartialTablets;
     };
