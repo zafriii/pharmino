@@ -112,10 +112,3 @@ export default async function FetchProducts({ searchParams, categories }: FetchP
   );
 }
 
-
-
-
-
-
-
-
