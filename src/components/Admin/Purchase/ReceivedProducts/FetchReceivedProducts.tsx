@@ -44,7 +44,11 @@ async function fetchReceivedProducts(
     const response = await fetch(
       `${baseUrl}/api/admin/received-items?${queryParams}`,
       {
-        cache: 'no-store', // Force no caching
+        // cache: 'no-store', // Force no caching
+        next: {
+        revalidate: 60, // 5 minutes
+          tags: ["purchases"],
+        },
         headers: {
           "Content-Type": "application/json",
           Cookie: cookieHeader,
