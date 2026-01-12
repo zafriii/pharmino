@@ -49,7 +49,7 @@ export async function deductTabletsFromInventory(
   try {
     // Get only ACTIVE batches for the item, sorted by expiry date (FIFO)
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
     
     const availableBatches = await client.productBatch.findMany({
       where: {
@@ -63,7 +63,7 @@ export async function deductTabletsFromInventory(
           {
             OR: [
               { expiryDate: null },
-              { expiryDate: { gt: today } }
+              { expiryDate: { gt: todayUTC } }
             ]
           }
         ]

@@ -9,12 +9,16 @@
  */
 export const isBatchExpired = (expiryDate: string | null): boolean => {
   if (!expiryDate) return false; // No expiry date means it doesn't expire
+  
+  // Get current date in UTC to match database storage
   const currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
+  const currentDateUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
+  
   const expiry = new Date(expiryDate);
-  expiry.setHours(0, 0, 0, 0);
+  const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
+  
   // Batch expires the day AFTER the expiry date
-  return expiry < currentDate;
+  return expiryUTC < currentDateUTC;
 };
 
 /**

@@ -153,14 +153,14 @@ export async function optimizeBatchActivation(itemId: number, tx?: any) {
  */
 export async function checkAndUpdateExpiredBatches(itemId?: number) {
   try {
+    // Get current date in UTC to match database storage
     const currentDate = new Date();
-    // Reset time to start of day for accurate date comparison
-    currentDate.setHours(0, 0, 0, 0);
+    const currentDateUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
     
     const whereClause: any = {
       expiryDate: {
         // Batch expires the day AFTER the expiry date, so use < instead of <=
-        lt: currentDate
+        lt: currentDateUTC
       },
       status: {
         not: 'EXPIRED'
@@ -304,15 +304,16 @@ export function getBatchExpiryInfo(batch: any) {
     };
   }
 
+  // Get current date in UTC to match database storage
   const currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
+  const currentDateUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
   
-  const expiryDate = new Date(batch.expiryDate);
-  expiryDate.setHours(0, 0, 0, 0);
+  const expiry = new Date(batch.expiryDate);
+  const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
   
   // Batch expires the day AFTER the expiry date
-  const isExpired = expiryDate < currentDate;
-  const daysUntilExpiry = Math.ceil((expiryDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+  const isExpired = expiryUTC < currentDateUTC;
+  const daysUntilExpiry = Math.ceil((expiryUTC.getTime() - currentDateUTC.getTime()) / (1000 * 60 * 60 * 24));
   
   let expiryStatus = 'VALID';
   if (isExpired) {

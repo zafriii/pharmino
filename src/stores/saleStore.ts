@@ -47,10 +47,10 @@ export const useSaleStore = create<SaleState>((set, get) => ({
           let isNotExpired = true;
           if (batch.expiryDate) {
             const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0);
-            const expiryDate = new Date(batch.expiryDate);
-            expiryDate.setHours(0, 0, 0, 0);
-            isNotExpired = expiryDate >= currentDate;
+            const currentDateUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
+            const expiry = new Date(batch.expiryDate);
+            const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
+            isNotExpired = expiryUTC >= currentDateUTC;
           }
           
           if (isNotExpired) {
@@ -84,14 +84,24 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     const hasOnlyRemainingTablets = (product: ProductForSale): boolean => {
       if (!product.batches || !product.tabletsPerStrip) return false;
       
-      const hasCompleteStrips = product.batches.some(batch => 
-        batch.status === "ACTIVE" && batch.quantity > 0 && 
-        (!batch.expiryDate || new Date(batch.expiryDate) >= new Date())
-      );
-      const hasPartialTablets = product.batches.some(batch => 
-        batch.status === "ACTIVE" && (batch.remainingTablets || 0) > 0 &&
-        (!batch.expiryDate || new Date(batch.expiryDate) >= new Date())
-      );
+      const currentDate = new Date();
+      const currentDateUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
+      
+      const hasCompleteStrips = product.batches.some(batch => {
+        if (batch.status !== "ACTIVE" || batch.quantity <= 0) return false;
+        if (!batch.expiryDate) return true;
+        const expiry = new Date(batch.expiryDate);
+        const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
+        return expiryUTC >= currentDateUTC;
+      });
+      
+      const hasPartialTablets = product.batches.some(batch => {
+        if (batch.status !== "ACTIVE" || (batch.remainingTablets || 0) <= 0) return false;
+        if (!batch.expiryDate) return true;
+        const expiry = new Date(batch.expiryDate);
+        const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
+        return expiryUTC >= currentDateUTC;
+      });
       
       return !hasCompleteStrips && hasPartialTablets;
     };
