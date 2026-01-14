@@ -3,6 +3,7 @@ import Badge from "@/components/shared ui/Badge";
 import ReceivedProductAction from "./ReceivedProductAction";
 import ReceivedProductsPagination from "./ReceivedProductsPagination";
 import { ReceivedItem } from "@/types/receivedProducts.types";
+import LocalDate from "@/components/shared ui/LocalDate";
 
 
 interface ReceivedProductsListProps {
