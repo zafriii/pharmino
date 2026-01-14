@@ -255,7 +255,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-30 bg-white transition-transform duration-300 
+      className={`fixed inset-y-0 left-0 z-50 bg-white transition-transform duration-300 
       ${isOpen ? "translate-x-0" : "-translate-x-full"} w-70 flex flex-col h-screen`}
     >
       {/* Logo */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
@@ -23,11 +23,31 @@ const PageLoader = () => (
 export default function DashboardContent({ children }: Props) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 700);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const toggleSidebar = React.useCallback(() => {
     setIsSidebarOpen(prev => !prev);
   }, []);
+
+  // Close sidebar when clicking outside on mobile
+  const handleOverlayClick = React.useCallback(() => {
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [isMobile]);
 
   // Handle navigation loading states
   useEffect(() => {
@@ -53,6 +73,14 @@ export default function DashboardContent({ children }: Props) {
     <div className="min-h-screen bg-gray-50 flex overflow-hidden">
       <Toaster position="top-right" />
 
+      {/* Dark Overlay for mobile when sidebar is open */}
+      {isSidebarOpen && isMobile && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"
+          onClick={handleOverlayClick}
+        />
+      )}
+
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} />
 
@@ -65,9 +93,10 @@ export default function DashboardContent({ children }: Props) {
         
         {/* Page Content */}
         <main
-          className={`pt-16 p-6 transition-all duration-300 h-screen overflow-y-auto ${
-            isSidebarOpen ? "ml-72" : "ml-0"
-          }`}
+          className={`pt-16 p-6 transition-all duration-300 h-screen overflow-y-auto`}
+          style={{
+            marginLeft: !isMobile && isSidebarOpen ? '288px' : '0'
+          }}
         >
           {/* Show loading spinner during navigation */}
           {isNavigating && (

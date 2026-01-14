@@ -11,10 +11,25 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarOpen }) => {
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 700);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <header
-      className={`h-16 bg-[#FFFFFF]  flex items-center justify-between px-4 sticky top-0 z-40 transition-all duration-300
-      ${isSidebarOpen ? "ml-64" : "ml-0"}`}
+      className="h-16 bg-[#FFFFFF] flex items-center justify-between px-4 sticky top-0 z-40 transition-all duration-300"
+      style={{
+        marginLeft: !isMobile && isSidebarOpen ? '256px' : '0'
+      }}
     >
       {/* Left: Collapse Button */}
       <button
