@@ -12,7 +12,7 @@ interface ToastProps {
   onClose?: () => void;
 }
 
-const Toast: React.FC<ToastProps> = ({ message, type, duration = 1200, onClose }) => {
+const Toast: React.FC<ToastProps> = ({ message, type, duration = 1000, onClose }) => {
   const [visible, setVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
 

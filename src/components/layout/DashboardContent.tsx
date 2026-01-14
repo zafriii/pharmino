@@ -76,9 +76,11 @@ export default function DashboardContent({ children }: Props) {
             </div>
           )}
           
-          <Suspense fallback={<PageLoader />}>
+          {children}
+
+          {/* <Suspense fallback={<PageLoader />}>
             {children}
-          </Suspense>
+          </Suspense> */}
         </main>
       </div>
     </div>
