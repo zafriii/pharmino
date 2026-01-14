@@ -11,6 +11,7 @@ import RecordDamageButton from "../Damage Record/RecordDamageButton";
 import BatchDamageDetails from "./BatchDamageDetails";
 import BatchListAction from "./BatchListAction";
 import BatchWrapper from "./BatchWrapper";
+import LocalDate from "@/components/shared ui/LocalDate";
 
 interface BatchListProps {
   itemId: string;
@@ -217,17 +218,8 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
     },
     {
       key: "createdAt",
-      header: "Created",
-      render: (row: ProductBatch) => (
-        <div className="text-sm">
-          <span className="block">
-            {new Date(row.createdAt).toLocaleDateString()}            
-          </span>
-          <span className="text-gray-500 text-xs">
-            {new Date(row.createdAt).toLocaleTimeString()}
-          </span>
-        </div>
-      ),
+      header: "Batch Created",
+      render: (row: ProductBatch) => <LocalDate date={row.createdAt} />,
     },
     {
       key: "actions",

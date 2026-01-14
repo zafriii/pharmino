@@ -4,6 +4,7 @@ import InventoryPagination from "./InventoryPagination";
 import { InventoryItem } from "@/types/inventory.types";
 import Link from "next/link";
 import { GoEye } from "react-icons/go";
+import LocalDate from "@/components/shared ui/LocalDate";
 
 interface InventoryListProps {
   inventory: InventoryItem[];
@@ -343,14 +344,20 @@ export default function InventoryList({
       },
     },
 
+    // {
+    //   key: "lastUpdated",
+    //   header: "Last Updated",
+    //   render: (row: InventoryItem) => (
+    //     <span className="text-sm text-gray-500">
+    //       {new Date(row.lastUpdated).toLocaleDateString()}
+    //     </span>
+    //   ),
+    // },
+
     {
-      key: "lastUpdated",
-      header: "Last Updated",
-      render: (row: InventoryItem) => (
-        <span className="text-sm text-gray-500">
-          {new Date(row.lastUpdated).toLocaleDateString()}
-        </span>
-      ),
+      key: "createdAt",
+      header: "Added on",
+      render: (row: InventoryItem) => <LocalDate date={row.lastUpdated} />,
     },
 
     {

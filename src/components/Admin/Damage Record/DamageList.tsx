@@ -3,6 +3,7 @@ import ReusableTable, { TableColumn } from '@/components/shared ui/ReusableTable
 import Badge from '@/components/shared ui/Badge';
 import { DamageRecord } from '@/types/damage.types';
 import DamagePagination from './DamagePagination';
+import LocalDate from '@/components/shared ui/LocalDate';
 
 interface DamageListProps {
   damages: DamageRecord[];
@@ -100,20 +101,26 @@ export default function DamageList({
       ),
     },
 
-    {
-      key: 'createdAt',
-      header: 'Damage Recorded',
-      render: (row: DamageRecord) => (
-        <div className="text-sm">
-          <span className="block">
-            {new Date(row.createdAt).toLocaleDateString()}
-          </span>
-          <span className="text-gray-500 text-xs">
-            {new Date(row.createdAt).toLocaleTimeString()}
-          </span>
-        </div>
-      ),
-    },
+    // {
+    //   key: 'createdAt',
+    //   header: 'Damage Recorded',
+    //   render: (row: DamageRecord) => (
+    //     <div className="text-sm">
+    //       <span className="block">
+    //         {new Date(row.createdAt).toLocaleDateString()}
+    //       </span>
+    //       <span className="text-gray-500 text-xs">
+    //         {new Date(row.createdAt).toLocaleTimeString()}
+    //       </span>
+    //     </div>
+    //   ),
+    // },
+
+     {
+      key: "createdAt",
+      header: "Damage Recorded",
+      render: (row: DamageRecord) => <LocalDate date={row.createdAt} />,
+     },
   ];
 
   return (

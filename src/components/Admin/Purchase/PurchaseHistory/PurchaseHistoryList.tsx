@@ -3,6 +3,7 @@ import Badge from "@/components/shared ui/Badge";
 import PurchaseHistoryAction from "./PurchaseHistoryAction";
 import PurchasePagination from "../PurchasePagination";
 import { PurchaseOrder } from "@/types/purchase.types";
+import LocalDate from "@/components/shared ui/LocalDate";
 
 interface PurchaseHistoryListProps {
   purchases: PurchaseOrder[];
@@ -89,19 +90,18 @@ export default function PurchaseHistoryList({
     {
       key: "createdAt",
       header: tab === 'ordered' ? "Ordered Date" : "Received Date",
-      render: (row: PurchaseOrder) => (
-        // <div className="text-sm text-gray-600">
-        //   {new Date(row.updatedAt).toLocaleDateString()}
-        // </div>
-        <div className="text-sm">
-          <span className="block">
-            {new Date(row.updatedAt).toLocaleDateString()}
-          </span>
-          <span className="text-gray-500 text-xs">
-            {new Date(row.updatedAt).toLocaleTimeString()}
-          </span>
-        </div>
-      ),
+      // render: (row: PurchaseOrder) => (
+       
+      //   // <div className="text-sm">
+      //   //   <span className="block">
+      //   //     {new Date(row.updatedAt).toLocaleDateString()}
+      //   //   </span>
+      //   //   <span className="text-gray-500 text-xs">
+      //   //     {new Date(row.updatedAt).toLocaleTimeString()}
+      //   //   </span>
+      //   // </div>
+      // ),
+      render: (row: PurchaseOrder) => <LocalDate date={row.createdAt} />,
     },
     {
       key: "action",

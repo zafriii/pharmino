@@ -5,6 +5,7 @@ import PaymentAction from "./PaymentAction";
 import { Payment } from "@/types/payment.types";
 import { HiOutlineCreditCard, HiOutlineBanknotes } from "react-icons/hi2";
 import PaymentPagination from "./PaymentPagination";
+import LocalDate from "@/components/shared ui/LocalDate";
 
 interface AllPaymentsListProps {
   payments: Payment[];
@@ -120,17 +121,23 @@ export default function AllPaymentsList({
       ),
     },
 
+    // {
+    //   key: "createdAt",
+    //   header: "Payment Date",
+    //   render: (row: Payment) =>
+    //     new Date(row.createdAt).toLocaleDateString("en-US", {
+    //       year: 'numeric',
+    //       month: 'short',
+    //       day: 'numeric',
+    //       hour: '2-digit',
+    //       minute: '2-digit'
+    //     }),
+    // },
+
     {
       key: "createdAt",
-      header: "Payment Date",
-      render: (row: Payment) =>
-        new Date(row.createdAt).toLocaleDateString("en-US", {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
+      header: "Payment date",
+      render: (row: Payment) => <LocalDate date={row.createdAt} />,
     },
 
     {

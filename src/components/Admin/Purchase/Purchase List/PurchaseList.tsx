@@ -4,6 +4,7 @@ import PurchaseAction from "./PurchaseAction";
 import PurchasePagination from "../PurchasePagination";
 import { formatCurrency } from "@/lib/utils";
 import { PurchaseOrder } from "@/types/purchase.types";
+import LocalDate from "@/components/shared ui/LocalDate";
 
 interface PurchaseListProps {
   purchases: PurchaseOrder[];
@@ -80,22 +81,27 @@ export default function PurchaseList({ purchases, totalPages, currentPage }: Pur
         </Badge>
       ),
     },
+    // {
+    //   key: "createdAt",
+    //   header: "Created",
+    //   render: (row: PurchaseOrder) => (
+    //     // <div className="text-sm text-gray-600">
+    //     //   {new Date(row.createdAt).toLocaleDateString()}
+    //     // </div>
+    //     <div className="text-sm">
+    //       <span className="block">
+    //         {new Date(row.createdAt).toLocaleDateString()}
+    //       </span>
+    //       <span className="text-gray-500 text-xs">
+    //         {new Date(row.createdAt).toLocaleTimeString()}
+    //       </span>
+    //     </div>
+    //   ),
+    // },
     {
-      key: "createdAt",
-      header: "Created",
-      render: (row: PurchaseOrder) => (
-        // <div className="text-sm text-gray-600">
-        //   {new Date(row.createdAt).toLocaleDateString()}
-        // </div>
-        <div className="text-sm">
-          <span className="block">
-            {new Date(row.createdAt).toLocaleDateString()}
-          </span>
-          <span className="text-gray-500 text-xs">
-            {new Date(row.createdAt).toLocaleTimeString()}
-          </span>
-        </div>
-      ),
+     key: "createdAt",
+     header: "Created",
+     render: (row: PurchaseOrder) => <LocalDate date={row.createdAt} />,
     },
     {
       key: "action",
