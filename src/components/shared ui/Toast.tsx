@@ -12,7 +12,7 @@ interface ToastProps {
   onClose?: () => void;
 }
 
-const Toast: React.FC<ToastProps> = ({ message, type, duration = 1500, onClose }) => {
+const Toast: React.FC<ToastProps> = ({ message, type, duration = 1200, onClose }) => {
   const [visible, setVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -22,7 +22,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 1500, onClose }
       setTimeout(() => {
         setVisible(false);
         onClose?.();
-      }, 150);
+      }, 100);
     }, duration);
 
     return () => clearTimeout(timer);
@@ -33,7 +33,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 1500, onClose }
     setTimeout(() => {
       setVisible(false);
       onClose?.();
-    }, 200);
+    }, 100);
   };
 
   if (!visible) return null;
