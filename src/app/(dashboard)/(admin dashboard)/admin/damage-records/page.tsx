@@ -19,10 +19,8 @@ export default async function DamageRecordsPage({ searchParams }: DamageRecordsP
 
   return (
     <PageContainer title="Damage Records">      
-      <div className="space-y-6">        
-        <Suspense fallback={<Load message="Loading damage records" />}>
-          <FetchDamages searchParams={resolvedParams} />
-        </Suspense>
+      <div className="space-y-6">                
+        <FetchDamages searchParams={resolvedParams} />
       </div>
     </PageContainer>
   );

@@ -18,10 +18,8 @@ export default async function AuthenticationPage({ searchParams }: PageProps) {
     <PageContainer title="Human Resource Management">
       <HRTabs />
 
-      {/* Suspense Wrapper – Same as Directory code */}
-      <Suspense fallback={<Load message="Loading users" />}>
-        <FetchUsers searchParams={resolvedParams} />
-      </Suspense>
+      {/* Suspense Wrapper – Same as Directory code */}     
+    <FetchUsers searchParams={resolvedParams} />    
     </PageContainer>
   );
 }

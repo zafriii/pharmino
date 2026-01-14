@@ -20,10 +20,11 @@ export default async function CategoriesPage({ searchParams }: PageProps) {
       <MenuTabs />
       
       <CategoryWrapper />
+      <FetchCategories searchParams={resolvedParams} />
       
-      <Suspense fallback={<Load message="Loading categories" />}>
+      {/* <Suspense fallback={<Load message="Loading categories" />}>
         <FetchCategories searchParams={resolvedParams} />
-      </Suspense>
+      </Suspense> */}
     </PageContainer>
   );
 }

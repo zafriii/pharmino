@@ -36,10 +36,8 @@ export default async function PurchasePage({ searchParams }: PurchasePageProps) 
         {/* Purchase Controls */}
         <PurchaseWrapper />
 
-        {/* Purchase List */}
-        <Suspense fallback={<Load />}>
+        {/* Purchase List */}        
           <FetchPurchases searchParams={resolvedParams} />
-        </Suspense>
       </div>
     </PageContainer>
   );

@@ -19,10 +19,8 @@ export default async function OrderedItemsPage({ searchParams }: OrderedItemsPag
     <PageContainer title="Ordered Items">
       <PurchaseTabs/>
       <div className="space-y-6">
-        <OrderedItemsWrapper>
-          <Suspense fallback={<Load message='Loading Purchase Orders'/>}>
-            <FetchOrderedItems searchParams={resolvedParams} />
-          </Suspense>
+        <OrderedItemsWrapper>         
+        <FetchOrderedItems searchParams={resolvedParams} />
         </OrderedItemsWrapper>
       </div>
     </PageContainer>

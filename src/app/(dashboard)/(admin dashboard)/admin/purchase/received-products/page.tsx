@@ -18,10 +18,8 @@ export default async function ReceivedProductsPage({ searchParams }: ReceivedPro
     <PageContainer title="Received Products">
       <div className="space-y-6">
         <ReceivedProductsWrapper>
-          <div >
-            <Suspense fallback={<Load message='Loading Received Prodcuts'/>}>
-              <FetchReceivedProducts searchParams={resolvedParams} />
-            </Suspense>
+          <div >       
+            <FetchReceivedProducts searchParams={resolvedParams} />
           </div>
         </ReceivedProductsWrapper>
       </div>

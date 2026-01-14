@@ -19,15 +19,9 @@ export default async function BatchesPage({ params, searchParams }: BatchesPageP
     <PageContainer title="Batch Details">
       <div className="space-y-6">
         {/* Batch Filters */}
-        <BatchWrapper />
-        
-        <Suspense fallback={<Load message="Loading Available Batches"/>}>
-          <BatchList itemId={resolvedParams.id} searchParams={resolvedSearchParams} />          
-        </Suspense>
+        <BatchWrapper />               
+        <BatchList itemId={resolvedParams.id} searchParams={resolvedSearchParams} />          
       </div>
     </PageContainer>
   );
 }
-
-
-

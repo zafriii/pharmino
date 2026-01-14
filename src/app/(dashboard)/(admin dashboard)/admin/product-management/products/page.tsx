@@ -1,9 +1,8 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import PageContainer from "@/components/shared ui/PageContainer";
 import ProductWrapper from '@/components/Admin/Product Management/Products/ProductWrapper';
 import FetchProducts from '@/components/Admin/Product Management/Products/FetchProducts';
 import { fetchCategoriesAction } from '@/actions/product.actions';
-import Load from '@/components/Load';
 import MenuTabs from '@/components/Admin/Product Management/ProductTabs';
 
 interface PageProps {
@@ -32,9 +31,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         <ProductWrapper categories={categories} />
 
         {/* Products List */}
-        <Suspense fallback={<Load message="Loading products" />}>
-          <FetchProducts searchParams={resolvedParams} categories={categories} />
-        </Suspense>
+        <FetchProducts searchParams={resolvedParams} categories={categories} />
       </div>
     </PageContainer>
   );

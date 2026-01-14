@@ -19,10 +19,8 @@ export default async function ReceivedItemsPage({ searchParams }: ReceivedItemsP
     <PageContainer title="Received Items">
       <PurchaseTabs/>
       <div className="space-y-6">
-        <ReceivedItemsWrapper>
-          <Suspense fallback={<Load message='Loading Received Orders'/>}>
-            <FetchReceivedItems searchParams={resolvedParams} />
-          </Suspense>
+        <ReceivedItemsWrapper>        
+         <FetchReceivedItems searchParams={resolvedParams} />
         </ReceivedItemsWrapper>
       </div>
     </PageContainer>

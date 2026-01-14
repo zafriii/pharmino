@@ -24,10 +24,8 @@ export default async function AllSalesPage({ searchParams }: PageProps) {
       {/* Search + Filters */}
       <SaleWrapper />
 
-      {/* Sales List with Suspense */}
-      <Suspense fallback={<Load message="Loading sales" />}>
-        <FetchSale searchParams={resolvedParams} />
-      </Suspense>
+      {/* Sales List with Suspense */}     
+    <FetchSale searchParams={resolvedParams} />
     </PageContainer>
   );
 }

@@ -50,11 +50,11 @@ async function fetchProducts(
     const cookieHeader = cookieStore.toString();
 
     const response = await fetch(`${baseUrl}/api/admin/products?${queryParams}`, {
-      //  Cache strategy 
+      //  Cache strategy - optimized for instant loading
+      // cache: "force-cache", // Aggressive caching
       next: {
-        revalidate: 60, // 5 minutes
-        // tags: ["products"], // For instant revalidation on mutations
-        tags: [`products-${params.status || "ALL"}-${params.stockStatus || "ALL"}-${params.categoryId || "ALL"}`]
+        revalidate: 60, // Revalidate in background after 60 seconds
+        tags: ["products"], // Simple static tag for better cache hits
       },
       headers: {
         "Content-Type": "application/json",

@@ -21,10 +21,8 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
       {/* Filters / Search UI */}
       <InventoryWrapper />
 
-      {/* Inventory List */}
-      <Suspense fallback={<Load message="Loading inventory" />}>
-        <FetchInventory searchParams={resolvedParams} />
-      </Suspense>
+      {/* Inventory List */}      
+      <FetchInventory searchParams={resolvedParams} />
     </PageContainer>
   );
 }

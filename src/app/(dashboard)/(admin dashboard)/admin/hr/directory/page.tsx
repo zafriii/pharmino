@@ -28,11 +28,8 @@ export default async function EmployeesPage({ searchParams }: PageProps) {
       {/* Search + Create + Filters */}
       <EmployeeWrapper />
 
-      {/* Employee List with Suspense */}
-      <Suspense fallback={<Load message="Loading employees" />}>
-        <FetchEmployees searchParams={resolvedParams} />
-      </Suspense>
-      
+      {/* Employee List with Suspense */}      
+      <FetchEmployees searchParams={resolvedParams} />      
     </PageContainer>
   );
 }

@@ -25,10 +25,8 @@ export default async function PaymentsPage({ searchParams }: PageProps) {
       {/* Search + Filters */}
       <PaymentWrapper />
 
-      {/* Payments List with Suspense */}
-      <Suspense fallback={<Load message="Loading payments" />}>
-        <FetchPayments searchParams={resolvedParams} />
-      </Suspense>
+      {/* Payments List with Suspense */}      
+    <FetchPayments searchParams={resolvedParams} />      
     </PageContainer>
   );
 };

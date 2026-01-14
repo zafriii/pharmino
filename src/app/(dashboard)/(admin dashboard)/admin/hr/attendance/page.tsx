@@ -23,11 +23,8 @@ export default async function AttendancePage({ searchParams }: PageProps) {
       {/* Search + Date Filter */}
       <AttendanceWrapper />
 
-      {/* Attendance List with Suspense */}
-      <Suspense fallback={<Load message="Loading attendance data" />}>
-        <FetchAttendance searchParams={resolvedParams} />
-      </Suspense>
-      
+      {/* Attendance List with Suspense */}     
+        <FetchAttendance searchParams={resolvedParams} />      
     </PageContainer>
   );
 }

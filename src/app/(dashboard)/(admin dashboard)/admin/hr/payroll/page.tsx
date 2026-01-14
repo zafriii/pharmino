@@ -25,10 +25,8 @@ export default async function PayrollPage({ searchParams }: PayrollPageProps) {
       {/* Search and Filters */}
       <PayrollWrapper />
 
-      {/* Payroll List with Suspense */}
-      <Suspense fallback={<Load message="Loading payroll records" />}>
+      {/* Payroll List with Suspense */}      
         <FetchPayroll searchParams={resolvedParams} />
-      </Suspense>
     </PageContainer>
   );
 }
