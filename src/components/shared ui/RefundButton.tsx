@@ -20,7 +20,7 @@ const RefundButton = ({
     "p-2 rounded-xl transition-colors focus:outline-none focus:ring-2 flex items-center justify-center";
 
   const variants = {
-    primary: "bg-[#059669] text-white hover:bg-emerald-700 focus:ring-[#059669]",
+    primary: "bg-[#4a90e2] text-white hover:bg-emerald-700 focus:ring-[#059669]",
     secondary:
       "bg-[#F1F5F9] text-gray-900 hover:bg-gray-300 focus:ring-gray-300",
   };

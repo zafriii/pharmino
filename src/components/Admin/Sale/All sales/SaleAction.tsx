@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import ViewButton from "@/components/shared ui/ViewButton";
 import ReturnButton from "@/components/shared ui/ReturnButton";
 import BackToInventoryButton from "@/components/shared ui/BackToInventoryButton";
 import ConfirmModal from "@/components/shared ui/ConfirmModal";
-import CenteredModal from "@/components/shared ui/CenteredModal";
 import ReturnForm from "./ReturnForm";
 import SingleOrder from "./SingleOrder";
+import Button from "@/components/shared ui/Button";
+import Invoice from "./Invoice";
 import { Sale } from "@/types/sale.types";
 import { backToInventoryAction } from "@/actions/sale.actions";
+import { HiOutlinePrinter } from "react-icons/hi2";
 
 interface SaleActionProps {
   sale: Sale;
@@ -18,10 +20,10 @@ interface SaleActionProps {
 export default function SaleAction({ sale }: SaleActionProps) {
   const [isReturnFormOpen, setIsReturnFormOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isRestoredToInventory, setIsRestoredToInventory] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   // Check if sale has been restored to inventory
   useEffect(() => {
@@ -82,15 +84,84 @@ export default function SaleAction({ sale }: SaleActionProps) {
     setIsOrderModalOpen(true);
   };
 
-  const handleViewReason = () => {
-    setIsReasonModalOpen(true);
+  const handlePrintInvoice = () => {
+    if (!printRef.current) return;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      alert('Please allow popups to print the invoice');
+      return;
+    }
+
+    // Get the invoice HTML
+    const invoiceHTML = printRef.current.innerHTML;
+    
+    // Write complete HTML document
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice #${sale.id}</title>
+          <meta charset="utf-8">
+          <style>
+            @page {
+              margin: 0;
+              size: auto;
+            }
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+              background: white;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            
+            @media print {
+              body {
+                margin: 0;
+                padding: 20px;
+              }
+              
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
+          </style>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body>
+          ${invoiceHTML}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.onafterprint = function() {
+                  window.close();
+                };
+              }, 200);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
   };
 
   return (
     <>
       <div className="flex items-center gap-2">
         <ViewButton onClick={handleView} />
-        
+                        
         {sale.status === "COMPLETED" && (
           <ReturnButton 
             ariaLabel="return"
@@ -106,7 +177,21 @@ export default function SaleAction({ sale }: SaleActionProps) {
             disabled={isPending}
             title="Restore items back to inventory"
           />
-        )}   
+        )} 
+
+        <Button
+          variant="primary"
+          onClick={handlePrintInvoice}
+          className="!w-auto px-4 py-1.5 text-xs"
+          leftIcon={<HiOutlinePrinter className="w-4 h-4" />}
+        >
+          Invoice
+        </Button>  
+      </div>
+
+      {/* Hidden Invoice for Printing */}
+      <div ref={printRef} className="hidden">
+        <Invoice sale={sale} />
       </div>
 
       <SingleOrder
