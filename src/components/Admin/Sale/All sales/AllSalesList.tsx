@@ -4,6 +4,7 @@ import SalePagination from "./SalePagination";
 import SaleAction from "./SaleAction";
 import { Sale } from "@/types/sale.types";
 import { HiOutlineCreditCard, HiOutlineBanknotes } from "react-icons/hi2";
+import LocalDate from "@/components/shared ui/LocalDate";
 
 interface AllSalesListProps {
   sales: Sale[];
@@ -159,18 +160,25 @@ export default function AllSalesList({
       ),
     },
 
+    // {
+    //   key: "createdAt",
+    //   header: "Sale Date",
+    //   render: (row: Sale) =>
+    //     new Date(row.createdAt).toLocaleDateString("en-US", {
+    //       year: 'numeric',
+    //       month: 'short',
+    //       day: 'numeric',
+    //       hour: '2-digit',
+    //       minute: '2-digit'
+    //     }),
+    // },
+
     {
       key: "createdAt",
       header: "Sale Date",
-      render: (row: Sale) =>
-        new Date(row.createdAt).toLocaleDateString("en-US", {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
+      render: (row: Sale) => <LocalDate date={row.createdAt} />,
     },
+
 
     {
       key: "discountAmount",
