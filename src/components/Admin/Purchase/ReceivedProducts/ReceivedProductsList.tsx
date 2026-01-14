@@ -139,14 +139,7 @@ export default function ReceivedProductsList({
         // <span className="text-sm text-gray-500">
         //   {new Date(row.receivedAt).toLocaleDateString()}
         // </span>
-        <div className="text-sm">
-          <span className="block">
-            {new Date(row.receivedAt).toLocaleDateString()}
-          </span>
-          <span className="text-gray-500 text-xs">
-            {new Date(row.receivedAt).toLocaleTimeString()}
-          </span>
-        </div>
+         <LocalDate date={row.receivedAt} />
       ),
     },
 
