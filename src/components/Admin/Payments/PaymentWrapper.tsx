@@ -23,6 +23,13 @@ const methodOptions: Option[] = [
   { label: 'CARD', value: 'CARD' },
 ];
 
+const dateFilterOptions: Option[] = [
+  { label: 'All Time', value: '' },
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'week' },
+  { label: 'This Month', value: 'month' },
+];
+
 export default function PaymentWrapper() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -69,6 +76,12 @@ export default function PaymentWrapper() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
+        <CustomDropdown
+          options={dateFilterOptions}
+          selectedValue={searchParams.get('dateFilter') || ''}
+          onSelect={(value) => updateURL('dateFilter', value.toString())}
+          placeholder="All Time"
+        />
         <CustomDropdown
           options={statusOptions}
           selectedValue={searchParams.get('status') || ''}

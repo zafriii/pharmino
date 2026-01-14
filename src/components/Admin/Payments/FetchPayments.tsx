@@ -14,6 +14,7 @@ interface FetchPaymentsProps {
     search?: string;
     status?: string;
     method?: string;
+    dateFilter?: string;
     startDate?: string;
     endDate?: string;
   };
@@ -30,6 +31,7 @@ async function fetchPayments(
     ...(params.search && { search: params.search }),
     ...(params.status && { status: params.status }),
     ...(params.method && { method: params.method }),
+    ...(params.dateFilter && { dateFilter: params.dateFilter }),
     ...(params.startDate && { startDate: params.startDate }),
     ...(params.endDate && { endDate: params.endDate }),
   });

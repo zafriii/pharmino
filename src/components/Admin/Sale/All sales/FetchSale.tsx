@@ -13,6 +13,7 @@ interface FetchSaleProps {
     status?: string;
     paymentMethod?: string;
     paymentStatus?: string;
+    dateFilter?: string;
     startDate?: string;
     endDate?: string;
   };
@@ -30,6 +31,7 @@ async function fetchSales(
     ...(params.status && { status: params.status }),
     ...(params.paymentMethod && { paymentMethod: params.paymentMethod }),
     ...(params.paymentStatus && { paymentStatus: params.paymentStatus }),
+    ...(params.dateFilter && { dateFilter: params.dateFilter }),
     ...(params.startDate && { startDate: params.startDate }),
     ...(params.endDate && { endDate: params.endDate }),
   });

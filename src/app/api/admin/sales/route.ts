@@ -39,10 +39,51 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const paymentMethod = searchParams.get('paymentMethod');
     const paymentStatus = searchParams.get('paymentStatus');
+    const dateFilter = searchParams.get('dateFilter');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
     const where: any = {};
+    
+    // Handle date filter based on local date
+    if (dateFilter) {
+      const now = new Date();
+      let filterStartDate: Date;
+      let filterEndDate: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      switch (dateFilter) {
+        case 'today':
+          // Today: from 00:00:00 to 23:59:59 of current date
+          filterStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+          break;
+        case 'week':
+          // This week: from Monday 00:00:00 to Sunday 23:59:59
+          const dayOfWeek = now.getDay();
+          const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday is 0, Monday is 1
+          filterStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysToMonday, 0, 0, 0, 0);
+          filterEndDate = new Date(filterStartDate);
+          filterEndDate.setDate(filterStartDate.getDate() + 6);
+          filterEndDate.setHours(23, 59, 59, 999);
+          break;
+        case 'month':
+          // This month: from 1st 00:00:00 to last day 23:59:59
+          filterStartDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+          filterEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+          break;
+        default:
+          filterStartDate = new Date(0); // Beginning of time
+      }
+
+      where.createdAt = {
+        gte: filterStartDate,
+        lte: filterEndDate
+      };
+    } else if (startDate || endDate) {
+      // Legacy date range filter
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
     
     // Handle search functionality
     if (search && search.trim()) {
@@ -74,11 +115,6 @@ export async function GET(request: NextRequest) {
     if (status) where.status = status;
     if (paymentMethod) where.paymentMethod = paymentMethod;
     if (paymentStatus) where.paymentStatus = paymentStatus;
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
-    }
 
     const total = await prisma.sale.count({ where });
 

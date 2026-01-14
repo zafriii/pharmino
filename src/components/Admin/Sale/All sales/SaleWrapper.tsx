@@ -28,6 +28,13 @@ const paymentStatusOptions: Option[] = [
   { label: 'REFUNDED', value: 'REFUNDED' },
 ];
 
+const dateFilterOptions: Option[] = [
+  { label: 'All Time', value: '' },
+  { label: 'Today', value: 'today' },
+  { label: 'This Week', value: 'week' },
+  { label: 'This Month', value: 'month' },
+];
+
 export default function SaleWrapper() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -74,6 +81,12 @@ export default function SaleWrapper() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
+        <CustomDropdown
+          options={dateFilterOptions}
+          selectedValue={searchParams.get('dateFilter') || ''}
+          onSelect={(value) => updateURL('dateFilter', value.toString())}
+          placeholder="All Time"
+        />
         <CustomDropdown
           options={statusOptions}
           selectedValue={searchParams.get('status') || ''}
