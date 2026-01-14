@@ -16,7 +16,7 @@ const PaymentStats: React.FC<PaymentStatsProps> = ({ payments = [] }) => {
   const totalRefunded = payments.reduce((sum, payment) => sum + (Number(payment.refundedAmount) || 0), 0);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
       <StatsCard
         title="Total Payments"
         value={total.toString()}

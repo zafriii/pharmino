@@ -53,4 +53,4 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarOpen }) => {
 
 // export default Navbar;
 
-export default React.memo(Navbar);
+export default Navbar;

@@ -19,7 +19,7 @@ const SaleStats: React.FC<SaleStatsProps> = ({ sales = [] }) => {
   const totalDiscount = sales.reduce((sum, sale) => sum + (Number(sale.discountAmount) || 0), 0);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-6">
       <StatsCard
         title="Total Sales"
         value={total.toString()}

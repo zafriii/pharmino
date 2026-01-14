@@ -13,7 +13,7 @@ const EmployeeStats: React.FC<EmployeeStatsProps> = ({ employees = [] }) => {
   const inactive = employees.filter((e) => e.status === "INACTIVE").length;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
       <StatsCard
         title="Total Employees"
         value={total.toString()}
