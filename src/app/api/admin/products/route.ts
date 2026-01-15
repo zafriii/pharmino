@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
+import { checkAndUpdateExpiredBatches } from "@/lib/batch-expiry-utils";
 import { z } from "zod";
 
 // Schema validation
@@ -51,6 +52,18 @@ export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
 
+    // Check and update expired batches before fetching products
+    // This ensures batch status is synchronized in real-time
+    try {
+      const expiryResult = await checkAndUpdateExpiredBatches();
+      if (expiryResult.updatedCount > 0) {
+        console.log(`🔄 Updated ${expiryResult.updatedCount} expired batches before fetching products`);
+      }
+    } catch (expiryError) {
+      console.error('⚠️ Failed to update expired batches:', expiryError);
+      // Continue with product fetch even if expiry update fails
+    }
+
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get("page") || 1);
     const limit = Number(searchParams.get("limit") || 20);
@@ -83,19 +96,13 @@ export async function GET(request: NextRequest) {
         batches: {
           where: {
             status: {
-              in: ["ACTIVE", "INACTIVE"]
+              in: ["ACTIVE", "INACTIVE", "EXPIRED"]
             },
             AND: [
               {
                 OR: [
                   { quantity: { gt: 0 } }, // Batches with complete strips
                   { remainingTablets: { gt: 0 } } // Batches with partial tablets
-                ]
-              },
-              {
-                OR: [
-                  { expiryDate: null },
-                  { expiryDate: { gte: new Date() } }
                 ]
               }
             ]
@@ -116,17 +123,20 @@ export async function GET(request: NextRequest) {
       let totalStock = 0;
       let totalTablets = 0;
       
+      // Only count ACTIVE and INACTIVE batches for stock calculation (exclude EXPIRED)
+      const availableBatches = product.batches.filter(batch => batch.status !== 'EXPIRED');
+      
       if (product.tabletsPerStrip) {
         // For tablet products, calculate both strips and tablets
-        totalStock = product.batches.reduce((sum, batch) => sum + batch.quantity, 0);
-        totalTablets = product.batches.reduce((sum, batch) => {
+        totalStock = availableBatches.reduce((sum, batch) => sum + batch.quantity, 0);
+        totalTablets = availableBatches.reduce((sum, batch) => {
           const completeStripTablets = batch.quantity * product.tabletsPerStrip!;
           const partialTablets = batch.remainingTablets || 0;
           return sum + completeStripTablets + partialTablets;
         }, 0);
       } else {
         // For non-tablet products, use regular calculation
-        totalStock = product.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+        totalStock = availableBatches.reduce((sum, batch) => sum + batch.quantity, 0);
       }
       
       const stockForThreshold = product.tabletsPerStrip ? Math.floor(totalTablets / product.tabletsPerStrip) : totalStock;
