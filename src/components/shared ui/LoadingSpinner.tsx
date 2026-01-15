@@ -3,11 +3,13 @@ import React from "react";
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
   className?: string;
+  fullScreen?: boolean;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = "md",
+  size = "lg",
   className = "",
+  fullScreen = true,
 }) => {
   const sizeClasses = {
     sm: "w-4 h-4 border-2",
@@ -16,7 +18,12 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   return (
-    <div className={`inline-flex items-center justify-center ${className}`}>
+    <div
+      className={`
+        ${fullScreen ? "fixed inset-0 z-50 flex items-center justify-center bg-white/70" : "inline-flex"}
+        ${className}
+      `}
+    >
       <div
         className={`
           ${sizeClasses[size]}
@@ -30,4 +37,4 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   );
 };
 
-export default React.memo(LoadingSpinner);
+export default LoadingSpinner;
