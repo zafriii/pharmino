@@ -1,6 +1,5 @@
 import React, { Suspense } from "react";
 import PageContainer from "@/components/shared ui/PageContainer";
-import AnalyticsTabs from "@/components/Admin/Analytics/AnalyticsTabs";
 import ExpenseWrapper from "@/components/Admin/Analytics/Expense/ExpenseWrapper";
 import FetchExpense from "@/components/Admin/Analytics/Expense/FetchExpense";
 import ExpenseGraph from "@/components/Admin/Analytics/Expense/ExpenseGraph";
@@ -22,7 +21,7 @@ export default async function ExpensesPage({ searchParams }: PageProps) {
 
   return (
     <PageContainer title="Expense Management">
-      <AnalyticsTabs />
+      {/* <AnalyticsTabs /> */}
 
       <ExpenseWrapper />
       

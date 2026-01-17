@@ -26,6 +26,7 @@ import { FiPieChart } from "react-icons/fi";
 import { HiOutlineLogout } from "react-icons/hi";
 import { GoHistory } from "react-icons/go";
 import { TbHttpPost } from "react-icons/tb";
+import {  LuReceipt } from "react-icons/lu";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ const iconMap = {
   inbox: BsInboxesFill,
   inventory: MdOutlineInventory2,
   damage: RiFileDamageFill,
+  expenses:LuReceipt,
   analytics: FiPieChart,
   chevronDown: LuChevronDown,
   chevronUp: LuChevronUp,
@@ -79,7 +81,8 @@ const getMenuItems = (): MenuItem[] => [
     ],
   },
   { name: "Inventory", iconName: "inventory", path: "/admin/inventory" },
-  { name: "Damage Records", iconName: "damage", path: "/admin/damage-records" },   
+  { name: "Damage Records", iconName: "damage", path: "/admin/damage-records" },  
+  { name: "Expenses", iconName: "expenses", path: "/admin/analytics/expenses" }, 
   { name: "Analytics", iconName: "analytics", path: "/admin/analytics/profit-loss" },
 ];
 
