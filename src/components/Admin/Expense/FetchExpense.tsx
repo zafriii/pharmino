@@ -50,7 +50,10 @@ async function fetchExpenses(
         "Content-Type": "application/json",
         Cookie: cookieHeader,
       },
-      cache: 'no-store',
+      next: {
+          revalidate: 60, // 5 minutes
+          tags: ['damages'],
+      },
     });
     
     if (!response.ok) {

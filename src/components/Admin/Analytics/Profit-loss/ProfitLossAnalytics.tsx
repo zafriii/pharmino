@@ -46,7 +46,6 @@ async function fetchProfitLossData(
           revalidate: 60, // No cache for debugging
           tags: ["profit-loss"],
         },
-        cache: 'no-store', // Force fresh data
       }
     );
 
