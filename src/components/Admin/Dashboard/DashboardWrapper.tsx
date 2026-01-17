@@ -95,7 +95,7 @@ export default async function DashboardWrapper({ searchParams }: DashboardWrappe
       <FinancialSummary {...data.financialSummary} />
 
       {/* Inventory Stats */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Inventory Overview</h2>
         <InventoryStats {...data.inventoryStats} />
       </div>

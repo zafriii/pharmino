@@ -123,3 +123,33 @@ export interface DashboardWrapperProps {
     endDate?: string;
   };
 }
+
+// Component Props Interfaces
+export interface PaymentMethodChartProps {
+  data: PaymentMethodItem[];
+}
+
+export interface PayrollByRoleChartProps {
+  data: PayrollByRoleItem[];
+}
+
+export interface RevenueByCategoryChartProps {
+  data: RevenueByCategoryItem[];
+}
+
+export interface TopSellingProductsProps {
+  products: TopSellingProduct[];
+}
+
+export interface InventoryAlertsProps {
+  expiringProducts: ExpiringProduct[];
+  lowStockProducts: StockProduct[];
+  outOfStockProducts: StockProduct[];
+}
+
+export interface InventoryStatsProps {
+  expiringCount: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  totalProducts: number;
+}

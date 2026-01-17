@@ -1,15 +1,6 @@
 import React from "react";
 import { TrendingUp, TrendingDown, DollarSign, Calculator } from "lucide-react";
-
-interface FinancialSummaryProps {
-  totalRevenue: number;
-  totalExpenses: number;
-  netProfit: number;
-  profitMargin: number;
-  revenueChange: number;
-  expensesChange: number;
-  profitChange: number;
-}
+import type { FinancialSummary } from "@/types/dashboard.types";
 
 export default function FinancialSummary({
   totalRevenue,
@@ -19,7 +10,7 @@ export default function FinancialSummary({
   revenueChange,
   expensesChange,
   profitChange,
-}: FinancialSummaryProps) {
+}: FinancialSummary) {
   const formatChange = (change: number) => {
     const sign = change >= 0 ? "+" : "";
     return `${sign}${change.toFixed(1)}%`;

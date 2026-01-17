@@ -1,18 +1,5 @@
-import React from "react";
 import { Package, TrendingUp } from "lucide-react";
-
-interface TopProduct {
-  id: number;
-  name: string;
-  category: string;
-  quantitySold: number;
-  revenue: number;
-  growth: number;
-}
-
-interface TopSellingProductsProps {
-  products: TopProduct[];
-}
+import type { TopSellingProductsProps } from "@/types/dashboard.types";
 
 export default function TopSellingProducts({ products }: TopSellingProductsProps) {
   const getGrowthColor = (growth: number) => {

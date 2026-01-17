@@ -1,23 +1,6 @@
 import React from "react";
 import StatsCard from "@/components/shared ui/StatsCard";
-
-interface DashboardStatsProps {
-  totalRevenue: number;
-  netRevenue: number;
-  grossProfit: number;
-  profitMargin: number;
-  totalOrders: number;
-  avgOrderValue: number;
-  totalExpenses: number;
-  totalRefunds: number;
-  revenueChange: number;
-  netRevenueChange: number;
-  grossProfitChange: number;
-  ordersChange: number;
-  avgOrderChange: number;
-  expensesChange: number;
-  refundsChange: number;
-}
+import type { DashboardStats } from "@/types/dashboard.types";
 
 export default function DashboardStats({
   totalRevenue,
@@ -35,7 +18,7 @@ export default function DashboardStats({
   avgOrderChange,
   expensesChange,
   refundsChange,
-}: DashboardStatsProps) {
+}: DashboardStats) {
   const formatChange = (change: number) => {
     const sign = change >= 0 ? "+" : "";
     return `${sign}${change.toFixed(1)}%`;
@@ -71,14 +54,14 @@ export default function DashboardStats({
       />
       
       <StatsCard
-        title="Total Orders"
+        title="Total Saless"
         value={totalOrders.toLocaleString()}
         description={ordersChange !== 0 ? formatChange(ordersChange) : undefined}
         variant="blue"
       />
       
       <StatsCard
-        title="Avg Order Value"
+        title="Avg Sale Value"
         value={avgOrderValue.toLocaleString()}
         description={avgOrderChange !== 0 ? formatChange(avgOrderChange) : undefined}
         variant="purple"

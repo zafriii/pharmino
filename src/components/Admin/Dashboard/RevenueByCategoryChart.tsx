@@ -1,21 +1,11 @@
 "use client";
 
-import React from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Package } from "lucide-react";
+import type { RevenueByCategoryChartProps } from "@/types/dashboard.types";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-
-interface CategoryRevenue {
-  name: string;
-  value: number;
-  percentage: number;
-}
-
-interface RevenueByCategoryChartProps {
-  data: CategoryRevenue[];
-}
 
 const COLORS = [
   "#10B981", // emerald-500

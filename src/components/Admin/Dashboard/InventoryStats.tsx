@@ -1,12 +1,5 @@
-import React from "react";
 import StatsCard from "@/components/shared ui/StatsCard";
-
-interface InventoryStatsProps {
-  expiringCount: number;
-  lowStockCount: number;
-  outOfStockCount: number;
-  totalProducts: number;
-}
+import type { InventoryStatsProps } from "@/types/dashboard.types";
 
 export default function InventoryStats({
   expiringCount,

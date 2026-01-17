@@ -1,28 +1,5 @@
-import React from 'react';
 import { AlertTriangle, Package, PackageX, Clock } from 'lucide-react';
-
-interface ExpiringProduct {
-  id: number;
-  itemName: string;
-  batchNumber: string;
-  expiryDate: string;
-  quantity: number;
-  daysUntilExpiry: number;
-}
-
-interface StockProduct {
-  id: number;
-  itemName: string;
-  totalQuantity: number;
-  lowStockThreshold: number;
-  status: 'LOW_STOCK' | 'OUT_OF_STOCK';
-}
-
-interface InventoryAlertsProps {
-  expiringProducts: ExpiringProduct[];
-  lowStockProducts: StockProduct[];
-  outOfStockProducts: StockProduct[];
-}
+import type { InventoryAlertsProps } from "@/types/dashboard.types";
 
 export default function InventoryAlerts({
   expiringProducts,
@@ -55,7 +32,7 @@ export default function InventoryAlerts({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Expiring Products */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 ">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -95,7 +72,7 @@ export default function InventoryAlerts({
         </div>
 
         {/* Low Stock Products */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 ">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
               <Package className="w-5 h-5 text-yellow-500" />
@@ -142,7 +119,7 @@ export default function InventoryAlerts({
         </div>
 
         {/* Out of Stock Products */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 ">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
               <PackageX className="w-5 h-5 text-red-500" />

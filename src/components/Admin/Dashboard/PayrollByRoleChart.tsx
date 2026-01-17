@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,6 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { Users } from "lucide-react";
+import type { PayrollByRoleChartProps } from "@/types/dashboard.types";
 
 ChartJS.register(
   CategoryScale,
@@ -21,17 +21,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-interface PayrollData {
-  role: string;
-  totalPaid: number;
-  employeeCount: number;
-  averageSalary: number;
-}
-
-interface PayrollByRoleChartProps {
-  data: PayrollData[];
-}
 
 export default function PayrollByRoleChart({ data }: PayrollByRoleChartProps) {
   const chartData = {

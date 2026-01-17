@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,6 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { CreditCard } from "lucide-react";
+import type { PaymentMethodChartProps } from "@/types/dashboard.types";
 
 ChartJS.register(
   CategoryScale,
@@ -21,17 +21,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-interface PaymentMethodData {
-  method: string;
-  amount: number;
-  count: number;
-  percentage: number;
-}
-
-interface PaymentMethodChartProps {
-  data: PaymentMethodData[];
-}
 
 export default function PaymentMethodChart({ data }: PaymentMethodChartProps) {
   const chartData = {
