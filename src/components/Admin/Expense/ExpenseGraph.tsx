@@ -79,13 +79,22 @@ export default function ExpenseGraph({ expenses, period }: ExpenseGraphProps) {
     other: 0,
     total: 0,
   });
+  const [chartData, setChartData] = useState<Array<{
+    date: string;
+    payroll: number;
+    products: number;
+    other: number;
+    total: number;
+  }>>([]);
 
-  // Fetch expense breakdown data
+  // Fetch comprehensive expense data from the new dedicated expense analytics API
   useEffect(() => {
-    const fetchExpenseBreakdown = async () => {
+    const fetchExpenseData = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_BETTER_AUTH_URL || process.env.BETTER_AUTH_URL;
-        const response = await fetch(`${baseUrl}/api/admin/analytics/profit-loss?period=${period}`, {
+        
+        // Fetch from the new dedicated expense analytics endpoint
+        const response = await fetch(`${baseUrl}/api/admin/analytics/expenses?period=${period}`, {
           credentials: 'include',
           cache: 'no-store',
         });
@@ -93,18 +102,21 @@ export default function ExpenseGraph({ expenses, period }: ExpenseGraphProps) {
         if (response.ok) {
           const data = await response.json();
           setExpenseBreakdown({
-            payroll: data.current?.expenses?.payroll || 0,
-            products: data.current?.expenses?.products || 0,
-            other: data.current?.expenses?.other || 0,
-            total: data.current?.expenses?.total || 0,
+            payroll: data.totals?.payroll || 0,
+            products: data.totals?.products || 0,
+            other: data.totals?.other || 0,
+            total: data.totals?.total || 0,
           });
+          
+          // Set detailed chart data with daily/monthly breakdown by category
+          setChartData(data.chartData || []);
         }
       } catch (error) {
-        console.error("Failed to fetch expense breakdown:", error);
+        console.error("Failed to fetch expense data:", error);
       }
     };
 
-    fetchExpenseBreakdown();
+    fetchExpenseData();
   }, [period]);
 
   const getDateRange = () => {
@@ -140,65 +152,35 @@ export default function ExpenseGraph({ expenses, period }: ExpenseGraphProps) {
     return { startDate, endDate };
   };
 
-  const { startDate, endDate } = getDateRange();
-
-  // Group expenses by date and category
-  const groupExpensesByDateAndCategory = () => {
-    const grouped: { 
-      [key: string]: { 
-        payroll: number; 
-        products: number; 
-        other: number; 
-        total: number; 
-      } 
-    } = {};
-    
-    expenses.forEach((expense) => {
-      const expenseDate = new Date(expense.date);
-      if (expenseDate >= startDate && expenseDate <= endDate) {
-        const dateKey = expenseDate.toISOString().split('T')[0];
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = { payroll: 0, products: 0, other: 0, total: 0 };
-        }
-        
-        // Categorize expenses based on reason (you may need to adjust this logic)
-        const reason = expense.reason.toLowerCase();
-        const amount = Number(expense.amount);
-        
-        if (reason.includes('salary') || reason.includes('payroll') || reason.includes('wage') || reason.includes('employee')) {
-          grouped[dateKey].payroll += amount;
-        } else if (reason.includes('product') || reason.includes('inventory') || reason.includes('stock') || reason.includes('purchase')) {
-          grouped[dateKey].products += amount;
-        } else {
-          grouped[dateKey].other += amount;
-        }
-        
-        grouped[dateKey].total += amount;
-      }
-    });
-
-    const dates: string[] = [];
-    const currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
-      const dateKey = currentDate.toISOString().split('T')[0];
-      dates.push(dateKey);
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = { payroll: 0, products: 0, other: 0, total: 0 };
-      }
-      currentDate.setDate(currentDate.getDate() + 1);
+  // Process chart data to extract expense categories by date
+  const processChartDataForExpenses = () => {
+    if (!chartData || chartData.length === 0) {
+      return {
+        dates: [],
+        payrollAmounts: [],
+        productAmounts: [],
+        otherAmounts: [],
+        totalAmounts: []
+      };
     }
 
-    return { 
-      dates, 
-      payrollAmounts: dates.map(date => grouped[date].payroll),
-      productAmounts: dates.map(date => grouped[date].products),
-      otherAmounts: dates.map(date => grouped[date].other),
-      totalAmounts: dates.map(date => grouped[date].total)
+    // Use the actual detailed data from the API
+    const dates = chartData.map(item => item.date);
+    const payrollAmounts = chartData.map(item => item.payroll || 0);
+    const productAmounts = chartData.map(item => item.products || 0);
+    const otherAmounts = chartData.map(item => item.other || 0);
+    const totalAmounts = chartData.map(item => item.total || 0);
+
+    return {
+      dates,
+      payrollAmounts,
+      productAmounts,
+      otherAmounts,
+      totalAmounts
     };
   };
 
-  const { dates, payrollAmounts, productAmounts, otherAmounts, totalAmounts } = groupExpensesByDateAndCategory();
+  const { dates, payrollAmounts, productAmounts, otherAmounts, totalAmounts } = processChartDataForExpenses();
 
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(Number);

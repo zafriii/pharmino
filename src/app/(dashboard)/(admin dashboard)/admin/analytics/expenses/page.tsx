@@ -23,12 +23,12 @@ export default async function ExpensesPage({ searchParams }: PageProps) {
       {/* <AnalyticsTabs /> */}
 
       <ExpenseWrapper />
-      
-      <FetchExpense searchParams={resolvedParams} />
-    
+          
       <div className="mt-8">
         <ExpenseGraph expenses={expensesForGraph} period={period} />
       </div>
+
+      <FetchExpense searchParams={resolvedParams} />
     </PageContainer>
   );
 }
