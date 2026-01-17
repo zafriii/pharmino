@@ -80,7 +80,7 @@ const getMenuItems = (): MenuItem[] => [
   },
   { name: "Inventory", iconName: "inventory", path: "/admin/inventory" },
   { name: "Damage Records", iconName: "damage", path: "/admin/damage-records" },   
-  { name: "Analytics", iconName: "analytics", path: "/admin/expenses" },
+  { name: "Analytics", iconName: "analytics", path: "/admin/analytics/profit-loss" },
 ];
 
 // Memoized Icon component

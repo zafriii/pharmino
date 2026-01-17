@@ -132,6 +132,7 @@ model User {
   attendances    Attendance[]
   payrolls       Payroll[]
   auditLogs      AuditLog[]
+  expenses       Expense[]
   
   sales          Sale[]
   damages        Damage[]
@@ -509,4 +510,20 @@ model Delivery {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  reason      String
+  amount      Decimal  @db.Decimal(10, 2)
+  date        DateTime @db.Date
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  
+  @@index([createdBy])
+  @@index([date])
+  @@map("expense")
 }
