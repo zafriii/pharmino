@@ -213,7 +213,7 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
       };
     }
 
-    // Group expired batches by item for batch activation optimization
+    // Group expired batches by item for batch activation optimization and inventory updates
     const expiredBatchesByItem = expiredBatches.reduce((acc, batch) => {
       if (!acc[batch.itemId]) {
         acc[batch.itemId] = [];

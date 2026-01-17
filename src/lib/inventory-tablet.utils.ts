@@ -246,6 +246,16 @@ export async function deductTabletsFromInventory(
       const newTotalQuantity = inventory.totalQuantity - totalStripsDeducted;
       const newAvailableQuantity = inventory.availableQuantity - totalStripsDeducted;
 
+      // Calculate new reserved quantity based on inactive batches
+      const inactiveBatches = await client.productBatch.findMany({
+        where: {
+          itemId,
+          status: 'INACTIVE',
+          quantity: { gt: 0 }
+        }
+      });
+      const newReservedQuantity = inactiveBatches.reduce((sum: number, batch: any) => sum + batch.quantity, 0);
+
       let newStatus = inventory.status;
       if (newTotalQuantity === 0) {
         newStatus = 'OUT_OF_STOCK';
@@ -260,6 +270,7 @@ export async function deductTabletsFromInventory(
         data: {
           totalQuantity: newTotalQuantity,
           availableQuantity: newAvailableQuantity,
+          reservedQuantity: newReservedQuantity,
           status: newStatus,
           lastUpdated: new Date()
         }
@@ -305,7 +316,7 @@ export async function addTabletsBackToInventory(
       where: { id: { in: batchIds } }
     });
 
-    // Track affected products for inventory sync
+    // Track affected products for inventory updates
     const affectedProductIds = new Set<number>();
     const batchUpdates = [];
 
@@ -378,6 +389,16 @@ export async function addTabletsBackToInventory(
         const newTotalQuantity = inventory.totalQuantity + stripsToAdd;
         const newAvailableQuantity = inventory.availableQuantity + stripsToAdd;
 
+        // Calculate new reserved quantity based on inactive batches after return
+        const inactiveBatches = await client.productBatch.findMany({
+          where: {
+            itemId: productId,
+            status: 'INACTIVE',
+            quantity: { gt: 0 }
+          }
+        });
+        const newReservedQuantity = inactiveBatches.reduce((sum: number, batch: any) => sum + batch.quantity, 0);
+
         let newStatus = inventory.status;
         if (newTotalQuantity >= inventory.lowStockThreshold) {
           newStatus = 'IN_STOCK';
@@ -390,6 +411,7 @@ export async function addTabletsBackToInventory(
           data: {
             totalQuantity: newTotalQuantity,
             availableQuantity: newAvailableQuantity,
+            reservedQuantity: newReservedQuantity,
             status: newStatus,
             lastUpdated: new Date()
           }

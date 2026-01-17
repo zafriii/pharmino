@@ -38,6 +38,7 @@ export function startCronJobs() {
             message: r.message
           })));
         }
+
       } catch (error) {
         console.error('❌ Batch expiry check failed:', error);
       }

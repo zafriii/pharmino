@@ -181,15 +181,17 @@ export default function InventoryList({
       0
     );
 
-    // Total units = sum of active & inactive batches quantities
+    // Total units = sum of active & inactive batches quantities (excludes expired and sold out)
     const totalUnits = availableUnits + inactiveUnits;
 
-      
+    // Calculate quantities sold from expired and sold out batches
+    const expiredQuantity = expiredBatches.reduce((sum, b) => sum + b.quantity, 0);
+    const soldQuantity = soldOutBatches.length; // Sold out batches had their quantity reduced to 0
 
     return (
       <div className="space-y-1 text-sm">
         <div>
-          <span className="font-medium">Total: </span>
+          <span className="font-medium">Total Available: </span>
           {tabletsPerStrip > 0 && remainingTablets > 0 ? (
             <>
               {totalUnits} {totalUnits > 1 ? "units" : "unit"}
@@ -205,7 +207,7 @@ export default function InventoryList({
         </div>
 
         <div>
-          <span className="font-medium text-green-600">Available: </span>
+          <span className="font-medium text-green-600">Active: </span>
           {tabletsPerStrip > 0 && remainingTablets > 0 ? (
             <>
               {availableUnits} {availableUnits > 1 ? "units" : "unit"}
@@ -243,8 +245,8 @@ export default function InventoryList({
 
         {soldOutUnits > 0 && (
           <div>
-            <span className="font-medium text-gray-500">Sold Out: </span>
-            {soldOutUnits} units
+            <span className="font-medium text-gray-500">Sold Out Batches: </span>
+            {soldOutBatches.length} batches
           </div>
         )}
       </div>
