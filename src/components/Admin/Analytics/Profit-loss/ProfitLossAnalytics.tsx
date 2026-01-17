@@ -15,7 +15,7 @@ interface ProfitLossAnalyticsProps {
 async function fetchProfitLossData(
   params: ProfitLossAnalyticsProps["searchParams"]
 ): Promise<ProfitLossData | null> {
-  const period = params.period || "month";
+  const period = params.period || "week";
   const compare = params.compare === "true";
 
   const queryParams = new URLSearchParams({
@@ -43,7 +43,7 @@ async function fetchProfitLossData(
           Cookie: cookieHeader,
         },
         next: {
-          revalidate: 0, // No cache for debugging
+          revalidate: 60, // No cache for debugging
           tags: ["profit-loss"],
         },
         cache: 'no-store', // Force fresh data

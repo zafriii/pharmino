@@ -3,6 +3,7 @@
 import { useTransition, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/shared ui/Button';
+import { IoIosGitCompare } from "react-icons/io";
 
 export default function ProfitLossWrapper() {
   const router = useRouter();
@@ -83,6 +84,7 @@ export default function ProfitLossWrapper() {
         {/* Compare Toggle */}
         <Button
           variant={currentCompare ? 'primary' : 'secondary'}
+          leftIcon={!currentCompare && <IoIosGitCompare />}
           onClick={toggleCompare}
           className="text-sm whitespace-nowrap"
         >

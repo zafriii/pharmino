@@ -10,112 +10,7 @@ import TopSellingProducts from "./TopSellingProducts";
 import MonthlySalesChart from "./MonthlySalesChart";
 import InventoryAlerts from "./InventoryAlerts";
 import InventoryStats from "./InventoryStats";
-
-interface DashboardData {
-  todaysSnapshot: {
-    todaysRevenue: number;
-    todaysOrders: number;
-    todaysReturns: number;
-    todaysRefundAmount: number;
-    todaysPurchases: number;
-    todaysPurchaseValue: number;
-  };
-  dashboardStats: {
-    totalRevenue: number;
-    netRevenue: number;
-    grossProfit: number;
-    profitMargin: number;
-    totalOrders: number;
-    avgOrderValue: number;
-    totalExpenses: number;
-    totalRefunds: number;
-    revenueChange: number;
-    netRevenueChange: number;
-    grossProfitChange: number;
-    ordersChange: number;
-    avgOrderChange: number;
-    expensesChange: number;
-    refundsChange: number;
-  };
-  financialSummary: {
-    totalRevenue: number;
-    totalExpenses: number;
-    netProfit: number;
-    profitMargin: number;
-    revenueChange: number;
-    expensesChange: number;
-    profitChange: number;
-  };
-  revenueByCategoryData: Array<{
-    name: string;
-    value: number;
-    percentage: number;
-  }>;
-  paymentMethodData: Array<{
-    method: string;
-    amount: number;
-    count: number;
-    percentage: number;
-  }>;
-  payrollByRoleData: Array<{
-    role: string;
-    totalPaid: number;
-    employeeCount: number;
-    averageSalary: number;
-  }>;
-  topSellingProducts: Array<{
-    id: number;
-    name: string;
-    category: string;
-    quantitySold: number;
-    revenue: number;
-    growth: number;
-  }>;
-  monthlySalesData: Array<{
-    month: string;
-    sales: number;
-    revenue: number;
-    orders: number;
-  }>;
-  inventoryAlerts: {
-    expiringProducts: Array<{
-      id: number;
-      itemName: string;
-      batchNumber: string;
-      expiryDate: string;
-      quantity: number;
-      daysUntilExpiry: number;
-    }>;
-    lowStockProducts: Array<{
-      id: number;
-      itemName: string;
-      totalQuantity: number;
-      lowStockThreshold: number;
-      status: 'LOW_STOCK' | 'OUT_OF_STOCK';
-    }>;
-    outOfStockProducts: Array<{
-      id: number;
-      itemName: string;
-      totalQuantity: number;
-      lowStockThreshold: number;
-      status: 'LOW_STOCK' | 'OUT_OF_STOCK';
-    }>;
-  };
-  inventoryStats: {
-    expiringCount: number;
-    lowStockCount: number;
-    outOfStockCount: number;
-    totalProducts: number;
-  };
-}
-
-interface DashboardWrapperProps {
-  searchParams?: {
-    period?: string;
-    startDate?: string;
-    endDate?: string;
-  };
-}
+import type { DashboardData, DashboardWrapperProps } from "@/types/dashboard.types";
 
 // Fetch dashboard data from API
 async function fetchDashboardData(searchParams?: DashboardWrapperProps['searchParams']): Promise<DashboardData | null> {
@@ -144,16 +39,15 @@ async function fetchDashboardData(searchParams?: DashboardWrapperProps['searchPa
     }
 
     const queryString = queryParams.toString();
-    const url = `${baseUrl}/api/admin/dashboard${queryString ? `?${queryString}` : ''}`;
-
-    console.log("Fetching dashboard data with filters:", queryString);
-    const response = await fetch(url, {
+    // console.log("Fetching dashboard data with filters:", queryString);
+    
+    const response = await fetch(`${baseUrl}/api/admin/dashboard${queryString ? `?${queryString}` : ''}`, {
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieHeader,
       },
       next: {
-        revalidate: 300, // 5 minutes
+        revalidate: 60, // 5 minutes
         tags: ["dashboard"],
       },
     });
