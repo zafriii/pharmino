@@ -1,9 +1,8 @@
 import React, { Suspense } from "react";
 import PageContainer from "@/components/shared ui/PageContainer";
-import ExpenseWrapper from "@/components/Admin/Analytics/Expense/ExpenseWrapper";
-import FetchExpense from "@/components/Admin/Analytics/Expense/FetchExpense";
-import ExpenseGraph from "@/components/Admin/Analytics/Expense/ExpenseGraph";
-import Load from "@/components/Load";
+import ExpenseWrapper from "@/components/Admin/Expense/ExpenseWrapper";
+import FetchExpense from "@/components/Admin/Expense/FetchExpense";
+import ExpenseGraph from "@/components/Admin/Expense/ExpenseGraph";
 import { fetchExpensesForGraph } from "@/actions/analytics.actions";
 
 interface PageProps {
@@ -25,7 +24,7 @@ export default async function ExpensesPage({ searchParams }: PageProps) {
 
       <ExpenseWrapper />
       
-        <FetchExpense searchParams={resolvedParams} />
+      <FetchExpense searchParams={resolvedParams} />
     
       <div className="mt-8">
         <ExpenseGraph expenses={expensesForGraph} period={period} />

@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { Package, TrendingUp } from "lucide-react";
 

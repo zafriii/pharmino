@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import StatsCard from "@/components/shared ui/StatsCard";
 

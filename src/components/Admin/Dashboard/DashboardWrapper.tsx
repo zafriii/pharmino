@@ -109,8 +109,16 @@ interface DashboardData {
   };
 }
 
+interface DashboardWrapperProps {
+  searchParams?: {
+    period?: string;
+    startDate?: string;
+    endDate?: string;
+  };
+}
+
 // Fetch dashboard data from API
-async function fetchDashboardData(): Promise<DashboardData | null> {
+async function fetchDashboardData(searchParams?: DashboardWrapperProps['searchParams']): Promise<DashboardData | null> {
   try {
     const sessionToken = await getSessionToken();
     const baseUrl = process.env.BETTER_AUTH_URL;
@@ -123,8 +131,23 @@ async function fetchDashboardData(): Promise<DashboardData | null> {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    console.log("Fetching dashboard data...");
-    const response = await fetch(`${baseUrl}/api/admin/dashboard`, {
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+    if (searchParams?.period) {
+      queryParams.set('period', searchParams.period);
+    }
+    if (searchParams?.startDate) {
+      queryParams.set('startDate', searchParams.startDate);
+    }
+    if (searchParams?.endDate) {
+      queryParams.set('endDate', searchParams.endDate);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `${baseUrl}/api/admin/dashboard${queryString ? `?${queryString}` : ''}`;
+
+    console.log("Fetching dashboard data with filters:", queryString);
+    const response = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieHeader,
@@ -148,8 +171,8 @@ async function fetchDashboardData(): Promise<DashboardData | null> {
   }
 }
 
-export default async function DashboardWrapper() {
-  const data = await fetchDashboardData();
+export default async function DashboardWrapper({ searchParams }: DashboardWrapperProps) {
+  const data = await fetchDashboardData(searchParams);
 
   if (!data) {
     return (

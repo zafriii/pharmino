@@ -1,10 +1,57 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+// Helper function to calculate date ranges based on period
+function getDateRange(period?: string, startDate?: string, endDate?: string) {
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  let filterStartDate: Date;
+  let filterEndDate: Date;
+  
+  if (period === 'custom' && startDate && endDate) {
+    filterStartDate = new Date(startDate);
+    filterEndDate = new Date(endDate);
+    filterEndDate.setHours(23, 59, 59, 999); // End of day
+  } else if (period === '7days') {
+    filterStartDate = new Date(today);
+    filterStartDate.setDate(today.getDate() - 7);
+    filterEndDate = new Date(today);
+    filterEndDate.setHours(23, 59, 59, 999);
+  } else if (period === '30days') {
+    filterStartDate = new Date(today);
+    filterStartDate.setDate(today.getDate() - 30);
+    filterEndDate = new Date(today);
+    filterEndDate.setHours(23, 59, 59, 999);
+  } else if (period === 'lastmonth') {
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+    filterStartDate = lastMonth;
+    filterEndDate = lastMonthEnd;
+    filterEndDate.setHours(23, 59, 59, 999);
+  } else {
+    // Default: this month
+    filterStartDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    filterEndDate = new Date(today);
+    filterEndDate.setHours(23, 59, 59, 999);
+  }
+  
+  return { filterStartDate, filterEndDate };
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const period = searchParams.get('period');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    
+    console.log('Dashboard API called with filters:', { period, startDate, endDate });
+    
+    const { filterStartDate, filterEndDate } = getDateRange(period || undefined, startDate || undefined, endDate || undefined);
+    
     const today = new Date();
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
@@ -28,7 +75,7 @@ export async function GET() {
     const startOfMonthDateStr = startOfMonth.toISOString().split('T')[0];
     const previousMonthDateStr = previousMonth.toISOString().split('T')[0];
 
-    // Today's Snapshot Data - with proper revenue calculation
+    // Today's Snapshot Data - always show today's data regardless of filters
     console.log("Fetching today's snapshot data...");
     
     // Get today's sales with payments for proper revenue calculation
@@ -139,15 +186,15 @@ export async function GET() {
 
     // const activeOrders = todaysOrders; // Same as today's orders for now
 
-    // Dashboard Stats Data - with proper revenue calculation
-    console.log("Fetching dashboard stats...");
+    // Dashboard Stats Data - with proper revenue calculation using filtered date range
+    console.log("Fetching dashboard stats with date range:", filterStartDate, "to", filterEndDate);
     
-    // Get current month sales with payments (same date range as monthly chart current month)
-    const currentMonthSalesData = await prisma.sale.findMany({
+    // Get filtered period sales with payments
+    const filteredSalesData = await prisma.sale.findMany({
       where: {
         createdAt: { 
-          gte: startOfMonth,
-          lt: endOfToday  // Only up to end of today, same as monthly chart
+          gte: filterStartDate,
+          lte: filterEndDate
         },
         paymentStatus: {
           in: ['PAID', 'PARTIALLY_REFUNDED']
@@ -163,12 +210,12 @@ export async function GET() {
         }
       }
     }).catch(err => {
-      console.error("Error fetching current month sales:", err);
+      console.error("Error fetching filtered sales:", err);
       return [];
     });
 
     // Calculate total revenue properly (same as analytics)
-    const totalRevenue = currentMonthSalesData.reduce((sum, sale) => {
+    const totalRevenue = filteredSalesData.reduce((sum, sale) => {
       if (sale.paymentStatus === "PAID") {
         return sum + Number(sale.grandTotal);
       } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
@@ -181,7 +228,7 @@ export async function GET() {
       return sum; // REFUNDED sales contribute 0
     }, 0);
 
-    const totalOrdersData = currentMonthSalesData.length;
+    const totalOrdersData = filteredSalesData.length;
 
     // Get previous month sales with payments
     const previousMonthSalesData = await prisma.sale.findMany({
@@ -224,11 +271,14 @@ export async function GET() {
 
     const previousMonthOrdersData = previousMonthSalesData.length;
 
-    // Calculate expenses properly (same as analytics)
+    // Calculate expenses properly using filtered date range
     // 1. Other expenses from expense table
     const totalExpensesData = await prisma.expense.aggregate({
       where: {
-        date: { gte: startOfMonthDateStr }
+        date: { 
+          gte: filterStartDate,
+          lte: filterEndDate
+        }
       },
       _sum: { amount: true }
     }).catch(err => {
@@ -239,7 +289,10 @@ export async function GET() {
     // 2. Payroll expenses
     const payrollExpensesData = await prisma.payroll.aggregate({
       where: {
-        createdAt: { gte: startOfMonth },
+        createdAt: { 
+          gte: filterStartDate,
+          lte: filterEndDate
+        },
         paymentStatus: "PAID"
       },
       _sum: { netPay: true }
@@ -251,7 +304,10 @@ export async function GET() {
     // 3. Product costs from received items
     const productCostItems = await prisma.receivedItem.findMany({
       where: {
-        receivedAt: { gte: startOfMonth }
+        receivedAt: { 
+          gte: filterStartDate,
+          lte: filterEndDate
+        }
       },
       include: {
         purchaseItem: true
@@ -343,14 +399,17 @@ export async function GET() {
     const ordersChange = previousMonthOrdersData > 0 ? ((totalOrdersData - previousMonthOrdersData) / previousMonthOrdersData) * 100 : 0;
 
     console.log("Fetching category revenue...");
-    // Revenue by Category - with proper payment status filtering
+    // Revenue by Category - with proper payment status filtering using filtered date range
     const categoryRevenue = await prisma.saleItem.groupBy({
       by: ['itemId'],
       _sum: { totalPrice: true },
       _count: true,
       where: {
         sale: {
-          createdAt: { gte: startOfMonth },
+          createdAt: { 
+            gte: filterStartDate,
+            lte: filterEndDate
+          },
           paymentStatus: {
             in: ['PAID', 'PARTIALLY_REFUNDED']
           }
@@ -400,13 +459,12 @@ export async function GET() {
     }, []);
 
     console.log("Fetching payment methods...");
-    // Payment Method Analysis - with proper refund calculation (same as totalRevenue and monthly chart)
-    // Use same date range as monthly chart current month: from startOfMonth to end of today
+    // Payment Method Analysis - with proper refund calculation using filtered date range
     const paymentMethodSales = await prisma.sale.findMany({
       where: {
         createdAt: { 
-          gte: startOfMonth,
-          lt: endOfToday  // Same as monthly chart current month
+          gte: filterStartDate,
+          lte: filterEndDate
         },
         paymentStatus: {
           in: ['PAID', 'PARTIALLY_REFUNDED']
@@ -460,13 +518,16 @@ export async function GET() {
     }));
 
     console.log("Fetching payroll data...");
-    // Payroll by Role - simplified
+    // Payroll by Role - simplified using filtered date range
     const payrollData = await prisma.payroll.groupBy({
       by: ['userId'],
       _sum: { netPay: true },
       _count: true,
       where: {
-        createdAt: { gte: startOfMonth }
+        createdAt: { 
+          gte: filterStartDate,
+          lte: filterEndDate
+        }
       },
       orderBy: {
         _sum: {
@@ -518,7 +579,7 @@ export async function GET() {
     }, []);
 
     console.log("Fetching top products...");
-    // Top Selling Products - with proper refund handling
+    // Top Selling Products - with proper refund handling using filtered date range
     const topProducts = await prisma.saleItem.groupBy({
       by: ['itemId'],
       _sum: { 
@@ -527,7 +588,10 @@ export async function GET() {
       },
       where: {
         sale: {
-          createdAt: { gte: startOfMonth },
+          createdAt: { 
+            gte: filterStartDate,
+            lte: filterEndDate
+          },
           paymentStatus: {
             in: ['PAID', 'PARTIALLY_REFUNDED']
           }
@@ -553,12 +617,15 @@ export async function GET() {
         });
         
         if (product) {
-          // Get sales for this product to calculate proper revenue with refunds
+          // Get sales for this product to calculate proper revenue with refunds using filtered date range
           const productSales = await prisma.saleItem.findMany({
             where: {
               itemId: item.itemId,
               sale: {
-                createdAt: { gte: startOfMonth },
+                createdAt: { 
+                  gte: filterStartDate,
+                  lte: filterEndDate
+                },
                 paymentStatus: {
                   in: ['PAID', 'PARTIALLY_REFUNDED']
                 }
@@ -844,7 +911,7 @@ export async function GET() {
       totalExpenses,
       netProfit,
       profitMargin,
-      currentMonthSalesCount: currentMonthSalesData.length,
+      currentMonthSalesCount: filteredSalesData.length,
       previousMonthSalesCount: previousMonthSalesData.length
     });
     

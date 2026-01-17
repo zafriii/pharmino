@@ -1,5 +1,3 @@
-"use client";
-
 import React from 'react';
 import { AlertTriangle, Package, PackageX, Clock } from 'lucide-react';
 
