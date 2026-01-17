@@ -1,4 +1,3 @@
-import React from "react";
 import StatsCard from "@/components/shared ui/StatsCard";
 import { Receipt, DollarSign, CreditCard } from "lucide-react";
 import type { Expense } from "@/types/expense.types";
@@ -14,7 +13,7 @@ interface ExpenseStatsProps {
   breakdown?: ExpenseBreakdownData;
 }
 
-const ExpenseStats: React.FC<ExpenseStatsProps> = ({ expenses = [], breakdown }) => {
+const ExpenseStats = ({ expenses = [], breakdown }: ExpenseStatsProps) => {
   const total = expenses.length;
   
   const totalAmount = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
