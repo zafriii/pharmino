@@ -44,6 +44,7 @@ export default function PaymentMethodChart({ data }: PaymentMethodChartProps) {
         borderColor: '#3B82F6',
         borderWidth: 1,
         borderRadius: 4,
+        maxBarThickness: 40,
       },
     ],
   };

@@ -44,6 +44,7 @@ export default function PayrollByRoleChart({ data }: PayrollByRoleChartProps) {
         borderColor: '#10B981',
         borderWidth: 1,
         borderRadius: 4,
+        maxBarThickness: 40,
       },
     ],
   };
