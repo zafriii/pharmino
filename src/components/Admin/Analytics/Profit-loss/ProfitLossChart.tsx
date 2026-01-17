@@ -650,13 +650,13 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
       </div>
 
       {/* Second Row: Daily Revenue vs Expenses and Profit Trend */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
          {/* Expense Distribution Pie Chart */}
-         <div className="bg-white rounded-xl  border border-gray-100 p-6">
+         {/* <div className="bg-white rounded-xl  border border-gray-100 p-6">
           <div className="h-80">
             <Pie data={expenseDistributionData} options={expenseDistributionOptions} />
           </div>
-        </div>
+        </div> */}
 
         {/* Profit Trend Chart */}
         <div className="bg-white rounded-xl  border border-gray-100 p-6">

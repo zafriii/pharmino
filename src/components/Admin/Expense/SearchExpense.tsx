@@ -16,7 +16,7 @@ const SearchExpense: React.FC<SearchExpenseProps> = ({
     <Search
       value={value}
       onSearch={onSearch}
-      placeholder="Search by name"
+      placeholder="Search by reason"
       delay={400}
     />
   );

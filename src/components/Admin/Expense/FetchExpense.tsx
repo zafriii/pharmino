@@ -2,8 +2,9 @@ import { cookies } from "next/headers";
 import ExpenseList from "./ExpenseList";
 import EmptyState from "@/components/EmptyState";
 import type { Expense } from "@/types/expense.types";
-import FetchExpenseBreakdown from "./FetchExpenseBreakdown";
+// import FetchExpenseBreakdown from "./FetchExpenseBreakdown";
 import { getSessionToken } from "@/lib/cookie-utils";
+import ExpenseStats from "./ExpenseStats";
 
 interface FetchExpenseProps {
   searchParams: {
@@ -84,7 +85,12 @@ export default async function FetchExpense({ searchParams }: FetchExpenseProps) 
 
   return (
     <>
-      <FetchExpenseBreakdown expenses={expenses} period={period} />
+
+     {/* <ExpenseStats expenses={expenses} */}
+      {/* <FetchExpenseBreakdown expenses={expenses} period={period} />  */}
+
+      <ExpenseStats expenses={expenses}/>
+      
       {expenses.length === 0 ? (
         <EmptyState message="No expenses found" />
       ) : (
