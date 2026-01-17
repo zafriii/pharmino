@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-import Search from '../../Search';
-// import Search from '../Search';
-
+import Search from '../Search';
 
 interface SearchExpenseProps {
   onSearch: (query: string) => void;
