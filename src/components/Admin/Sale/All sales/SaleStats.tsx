@@ -35,7 +35,7 @@ const SaleStats: React.FC<SaleStatsProps> = ({ sales = [] }) => {
 
       <StatsCard
         title="Total Discount"
-        value={`$${Number(totalDiscount).toFixed(2)}`}
+        value={`${Number(totalDiscount).toFixed(2)}`}
         variant="yellow"
       />
     </div>
