@@ -43,7 +43,7 @@ const ExpenseStats = ({ expenses = [] }: ExpenseStatsProps) => {
       {/* Expense Statistics */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4 mt-4">
-          Expense Statistics
+          Other expenses
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
