@@ -53,6 +53,7 @@ export async function createExpenseAction(
 
     revalidatePath("/admin/analytics/profit-loss");
     revalidatePath("/admin/analytics/expenses");
+    revalidatePath("/admin/analytics/dashboard-overview");
 
     return {
       success: true,
@@ -102,6 +103,7 @@ export async function updateExpenseAction(
 
     revalidatePath("/admin/analytics/profit-loss");
     revalidatePath("/admin/analytics/expenses");
+    revalidatePath("/admin/analytics/dashboard-overview");
 
     return {
       success: true,
@@ -140,6 +142,7 @@ export async function deleteExpenseAction(
 
     revalidatePath("/admin/analytics/profit-loss");
     revalidatePath("/admin/analytics/expenses");
+    revalidatePath("/admin/analytics/dashboard-overview");
 
     return {
       success: true,
