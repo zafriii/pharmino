@@ -52,7 +52,7 @@ async function fetchExpenses(
       },
       next: {
           revalidate: 60, // 5 minutes
-          tags: ['damages'],
+          tags: ['expenses'],
       },
     });
     
