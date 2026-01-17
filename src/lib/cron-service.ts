@@ -16,9 +16,13 @@ export function startCronJobs() {
   }
 
   try {
-    // Batch Expiry Check - Every day at midnight
+    // Get system's local timezone
+    const systemTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // Batch Expiry Check - Every day at midnight in system's local timezone
     batchExpiryJob = cron.schedule('0 0 * * *', async () => {
       console.log('🔄 Running scheduled batch expiry check...');
+      console.log('📅 Current local time:', new Date().toLocaleString());
       try {
         const result = await checkAndUpdateExpiredBatches();
         console.log('✅ Batch expiry check completed:', {
@@ -38,12 +42,12 @@ export function startCronJobs() {
         console.error('❌ Batch expiry check failed:', error);
       }
     }, {
-      timezone: 'UTC'
+      timezone: systemTimezone
     });
 
     isInitialized = true;
     console.log('✅ Cron jobs initialized successfully');
-    console.log('⏰ Batch expiry check: Every day at midnight (00:00 UTC)');
+    console.log(`⏰ Batch expiry check: Every day at midnight (00:00 ${systemTimezone})`);
   } catch (error) {
     console.error('❌ Failed to initialize cron jobs:', error);
   }

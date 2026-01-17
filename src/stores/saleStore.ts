@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { ProductForSale, SaleItem } from '@/types/sale.types';
+import { isBatchAvailableForSale } from '@/lib/batch-utils';
 
 interface ToastState {
   show: boolean;
@@ -42,20 +43,8 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     let availableStock = 0;
     if (product.batches) {
       product.batches.forEach((batch: any) => {
-        if (batch.status === "ACTIVE" && batch.quantity > 0) {
-          // Check if batch is not expired
-          let isNotExpired = true;
-          if (batch.expiryDate) {
-            const currentDate = new Date();
-            const currentDateUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
-            const expiry = new Date(batch.expiryDate);
-            const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
-            isNotExpired = expiryUTC >= currentDateUTC;
-          }
-          
-          if (isNotExpired) {
-            availableStock += batch.quantity;
-          }
+        if (isBatchAvailableForSale(batch)) {
+          availableStock += batch.quantity;
         }
       });
     }
@@ -83,24 +72,12 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     // Helper function to check if product has only remaining tablets
     const hasOnlyRemainingTablets = (product: ProductForSale): boolean => {
       if (!product.batches || !product.tabletsPerStrip) return false;
-      
-      const currentDate = new Date();
-      const currentDateUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
-      
       const hasCompleteStrips = product.batches.some(batch => {
-        if (batch.status !== "ACTIVE" || batch.quantity <= 0) return false;
-        if (!batch.expiryDate) return true;
-        const expiry = new Date(batch.expiryDate);
-        const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
-        return expiryUTC >= currentDateUTC;
+        return isBatchAvailableForSale(batch) && batch.quantity > 0;
       });
       
       const hasPartialTablets = product.batches.some(batch => {
-        if (batch.status !== "ACTIVE" || (batch.remainingTablets || 0) <= 0) return false;
-        if (!batch.expiryDate) return true;
-        const expiry = new Date(batch.expiryDate);
-        const expiryUTC = new Date(Date.UTC(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()));
-        return expiryUTC >= currentDateUTC;
+        return isBatchAvailableForSale(batch) && (batch.remainingTablets || 0) > 0;
       });
       
       return !hasCompleteStrips && hasPartialTablets;

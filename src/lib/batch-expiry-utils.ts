@@ -153,15 +153,21 @@ export async function optimizeBatchActivation(itemId: number, tx?: any) {
  */
 export async function checkAndUpdateExpiredBatches(itemId?: number) {
   try {
-    // Get current date in local timezone (not UTC)
+    // Use the same logic as isBatchExpired function for consistency
     const currentDate = new Date();
-    // Reset to start of day in local timezone
     const currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    
+    // Convert to UTC for database comparison since Prisma stores dates in UTC
+    const currentDateUTC = new Date(Date.UTC(
+      currentDateLocal.getFullYear(), 
+      currentDateLocal.getMonth(), 
+      currentDateLocal.getDate()
+    ));
     
     const whereClause: any = {
       expiryDate: {
         // Batch expires the day AFTER the expiry date, so use < instead of <=
-        lt: currentDateLocal
+        lt: currentDateUTC
       },
       status: {
         not: 'EXPIRED'
