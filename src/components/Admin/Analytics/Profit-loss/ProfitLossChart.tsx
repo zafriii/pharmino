@@ -35,6 +35,22 @@ interface ProfitLossChartProps {
 export default function ProfitLossChart({ data }: ProfitLossChartProps) {
   const { chartData, period, current } = data;
 
+  // Debug logging
+  console.log("ProfitLossChart received data:", {
+    period,
+    chartDataLength: chartData.length,
+    firstDate: chartData[0]?.date,
+    lastDate: chartData[chartData.length - 1]?.date,
+    chartDates: chartData.map(item => {
+      const [year, month, day] = item.date.split('-').map(Number);
+      const localDate = new Date(year, month - 1, day);
+      return {
+        date: item.date,
+        formatted: localDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+      };
+    })
+  });
+
   // Calculate profit/loss for each data point
   const profitLossData = chartData.map((item) => ({
     ...item,
@@ -43,13 +59,17 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
   }));
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Parse date string as local date to avoid timezone issues
+    // dateString format is YYYY-MM-DD
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
+    
     if (period === "week") {
-      return date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
+      return date.toLocaleDateString("en-US", { weekday: "short" }) + " " + day;
     } else if (period === "month") {
       return date.toLocaleDateString("en-US", { day: "numeric" });
     } else if (period === "year") {
-      return date.toLocaleDateString("en-US", { month: "short" });
+      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
@@ -727,20 +747,11 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
           <div className="h-80">
             <Line data={lineChartDataConfig} options={lineChartOptions} />
           </div>
-        </div>
-
-       
-       
+        </div>       
       </div>
 
       {/* Second Row: Daily Revenue vs Expenses and Profit Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Revenue vs Expenses Chart */}
-        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="h-80">
-            <Chart type="bar" data={dailyRevenueExpensesData} options={dailyRevenueExpensesOptions} />
-          </div>
-        </div> */}
          {/* Expense Distribution Pie Chart */}
          <div className="bg-white rounded-xl  border border-gray-100 p-6">
           <div className="h-80">

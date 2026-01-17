@@ -10,12 +10,6 @@ const SaleStats: React.FC<SaleStatsProps> = ({ sales = [] }) => {
   const total = sales.length;
   const completed = sales.filter((s) => s.status === "COMPLETED").length;
   const returned = sales.filter((s) => s.status === "RETURNED").length;
-  
-  // Only include PAID and PARTIALLY_REFUNDED sales in revenue calculation
-  const totalRevenue = sales
-    .filter((s) => s.paymentStatus === "PAID" || s.paymentStatus === "PARTIALLY_REFUNDED")
-    .reduce((sum, sale) => sum + (Number(sale.grandTotal) || 0), 0);
-
   const totalDiscount = sales.reduce((sum, sale) => sum + (Number(sale.discountAmount) || 0), 0);
 
   return (
@@ -38,15 +32,10 @@ const SaleStats: React.FC<SaleStatsProps> = ({ sales = [] }) => {
         variant="red"
       />
 
-      <StatsCard
-        title="Total Revenue"
-        value={`${Number(totalRevenue).toFixed(2)}`}
-        variant="green"
-      />
 
       <StatsCard
         title="Total Discount"
-        value={`${Number(totalDiscount).toFixed(2)}`}
+        value={`$${Number(totalDiscount).toFixed(2)}`}
         variant="yellow"
       />
     </div>

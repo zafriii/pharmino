@@ -27,41 +27,61 @@ export async function GET(request: NextRequest) {
     let startDate: Date, endDate: Date, prevStartDate: Date, prevEndDate: Date;
 
     // Set date ranges based on period using local date logic
+    console.log("Current date:", now.toISOString(), "Local:", now.toLocaleDateString());
+    
     switch (period) {
       case "week":
-        // This week: from Monday 00:00:00 to Sunday 23:59:59
-        const dayOfWeek = now.getDay();
-        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysToMonday, 0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-        // Previous week
-        prevStartDate = new Date(startDate);
-        prevStartDate.setDate(startDate.getDate() - 7);
-        prevEndDate = new Date(prevStartDate);
-        prevEndDate.setDate(prevStartDate.getDate() + 6);
-        prevEndDate.setHours(23, 59, 59, 999);
+        // Last 7 days ending with today (not calendar week)
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        // Previous 7 days (8-14 days ago)
+        prevStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13, 0, 0, 0, 0);
+        prevEndDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 23, 59, 59, 999);
+        console.log("Week period date range (last 7 days):", {
+          current: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
+          today: now.getDate(),
+          daysShown: 7
+        });
         break;
       case "year":
-        // This year: from Jan 1st 00:00:00 to Dec 31st 23:59:59
-        startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
-        endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-        // Previous year
-        prevStartDate = new Date(now.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
-        prevEndDate = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+        // Last 12 months: from 12 months ago to current month end
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        // Start from 12 months ago
+        startDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
+        // End at the end of current month
+        endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+        // Previous 12 months (12-23 months ago)
+        prevStartDate = new Date(currentYear, currentMonth - 23, 1, 0, 0, 0, 0);
+        prevEndDate = new Date(currentYear, currentMonth - 11, 0, 23, 59, 59, 999);
+        console.log("Year period date range:", {
+          current: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
+          previous: `${prevStartDate.toISOString().split('T')[0]} to ${prevEndDate.toISOString().split('T')[0]}`,
+          currentMonth: currentMonth,
+          currentYear: currentYear,
+          startMonth: startDate.getMonth(),
+          startYear: startDate.getFullYear(),
+          endMonth: endDate.getMonth(),
+          endYear: endDate.getFullYear()
+        });
         break;
       default: // month
-        // This month: from 1st 00:00:00 to last day 23:59:59
+        // This month: from 1st 00:00:00 to today 23:59:59 (not the entire month)
         startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        // For current month, only go up to today, not the entire month
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
         // Previous month
         prevStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
         prevEndDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+        console.log("Month period date range:", {
+          current: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
+          today: now.getDate(),
+          endDay: endDate.getDate()
+        });
     }
 
-    // Calculate Revenue (from PAID and PARTIALLY_REFUNDED sales)
-    const revenueQuery = {
+    // Calculate Revenue (from PAID and PARTIALLY_REFUNDED sales with proper refund calculation)
+    const currentSalesData = await prisma.sale.findMany({
       where: {
         createdAt: {
           gte: startDate,
@@ -71,32 +91,64 @@ export async function GET(request: NextRequest) {
           in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
         },
       },
-    };
+      include: {
+        payments: {
+          select: {
+            amount: true,
+            status: true,
+            refundedAmount: true
+          }
+        }
+      }
+    });
 
-    const [currentRevenue, prevRevenue] = await Promise.all([
-      prisma.sale.aggregate({
-        ...revenueQuery,
-        _sum: {
-          grandTotal: true,
+    const prevSalesData = compare ? await prisma.sale.findMany({
+      where: {
+        createdAt: {
+          gte: prevStartDate,
+          lte: prevEndDate,
         },
-      }),
-      compare
-        ? prisma.sale.aggregate({
-            where: {
-              createdAt: {
-                gte: prevStartDate,
-                lte: prevEndDate,
-              },
-              paymentStatus: {
-                in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
-              },
-            },
-            _sum: {
-              grandTotal: true,
-            },
-          })
-        : null,
-    ]);
+        paymentStatus: {
+          in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
+        },
+      },
+      include: {
+        payments: {
+          select: {
+            amount: true,
+            status: true,
+            refundedAmount: true
+          }
+        }
+      }
+    }) : [];
+
+    // Calculate revenue properly
+    const currentRevenue = currentSalesData.reduce((sum, sale) => {
+      if (sale.paymentStatus === "PAID") {
+        return sum + Number(sale.grandTotal);
+      } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+        const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+          return refundSum + (Number(payment.refundedAmount) || 0);
+        }, 0);
+        const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+        return sum + Math.max(0, remainingAmount);
+      }
+      return sum;
+    }, 0);
+
+    const prevRevenue = prevSalesData.reduce((sum, sale) => {
+      if (sale.paymentStatus === "PAID") {
+        return sum + Number(sale.grandTotal);
+      } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+        const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+          return refundSum + (Number(payment.refundedAmount) || 0);
+        }, 0);
+        const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+        return sum + Math.max(0, remainingAmount);
+      }
+      return sum;
+    }, 0);
 
     // Calculate Payroll Expenses
     const [currentPayroll, prevPayroll] = await Promise.all([
@@ -199,14 +251,14 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Calculate totals
-    const revenue = Number(currentRevenue._sum?.grandTotal || 0);
+    const revenue = currentRevenue;
     const payrollExpenses = Number(currentPayroll._sum?.netPay || 0);
     const productExpenses = currentProductCostSum;
     const otherExpenses = Number(currentExpenses._sum?.amount || 0);
     const totalExpenses = payrollExpenses + productExpenses + otherExpenses;
     const profit = revenue - totalExpenses;
 
-    const prevRevenueTotal = Number(prevRevenue?._sum?.grandTotal || 0);
+    const prevRevenueTotal = prevRevenue;
     const prevPayrollTotal = Number(prevPayroll?._sum?.netPay || 0);
     const prevOtherExpensesTotal = Number(prevExpenses?._sum?.amount || 0);
     const prevTotalExpenses = prevPayrollTotal + prevProductCostSum + prevOtherExpensesTotal;
@@ -289,44 +341,71 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
   // For month period, group by day
   // For week/today, group by day
   
+  console.log("getChartData called with:", {
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    period: period
+  });
+  
   if (period === 'year') {
-    // Group by month for year view
-    const months = [];
-    const currentYear = new Date().getFullYear();
+    // Use exact same logic as dashboard but for 12 months instead of 6
+    const chartData = [];
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
     
-    // Generate months from January (0) to December (11) of current year
-    for (let month = 0; month < 12; month++) {
-      const monthStart = new Date(currentYear, month, 1, 0, 0, 0, 0);
-      const monthEnd = new Date(currentYear, month + 1, 0, 23, 59, 59, 999);
+    console.log("Current date info:", {
+      currentDate: currentDate.toISOString(),
+      currentYear: currentYear,
+      currentMonth: currentMonth,
+      currentMonthName: currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    });
+    
+    // Generate last 12 months ending with current month
+    for (let i = 11; i >= 0; i--) {
+      // Calculate target year and month
+      let targetYear = currentYear;
+      let targetMonth = currentMonth - i;
       
-      months.push({ start: new Date(monthStart), end: new Date(monthEnd) });
-    }
-
-    console.log("Year view - Generating months for year:", currentYear);
-    console.log("Months generated:", months.map(m => `${m.start.toISOString().split('T')[0]} to ${m.end.toISOString().split('T')[0]}`));
-
-    const chartData = await Promise.all(
-      months.map(async ({ start, end }) => {
-        const [revenue, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
-          prisma.sale.aggregate({
+      // Handle negative months properly
+      while (targetMonth < 0) {
+        targetMonth += 12;
+        targetYear -= 1;
+      }
+      
+      // Create date for the first day of the target month
+      const date = new Date(targetYear, targetMonth, 1);
+      const nextMonth = new Date(targetYear, targetMonth + 1, 1);
+      
+      console.log(`Month ${i}: targetYear=${targetYear}, targetMonth=${targetMonth}, date=${date.toISOString()}, formatted=${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`);
+      
+      try {
+        const [salesData, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
+          prisma.sale.findMany({
             where: {
               createdAt: {
-                gte: start,
-                lte: end,
+                gte: date,
+                lt: nextMonth,
               },
               paymentStatus: {
                 in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
               },
             },
-            _sum: {
-              grandTotal: true,
-            },
+            include: {
+              payments: {
+                select: {
+                  amount: true,
+                  status: true,
+                  refundedAmount: true
+                }
+              }
+            }
           }),
           prisma.expense.aggregate({
             where: {
               date: {
-                gte: new Date(start.toISOString().split('T')[0]),
-                lte: new Date(end.toISOString().split('T')[0] + 'T23:59:59.999Z'),
+                gte: new Date(date.toISOString().split('T')[0]),
+                lt: new Date(nextMonth.toISOString().split('T')[0]),
               },
             },
             _sum: {
@@ -336,8 +415,8 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
           prisma.payroll.aggregate({
             where: {
               createdAt: {
-                gte: start,
-                lte: end,
+                gte: date,
+                lt: nextMonth,
               },
               paymentStatus: "PAID",
             },
@@ -348,8 +427,8 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
           prisma.receivedItem.findMany({
             where: {
               receivedAt: {
-                gte: start,
-                lte: end,
+                gte: date,
+                lt: nextMonth,
               },
             },
             include: {
@@ -357,6 +436,20 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
             },
           }),
         ]);
+
+        // Calculate revenue properly (same as dashboard)
+        const revenue = salesData.reduce((sum, sale) => {
+          if (sale.paymentStatus === "PAID") {
+            return sum + Number(sale.grandTotal);
+          } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+            const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+              return refundSum + (Number(payment.refundedAmount) || 0);
+            }, 0);
+            const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+            return sum + Math.max(0, remainingAmount);
+          }
+          return sum;
+        }, 0);
 
         const productCostSum = productCosts.reduce(
           (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
@@ -367,15 +460,26 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
                              Number(payrollExpenses._sum?.netPay || 0) + 
                              productCostSum;
 
-        return {
-          date: start.toISOString().split('T')[0],
-          revenue: Number(revenue._sum?.grandTotal || 0),
+        // Use the first day of the month as the date for consistency
+        chartData.push({
+          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
+          revenue: revenue,
           expenses: totalExpenses,
-        };
-      })
-    );
+        });
+      } catch (err) {
+        console.error(`Error fetching data for ${date}:`, err);
+        chartData.push({
+          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
+          revenue: 0,
+          expenses: 0,
+        });
+      }
+    }
 
-    console.log("Year chart data generated:", chartData.map(d => `${d.date}: Revenue=${d.revenue}, Expenses=${d.expenses}`));
+    console.log("Year chart data generated:", chartData.map(d => `${d.date}: Revenue=${d.revenue}, Expenses=${d.expenses} (${(() => {
+      const [year, month] = d.date.split('-').map(Number);
+      return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    })()})`));
     return chartData;
   }
   
@@ -395,8 +499,8 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
       const dayEnd = new Date(date);
       dayEnd.setHours(23, 59, 59, 999);
 
-      const [revenue, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
-        prisma.sale.aggregate({
+      const [salesData, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
+        prisma.sale.findMany({
           where: {
             createdAt: {
               gte: dayStart,
@@ -406,9 +510,15 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
               in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
             },
           },
-          _sum: {
-            grandTotal: true,
-          },
+          include: {
+            payments: {
+              select: {
+                amount: true,
+                status: true,
+                refundedAmount: true
+              }
+            }
+          }
         }),
         prisma.expense.aggregate({
           where: {
@@ -446,6 +556,20 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
         }),
       ]);
 
+      // Calculate revenue properly
+      const revenue = salesData.reduce((sum, sale) => {
+        if (sale.paymentStatus === "PAID") {
+          return sum + Number(sale.grandTotal);
+        } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+          const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+            return refundSum + (Number(payment.refundedAmount) || 0);
+          }, 0);
+          const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+          return sum + Math.max(0, remainingAmount);
+        }
+        return sum;
+      }, 0);
+
       const productCostSum = productCosts.reduce(
         (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
         0
@@ -455,9 +579,14 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
                            Number(payrollExpenses._sum?.netPay || 0) + 
                            productCostSum;
 
+      // Format date as YYYY-MM-DD for consistency
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
       return {
-        date: date.toISOString().split('T')[0],
-        revenue: Number(revenue._sum?.grandTotal || 0),
+        date: `${year}-${month}-${day}`,
+        revenue: revenue,
         expenses: totalExpenses,
       };
     })

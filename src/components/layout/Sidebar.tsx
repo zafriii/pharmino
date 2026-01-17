@@ -63,7 +63,7 @@ const iconMap = {
 
 // Memoized menu items - won't recreate on every render
 const getMenuItems = (): MenuItem[] => [
-  { name: "Dashboard", iconName: "dashboard", path: "/overview" },
+  { name: "Dashboard", iconName: "dashboard", path: "/admin/dashboard-overview" },
   { name: "Point Of Sale (POS)", iconName: "pos", path: "/admin/sale/pos" },
   { name: "All Sales", iconName: "sales", path: "/admin/sale/all-sale" },
   { name: "Payments", iconName: "payments", path: "/admin/payments" },

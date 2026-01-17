@@ -29,7 +29,7 @@ function Signin() {
         return;
       }
 
-      router.push("/admin/hr/directory");
+      router.push("/admin/dashboard-overview");
     } catch (err: any) {
       alert(err.message || "Something went wrong");
     }

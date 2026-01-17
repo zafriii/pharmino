@@ -1,160 +1,931 @@
-import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import { requirePharmacyOrAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
+import { NextResponse } from "next/server";
+import { PrismaClient } from "@/generated/prisma";
 
-// GET /api/admin/pharmacy-dashboard - Get pharmacy dashboard statistics
-export async function GET(request: NextRequest) {
+const prisma = new PrismaClient();
+
+export async function GET() {
   try {
-    await requirePharmacyOrAdmin();
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    
+    // Get current year and month for comparisons
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    
+    // Previous month for comparison
+    const previousMonth = new Date(currentYear, currentMonth - 1, 1);
+    const previousMonthEnd = new Date(currentYear, currentMonth, 1);
+    
+    // Start of current month
+    const startOfMonth = new Date(currentYear, currentMonth, 1);
+    
+    // End of today (for consistent date ranges across dashboard, payment method, and monthly chart)
+    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0, 0);
+    
+    // For date fields, use date strings
+    const todayDateStr = today.toISOString().split('T')[0];
+    const startOfMonthDateStr = startOfMonth.toISOString().split('T')[0];
+    const previousMonthDateStr = previousMonth.toISOString().split('T')[0];
 
-    const [
-      totalItems,
-      totalCategories,
-      lowStockItems,
-      outOfStockItems,
-      expiredBatches,
-      todaySales,
-      pendingPurchases,
-      receivedItems
-    ] = await Promise.all([
-      // Total active items
-      prisma.product.count({
-        where: { status: 'ACTIVE' }
-      }),
-
-      // Total categories (using existing categories table)
-      prisma.category.count(),
-
-      // Low stock items
-      prisma.product.findMany({
-        where: { status: 'ACTIVE' },
-        include: {
-          batches: {
-            where: {
-              status: { in: ['ACTIVE', 'INACTIVE'] },
-              quantity: { gt: 0 }
-            }
-          }
-        }
-      }).then(items => {
-        return items.filter(item => {
-          const totalStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
-          return totalStock > 0 && totalStock < item.lowStockThreshold;
-        }).length;
-      }),
-
-      // Out of stock items
-      prisma.product.findMany({
-        where: { status: 'ACTIVE' },
-        include: {
-          batches: {
-            where: {
-              status: { in: ['ACTIVE', 'INACTIVE'] },
-              quantity: { gt: 0 }
-            }
-          }
-        }
-      }).then(items => {
-        return items.filter(item => {
-          const totalStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
-          return totalStock === 0;
-        }).length;
-      }),
-
-      // Expired batches (not yet marked as expired)
-      prisma.productBatch.count({
-        where: {
-          expiryDate: { lt: new Date() },
-          status: { not: 'EXPIRED' }
-        }
-      }),
-
-      // Today's sales
-      prisma.sale.aggregate({
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            lt: new Date(new Date().setHours(23, 59, 59, 999))
-          },
-          status: 'COMPLETED'
-        },
-        _sum: { grandTotal: true },
-        _count: true
-      }),
-
-      // Pending purchases
-      prisma.purchaseOrder.count({
-        where: { status: 'LISTED' }
-      }),
-
-      // Items ready for stock entry
-      prisma.receivedItem.findMany({
-        include: {
-          batches: true
-        }
-      }).then(items => {
-        return items.filter(item => {
-          const totalBatchQuantity = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
-          return totalBatchQuantity < item.receivedQuantity;
-        }).length;
-      })
-    ]);
-
-    // Get recent sales for trend
-    const recentSales = await prisma.sale.findMany({
+    // Today's Snapshot Data - with proper revenue calculation
+    console.log("Fetching today's snapshot data...");
+    
+    // Get today's sales with payments for proper revenue calculation
+    const todaysSalesData = await prisma.sale.findMany({
       where: {
         createdAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+          gte: todayStart,
+          lt: todayEnd
         },
-        status: 'COMPLETED'
+        paymentStatus: {
+          in: ['PAID', 'PARTIALLY_REFUNDED']
+        }
       },
-      select: {
-        grandTotal: true,
-        createdAt: true
-      },
-      orderBy: { createdAt: 'desc' }
+      include: {
+        payments: {
+          select: {
+            amount: true,
+            status: true,
+            refundedAmount: true
+          }
+        }
+      }
+    }).catch(err => {
+      console.error("Error fetching today's sales:", err);
+      return [];
     });
 
-    // Calculate weekly sales
-    const weeklyTotal = recentSales.reduce((sum, sale) => sum + Number(sale.grandTotal), 0);
+    // Calculate today's revenue properly
+    const todaysRevenue = todaysSalesData.reduce((sum, sale) => {
+      if (sale.paymentStatus === "PAID") {
+        return sum + Number(sale.grandTotal);
+      } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+        const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+          return refundSum + (Number(payment.refundedAmount) || 0);
+        }, 0);
+        const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+        return sum + Math.max(0, remainingAmount);
+      }
+      return sum; // REFUNDED sales contribute 0
+    }, 0);
 
-    const dashboardStats = {
-      inventory: {
-        totalItems,
-        totalCategories,
-        lowStockItems,
-        outOfStockItems,
-        expiredBatches
+    const todaysOrders = todaysSalesData.length;
+
+    // Get today's returns/refunds
+    const todaysReturns = await prisma.sale.count({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lt: todayEnd
+        },
+        paymentStatus: 'REFUNDED'
+      }
+    }).catch(err => {
+      console.error("Error fetching today's returns:", err);
+      return 0;
+    });
+
+    // Get today's refund amount
+    const todaysRefundAmount = await prisma.payment.aggregate({
+      where: {
+        createdAt: {
+          gte: todayStart,
+          lt: todayEnd
+        },
+        status: 'REFUNDED'
       },
-      sales: {
-        todayCount: todaySales._count,
-        todayAmount: Number(todaySales._sum.grandTotal || 0),
-        weeklyAmount: weeklyTotal,
-        recentSalesCount: recentSales.length
+      _sum: {
+        refundedAmount: true
+      }
+    }).catch(err => {
+      console.error("Error fetching today's refund amount:", err);
+      return { _sum: { refundedAmount: null } };
+    });
+
+    // Get today's received items (purchases)
+    const todaysReceivedItems = await prisma.receivedItem.findMany({
+      where: {
+        receivedAt: {
+          gte: todayStart,
+          lt: todayEnd
+        }
       },
-      purchases: {
-        pendingOrders: pendingPurchases,
-        itemsToStock: receivedItems
+      include: {
+        purchaseItem: true
+      }
+    }).catch(err => {
+      console.error("Error fetching today's received items:", err);
+      return [];
+    });
+
+    // Calculate today's purchase value
+    const todaysPurchaseValue = todaysReceivedItems.reduce(
+      (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
+      0
+    );
+
+    const todaysPurchaseCount = todaysReceivedItems.length;
+
+    // For now, let's use simple counts for pending/active orders (removed as not used in new snapshot)
+    // const pendingPayments = await prisma.sale.count({
+    //   where: {
+    //     paymentStatus: 'PAID'
+    //   }
+    // }).catch(err => {
+    //   console.error("Error fetching pending payments:", err);
+    //   return 0;
+    // });
+
+    // const activeOrders = todaysOrders; // Same as today's orders for now
+
+    // Dashboard Stats Data - with proper revenue calculation
+    console.log("Fetching dashboard stats...");
+    
+    // Get current month sales with payments (same date range as monthly chart current month)
+    const currentMonthSalesData = await prisma.sale.findMany({
+      where: {
+        createdAt: { 
+          gte: startOfMonth,
+          lt: endOfToday  // Only up to end of today, same as monthly chart
+        },
+        paymentStatus: {
+          in: ['PAID', 'PARTIALLY_REFUNDED']
+        }
       },
-      alerts: {
-        lowStock: lowStockItems > 0,
-        outOfStock: outOfStockItems > 0,
-        expired: expiredBatches > 0,
-        pendingStock: receivedItems > 0
+      include: {
+        payments: {
+          select: {
+            amount: true,
+            status: true,
+            refundedAmount: true
+          }
+        }
+      }
+    }).catch(err => {
+      console.error("Error fetching current month sales:", err);
+      return [];
+    });
+
+    // Calculate total revenue properly (same as analytics)
+    const totalRevenue = currentMonthSalesData.reduce((sum, sale) => {
+      if (sale.paymentStatus === "PAID") {
+        return sum + Number(sale.grandTotal);
+      } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+        const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+          return refundSum + (Number(payment.refundedAmount) || 0);
+        }, 0);
+        const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+        return sum + Math.max(0, remainingAmount);
+      }
+      return sum; // REFUNDED sales contribute 0
+    }, 0);
+
+    const totalOrdersData = currentMonthSalesData.length;
+
+    // Get previous month sales with payments
+    const previousMonthSalesData = await prisma.sale.findMany({
+      where: {
+        createdAt: {
+          gte: previousMonth,
+          lt: previousMonthEnd
+        },
+        paymentStatus: {
+          in: ['PAID', 'PARTIALLY_REFUNDED']
+        }
+      },
+      include: {
+        payments: {
+          select: {
+            amount: true,
+            status: true,
+            refundedAmount: true
+          }
+        }
+      }
+    }).catch(err => {
+      console.error("Error fetching previous month sales:", err);
+      return [];
+    });
+
+    // Calculate previous month revenue properly
+    const previousRevenue = previousMonthSalesData.reduce((sum, sale) => {
+      if (sale.paymentStatus === "PAID") {
+        return sum + Number(sale.grandTotal);
+      } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+        const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+          return refundSum + (Number(payment.refundedAmount) || 0);
+        }, 0);
+        const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+        return sum + Math.max(0, remainingAmount);
+      }
+      return sum; // REFUNDED sales contribute 0
+    }, 0);
+
+    const previousMonthOrdersData = previousMonthSalesData.length;
+
+    // Calculate expenses properly (same as analytics)
+    // 1. Other expenses from expense table
+    const totalExpensesData = await prisma.expense.aggregate({
+      where: {
+        date: { gte: startOfMonthDateStr }
+      },
+      _sum: { amount: true }
+    }).catch(err => {
+      console.error("Error fetching total expenses:", err);
+      return { _sum: { amount: null } };
+    });
+
+    // 2. Payroll expenses
+    const payrollExpensesData = await prisma.payroll.aggregate({
+      where: {
+        createdAt: { gte: startOfMonth },
+        paymentStatus: "PAID"
+      },
+      _sum: { netPay: true }
+    }).catch(err => {
+      console.error("Error fetching payroll expenses:", err);
+      return { _sum: { netPay: null } };
+    });
+
+    // 3. Product costs from received items
+    const productCostItems = await prisma.receivedItem.findMany({
+      where: {
+        receivedAt: { gte: startOfMonth }
+      },
+      include: {
+        purchaseItem: true
+      }
+    }).catch(err => {
+      console.error("Error fetching product costs:", err);
+      return [];
+    });
+
+    const productCosts = productCostItems.reduce(
+      (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
+      0
+    );
+
+    const otherExpenses = Number(totalExpensesData._sum.amount || 0);
+    const payrollExpenses = Number(payrollExpensesData._sum.netPay || 0);
+    const totalExpenses = otherExpenses + payrollExpenses + productCosts;
+
+    // Calculate previous month expenses properly
+    const previousMonthExpensesData = await prisma.expense.aggregate({
+      where: {
+        date: {
+          gte: previousMonthDateStr,
+          lt: startOfMonthDateStr
+        }
+      },
+      _sum: { amount: true }
+    }).catch(err => {
+      console.error("Error fetching previous month expenses:", err);
+      return { _sum: { amount: null } };
+    });
+
+    const previousPayrollExpensesData = await prisma.payroll.aggregate({
+      where: {
+        createdAt: {
+          gte: previousMonth,
+          lt: previousMonthEnd
+        },
+        paymentStatus: "PAID"
+      },
+      _sum: { netPay: true }
+    }).catch(err => {
+      console.error("Error fetching previous payroll expenses:", err);
+      return { _sum: { netPay: null } };
+    });
+
+    const previousProductCostItems = await prisma.receivedItem.findMany({
+      where: {
+        receivedAt: {
+          gte: previousMonth,
+          lt: previousMonthEnd
+        }
+      },
+      include: {
+        purchaseItem: true
+      }
+    }).catch(err => {
+      console.error("Error fetching previous product costs:", err);
+      return [];
+    });
+
+    const previousProductCosts = previousProductCostItems.reduce(
+      (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
+      0
+    );
+
+    const previousOtherExpenses = Number(previousMonthExpensesData._sum.amount || 0);
+    const previousPayrollExpenses = Number(previousPayrollExpensesData._sum.netPay || 0);
+    const previousExpenses = previousOtherExpenses + previousPayrollExpenses + previousProductCosts;
+
+    const totalRefundsData = await prisma.payment.aggregate({
+      where: {
+        status: 'REFUNDED'
+      },
+      _sum: { refundedAmount: true }
+    }).catch(err => {
+      console.error("Error fetching total refunds:", err);
+      return { _sum: { refundedAmount: null } };
+    });
+
+    // Calculate stats
+    const netProfit = totalRevenue - totalExpenses;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+    const avgOrderValue = totalOrdersData > 0 ? totalRevenue / totalOrdersData : 0;
+
+    // Calculate percentage changes
+    const revenueChange = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
+    const expensesChange = previousExpenses > 0 ? ((totalExpenses - previousExpenses) / previousExpenses) * 100 : 0;
+    const ordersChange = previousMonthOrdersData > 0 ? ((totalOrdersData - previousMonthOrdersData) / previousMonthOrdersData) * 100 : 0;
+
+    console.log("Fetching category revenue...");
+    // Revenue by Category - with proper payment status filtering
+    const categoryRevenue = await prisma.saleItem.groupBy({
+      by: ['itemId'],
+      _sum: { totalPrice: true },
+      _count: true,
+      where: {
+        sale: {
+          createdAt: { gte: startOfMonth },
+          paymentStatus: {
+            in: ['PAID', 'PARTIALLY_REFUNDED']
+          }
+        }
+      },
+      orderBy: {
+        _sum: {
+          totalPrice: 'desc'
+        }
+      },
+      take: 5 // Limit to top 5 to avoid performance issues
+    }).catch(err => {
+      console.error("Error fetching category revenue:", err);
+      return [];
+    });
+
+    const categoryData = [];
+    for (const item of categoryRevenue) {
+      try {
+        const product = await prisma.product.findUnique({
+          where: { id: item.itemId },
+          include: { category: true }
+        });
+        
+        if (product) {
+          categoryData.push({
+            name: product.category.name || 'Unknown',
+            value: Number(item._sum.totalPrice || 0),
+            percentage: totalRevenue > 0 ? (Number(item._sum.totalPrice || 0) / totalRevenue) * 100 : 0
+          });
+        }
+      } catch (err) {
+        console.error(`Error fetching product ${item.itemId}:`, err);
+      }
+    }
+
+    // Group by category and sum up
+    const groupedCategories = categoryData.reduce((acc: any, item) => {
+      const existing = acc.find((cat: any) => cat.name === item.name);
+      if (existing) {
+        existing.value += item.value;
+        existing.percentage += item.percentage;
+      } else {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
+
+    console.log("Fetching payment methods...");
+    // Payment Method Analysis - with proper refund calculation (same as totalRevenue and monthly chart)
+    // Use same date range as monthly chart current month: from startOfMonth to end of today
+    const paymentMethodSales = await prisma.sale.findMany({
+      where: {
+        createdAt: { 
+          gte: startOfMonth,
+          lt: endOfToday  // Same as monthly chart current month
+        },
+        paymentStatus: {
+          in: ['PAID', 'PARTIALLY_REFUNDED']
+        }
+      },
+      include: {
+        payments: {
+          select: {
+            amount: true,
+            status: true,
+            refundedAmount: true
+          }
+        }
+      }
+    }).catch(err => {
+      console.error("Error fetching payment method sales:", err);
+      return [];
+    });
+
+    // Group by payment method and calculate actual revenue (same logic as totalRevenue)
+    const paymentMethodMap = new Map<string, { amount: number; count: number }>();
+    
+    paymentMethodSales.forEach(sale => {
+      let actualAmount = 0;
+      
+      if (sale.paymentStatus === "PAID") {
+        actualAmount = Number(sale.grandTotal);
+      } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+        const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+          return refundSum + (Number(payment.refundedAmount) || 0);
+        }, 0);
+        const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+        actualAmount = Math.max(0, remainingAmount);
+      }
+      
+      if (actualAmount > 0) {
+        const method = sale.paymentMethod;
+        const existing = paymentMethodMap.get(method) || { amount: 0, count: 0 };
+        paymentMethodMap.set(method, {
+          amount: existing.amount + actualAmount,
+          count: existing.count + 1
+        });
+      }
+    });
+
+    const paymentMethodData = Array.from(paymentMethodMap.entries()).map(([method, data]) => ({
+      method: method,
+      amount: data.amount,
+      count: data.count,
+      percentage: totalRevenue > 0 ? (data.amount / totalRevenue) * 100 : 0
+    }));
+
+    console.log("Fetching payroll data...");
+    // Payroll by Role - simplified
+    const payrollData = await prisma.payroll.groupBy({
+      by: ['userId'],
+      _sum: { netPay: true },
+      _count: true,
+      where: {
+        createdAt: { gte: startOfMonth }
+      },
+      orderBy: {
+        _sum: {
+          netPay: 'desc'
+        }
+      },
+      take: 10 // Limit results
+    }).catch(err => {
+      console.error("Error fetching payroll data:", err);
+      return [];
+    });
+
+    const rolePayroll = [];
+    for (const payroll of payrollData) {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: payroll.userId },
+          select: { role: true }
+        });
+        
+        if (user) {
+          rolePayroll.push({
+            role: user.role || 'UNKNOWN',
+            totalPaid: Number(payroll._sum.netPay || 0),
+            count: payroll._count
+          });
+        }
+      } catch (err) {
+        console.error(`Error fetching user ${payroll.userId}:`, err);
+      }
+    }
+
+    // Group by role
+    const groupedRoles = rolePayroll.reduce((acc: any, item) => {
+      const existing = acc.find((role: any) => role.role === item.role);
+      if (existing) {
+        existing.totalPaid += item.totalPaid;
+        existing.employeeCount += item.count;
+        existing.averageSalary = existing.totalPaid / existing.employeeCount;
+      } else {
+        acc.push({
+          role: item.role,
+          totalPaid: item.totalPaid,
+          employeeCount: item.count,
+          averageSalary: item.totalPaid / item.count
+        });
+      }
+      return acc;
+    }, []);
+
+    console.log("Fetching top products...");
+    // Top Selling Products - with proper refund handling
+    const topProducts = await prisma.saleItem.groupBy({
+      by: ['itemId'],
+      _sum: { 
+        quantity: true,
+        totalPrice: true 
+      },
+      where: {
+        sale: {
+          createdAt: { gte: startOfMonth },
+          paymentStatus: {
+            in: ['PAID', 'PARTIALLY_REFUNDED']
+          }
+        }
+      },
+      orderBy: {
+        _sum: {
+          quantity: 'desc'
+        }
+      },
+      take: 5 // Limit to top 5
+    }).catch(err => {
+      console.error("Error fetching top products:", err);
+      return [];
+    });
+
+    const topProductsData = [];
+    for (const item of topProducts) {
+      try {
+        const product = await prisma.product.findUnique({
+          where: { id: item.itemId },
+          include: { category: true }
+        });
+        
+        if (product) {
+          // Get sales for this product to calculate proper revenue with refunds
+          const productSales = await prisma.saleItem.findMany({
+            where: {
+              itemId: item.itemId,
+              sale: {
+                createdAt: { gte: startOfMonth },
+                paymentStatus: {
+                  in: ['PAID', 'PARTIALLY_REFUNDED']
+                }
+              }
+            },
+            include: {
+              sale: {
+                include: {
+                  payments: {
+                    select: {
+                      refundedAmount: true
+                    }
+                  }
+                }
+              }
+            }
+          });
+
+          // Calculate actual revenue considering refunds
+          let actualRevenue = 0;
+          let actualQuantity = 0;
+          
+          for (const saleItem of productSales) {
+            if (saleItem.sale.paymentStatus === 'PAID') {
+              actualRevenue += Number(saleItem.totalPrice);
+              actualQuantity += saleItem.quantity;
+            } else if (saleItem.sale.paymentStatus === 'PARTIALLY_REFUNDED') {
+              const totalRefunded = saleItem.sale.payments.reduce((sum, payment) => {
+                return sum + (Number(payment.refundedAmount) || 0);
+              }, 0);
+              
+              // Calculate proportional refund for this item
+              const saleTotal = Number(saleItem.sale.grandTotal);
+              const itemProportion = Number(saleItem.totalPrice) / saleTotal;
+              const itemRefund = totalRefunded * itemProportion;
+              const itemActualRevenue = Number(saleItem.totalPrice) - itemRefund;
+              
+              if (itemActualRevenue > 0) {
+                actualRevenue += itemActualRevenue;
+                actualQuantity += saleItem.quantity;
+              }
+            }
+          }
+          
+          // Get previous month data for growth calculation
+          const previousMonthSales = await prisma.saleItem.findMany({
+            where: {
+              itemId: item.itemId,
+              sale: {
+                createdAt: {
+                  gte: previousMonth,
+                  lt: previousMonthEnd
+                },
+                paymentStatus: {
+                  in: ['PAID', 'PARTIALLY_REFUNDED']
+                }
+              }
+            },
+            include: {
+              sale: {
+                include: {
+                  payments: {
+                    select: {
+                      refundedAmount: true
+                    }
+                  }
+                }
+              }
+            }
+          });
+
+          let previousQuantity = 0;
+          for (const saleItem of previousMonthSales) {
+            if (saleItem.sale.paymentStatus === 'PAID') {
+              previousQuantity += saleItem.quantity;
+            } else if (saleItem.sale.paymentStatus === 'PARTIALLY_REFUNDED') {
+              const totalRefunded = saleItem.sale.payments.reduce((sum, payment) => {
+                return sum + (Number(payment.refundedAmount) || 0);
+              }, 0);
+              
+              const saleTotal = Number(saleItem.sale.grandTotal);
+              const itemProportion = Number(saleItem.totalPrice) / saleTotal;
+              const itemRefund = totalRefunded * itemProportion;
+              const itemActualRevenue = Number(saleItem.totalPrice) - itemRefund;
+              
+              if (itemActualRevenue > 0) {
+                previousQuantity += saleItem.quantity;
+              }
+            }
+          }
+
+          const growth = previousQuantity > 0 ? ((actualQuantity - previousQuantity) / previousQuantity) * 100 : 0;
+          
+          topProductsData.push({
+            id: item.itemId,
+            name: product.itemName || 'Unknown Product',
+            category: product.category.name || 'Unknown',
+            quantitySold: actualQuantity,
+            revenue: actualRevenue,
+            growth: growth
+          });
+        }
+      } catch (err) {
+        console.error(`Error fetching product ${item.itemId}:`, err);
+      }
+    }
+
+    console.log("Fetching monthly data...");
+    // Monthly Sales Chart - with proper revenue calculation
+    const monthlyData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentYear, currentMonth - i, 1);
+      let nextMonth: Date;
+      
+      // For current month (i=0), only go up to today to match dashboard stats
+      if (i === 0) {
+        nextMonth = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0, 0);
+      } else {
+        nextMonth = new Date(currentYear, currentMonth - i + 1, 1);
+      }
+      
+      console.log(`Dashboard month ${i}: currentMonth=${currentMonth}, currentMonth-i=${currentMonth - i}, date=${date.toISOString()}, nextMonth=${nextMonth.toISOString()}, formatted=${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`);
+      
+      try {
+        const monthSalesData = await prisma.sale.findMany({
+          where: {
+            createdAt: {
+              gte: date,
+              lt: nextMonth
+            },
+            paymentStatus: {
+              in: ['PAID', 'PARTIALLY_REFUNDED']
+            }
+          },
+          include: {
+            payments: {
+              select: {
+                amount: true,
+                status: true,
+                refundedAmount: true
+              }
+            }
+          }
+        });
+
+        // Calculate monthly revenue properly
+        const monthRevenue = monthSalesData.reduce((sum, sale) => {
+          if (sale.paymentStatus === "PAID") {
+            return sum + Number(sale.grandTotal);
+          } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+            const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+              return refundSum + (Number(payment.refundedAmount) || 0);
+            }, 0);
+            const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+            return sum + Math.max(0, remainingAmount);
+          }
+          return sum; // REFUNDED sales contribute 0
+        }, 0);
+
+        monthlyData.push({
+          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          sales: monthRevenue,
+          revenue: monthRevenue,
+          orders: monthSalesData.length
+        });
+      } catch (err) {
+        console.error(`Error fetching month data for ${date}:`, err);
+        monthlyData.push({
+          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          sales: 0,
+          revenue: 0,
+          orders: 0
+        });
+      }
+    }
+
+    console.log("Fetching inventory alerts...");
+    // Inventory Alerts Data
+    const twoDaysFromNow = new Date();
+    twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
+    
+    // Products expiring within 2 days
+    const expiringProducts = await prisma.productBatch.findMany({
+      where: {
+        status: 'ACTIVE',
+        quantity: { gt: 0 },
+        expiryDate: {
+          lte: twoDaysFromNow
+        }
+      },
+      include: {
+        item: {
+          select: {
+            id: true,
+            itemName: true
+          }
+        }
+      },
+      orderBy: {
+        expiryDate: 'asc'
+      },
+      take: 20 // Limit to prevent performance issues
+    }).catch(err => {
+      console.error("Error fetching expiring products:", err);
+      return [];
+    });
+
+    const expiringProductsData = expiringProducts.map(batch => {
+      const expiryDate = batch.expiryDate ? new Date(batch.expiryDate) : new Date();
+      const today = new Date();
+      const timeDiff = expiryDate.getTime() - today.getTime();
+      const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+      return {
+        id: batch.item.id,
+        itemName: batch.item.itemName,
+        batchNumber: batch.batchNumber,
+        expiryDate: batch.expiryDate ? batch.expiryDate.toISOString().split('T')[0] : '',
+        quantity: batch.quantity,
+        daysUntilExpiry: daysUntilExpiry
+      };
+    });
+
+    // Low stock and out of stock products
+    const inventoryItems = await prisma.inventory.findMany({
+      where: {
+        OR: [
+          { status: 'LOW_STOCK' },
+          { status: 'OUT_OF_STOCK' }
+        ]
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            itemName: true,
+            lowStockThreshold: true
+          }
+        }
+      },
+      orderBy: {
+        availableQuantity: 'asc'
+      },
+      take: 20 // Limit to prevent performance issues
+    }).catch(err => {
+      console.error("Error fetching inventory items:", err);
+      return [];
+    });
+
+    const lowStockProducts = inventoryItems
+      .filter(item => item.status === 'LOW_STOCK')
+      .map(item => ({
+        id: item.product.id,
+        itemName: item.product.itemName,
+        totalQuantity: item.availableQuantity,
+        lowStockThreshold: item.product.lowStockThreshold,
+        status: 'LOW_STOCK' as const
+      }));
+
+    const outOfStockProducts = inventoryItems
+      .filter(item => item.status === 'OUT_OF_STOCK')
+      .map(item => ({
+        id: item.product.id,
+        itemName: item.product.itemName,
+        totalQuantity: item.availableQuantity,
+        lowStockThreshold: item.product.lowStockThreshold,
+        status: 'OUT_OF_STOCK' as const
+      }));
+
+    // Get total active products count
+    const totalActiveProducts = await prisma.product.count({
+      where: {
+        status: 'ACTIVE'
+      }
+    }).catch(err => {
+      console.error("Error fetching total products count:", err);
+      return 0;
+    });
+
+    console.log("Preparing response data...");
+    console.log("Revenue calculation debug:", {
+      totalRevenue,
+      totalExpenses,
+      netProfit,
+      profitMargin,
+      currentMonthSalesCount: currentMonthSalesData.length,
+      previousMonthSalesCount: previousMonthSalesData.length
+    });
+    
+    // Prepare response data with fallbacks
+    const dashboardData = {
+      todaysSnapshot: {
+        todaysRevenue: todaysRevenue || 0,
+        todaysOrders: todaysOrders || 0,
+        todaysReturns: todaysReturns || 0,
+        todaysRefundAmount: Number(todaysRefundAmount._sum.refundedAmount || 0),
+        todaysPurchases: todaysPurchaseCount || 0,
+        todaysPurchaseValue: todaysPurchaseValue || 0
+      },
+      
+      dashboardStats: {
+        totalRevenue: totalRevenue || 0,
+        netRevenue: totalRevenue || 0,
+        grossProfit: netProfit || 0,
+        profitMargin: profitMargin || 0,
+        totalOrders: totalOrdersData || 0,
+        avgOrderValue: avgOrderValue || 0,
+        totalExpenses: totalExpenses || 0,
+        totalRefunds: Number(totalRefundsData._sum.refundedAmount || 0),
+        revenueChange: revenueChange || 0,
+        netRevenueChange: revenueChange || 0,
+        grossProfitChange: (revenueChange || 0) - (expensesChange || 0),
+        ordersChange: ordersChange || 0,
+        avgOrderChange: 0,
+        expensesChange: expensesChange || 0,
+        refundsChange: 0
+      },
+
+      financialSummary: {
+        totalRevenue: totalRevenue || 0,
+        totalExpenses: totalExpenses || 0,
+        netProfit: netProfit || 0,
+        profitMargin: profitMargin || 0,
+        revenueChange: revenueChange || 0,
+        expensesChange: expensesChange || 0,
+        profitChange: (revenueChange || 0) - (expensesChange || 0)
+      },
+
+      revenueByCategoryData: groupedCategories.length > 0 ? groupedCategories : [
+        { name: "No Data", value: 0, percentage: 0 }
+      ],
+      paymentMethodData: paymentMethodData.length > 0 ? paymentMethodData : [
+        { method: "CASH", amount: 0, count: 0, percentage: 0 },
+        { method: "CARD", amount: 0, count: 0, percentage: 0 }
+      ],
+      payrollByRoleData: groupedRoles.length > 0 ? groupedRoles : [
+        { role: "No Data", totalPaid: 0, employeeCount: 0, averageSalary: 0 }
+      ],
+      topSellingProducts: topProductsData.length > 0 ? topProductsData : [
+        { id: 0, name: "No Products", category: "No Data", quantitySold: 0, revenue: 0, growth: 0 }
+      ],
+      monthlySalesData: monthlyData.length > 0 ? monthlyData : [
+        { month: "Jan 2025", sales: 0, revenue: 0, orders: 0 }
+      ],
+
+      inventoryAlerts: {
+        expiringProducts: expiringProductsData || [],
+        lowStockProducts: lowStockProducts || [],
+        outOfStockProducts: outOfStockProducts || []
+      },
+
+      inventoryStats: {
+        expiringCount: expiringProductsData.length || 0,
+        lowStockCount: lowStockProducts.length || 0,
+        outOfStockCount: outOfStockProducts.length || 0,
+        totalProducts: totalActiveProducts || 0
       }
     };
 
-    return successResponse(dashboardStats);
+    console.log("Dashboard data prepared successfully");
+    return NextResponse.json(dashboardData);
+
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "Unauthorized") {
-        return errorResponse("Unauthorized", 401);
-      }
-      if (error.message.includes("Forbidden")) {
-        return errorResponse("Forbidden - Pharmacy access required", 403);
-      }
-    }
-    console.error("Error fetching pharmacy dashboard:", error);
-    return errorResponse("Failed to fetch pharmacy dashboard", 500);
+    console.error("Dashboard API Error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch dashboard data" },
+      { status: 500 }
+    );
   }
 }

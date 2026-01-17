@@ -12,11 +12,29 @@ const PaymentStats: React.FC<PaymentStatsProps> = ({ payments = [] }) => {
   const refunded = payments.filter((p) => p.status === "REFUNDED").length;
   const partiallyRefunded = payments.filter((p) => p.status === "PARTIALLY_REFUNDED").length;
   
-  const totalAmount = payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
-  const totalRefunded = payments.reduce((sum, payment) => sum + (Number(payment.refundedAmount) || 0), 0);
+  // Calculate total revenue: PAID (full amount) + PARTIALLY_REFUNDED (remaining amount)
+  const totalRevenue = payments.reduce((sum, payment) => {
+    if (payment.status === "PAID") {
+      return sum + (Number(payment.amount) || 0);
+    } else if (payment.status === "PARTIALLY_REFUNDED") {
+      const remainingAmount = (Number(payment.amount) || 0) - (Number(payment.refundedAmount) || 0);
+      return sum + remainingAmount;
+    }
+    return sum; // REFUNDED payments contribute 0 to revenue
+  }, 0);
+
+  // Calculate total refunded amount only from REFUNDED status payments
+  const totalRefunded = payments
+    .filter((p) => p.status === "REFUNDED")
+    .reduce((sum, payment) => sum + (Number(payment.refundedAmount) || 0), 0);
+
+  // Calculate partial refunds amount from PARTIALLY_REFUNDED status payments
+  const totalPartialRefunds = payments
+    .filter((p) => p.status === "PARTIALLY_REFUNDED")
+    .reduce((sum, payment) => sum + (Number(payment.refundedAmount) || 0), 0);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4 mt-6">
       <StatsCard
         title="Total Payments"
         value={total.toString()}
@@ -42,8 +60,8 @@ const PaymentStats: React.FC<PaymentStatsProps> = ({ payments = [] }) => {
       />
 
       <StatsCard
-        title="Total Amount"
-        value={`${Number(totalAmount).toFixed(2)}`}
+        title="Total Revenue"
+        value={`${Number(totalRevenue).toFixed(2)}`}
         variant="green"
       />
 
@@ -51,6 +69,12 @@ const PaymentStats: React.FC<PaymentStatsProps> = ({ payments = [] }) => {
         title="Total Refunded"
         value={`${Number(totalRefunded).toFixed(2)}`}
         variant="red"
+      />
+
+      <StatsCard
+        title="Partial Refunds"
+        value={`${Number(totalPartialRefunds).toFixed(2)}`}
+        variant="yellow"
       />
     </div>
   );

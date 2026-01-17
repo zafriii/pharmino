@@ -43,9 +43,10 @@ async function fetchProfitLossData(
           Cookie: cookieHeader,
         },
         next: {
-          revalidate: 60, // 5 minutes
+          revalidate: 0, // No cache for debugging
           tags: ["profit-loss"],
         },
+        cache: 'no-store', // Force fresh data
       }
     );
 

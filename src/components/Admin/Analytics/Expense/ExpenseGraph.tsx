@@ -132,11 +132,15 @@ export default function ExpenseGraph({ expenses, period }: ExpenseGraphProps) {
   const { dates, amounts } = groupExpensesByDate();
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Parse date string as local date to avoid timezone issues
+    // dateString format is YYYY-MM-DD
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
+    
     if (period === 'today') {
       return date.toLocaleDateString("en-US", { hour: '2-digit' });
     } else if (period === 'week') {
-      return date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
+      return date.toLocaleDateString("en-US", { weekday: "short" }) + " " + day;
     } else if (period === 'month') {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } else if (period === 'year') {
