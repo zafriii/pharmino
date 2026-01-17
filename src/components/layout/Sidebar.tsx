@@ -64,6 +64,7 @@ const iconMap = {
 // Memoized menu items - won't recreate on every render
 const getMenuItems = (): MenuItem[] => [
   { name: "Dashboard", iconName: "dashboard", path: "/admin/dashboard-overview" },
+  { name: "Analytics", iconName: "analytics", path: "/admin/analytics/profit-loss" },
   { name: "Point Of Sale (POS)", iconName: "pos", path: "/admin/sale/pos" },
   { name: "All Sales", iconName: "sales", path: "/admin/sale/all-sale" },
   { name: "Payments", iconName: "payments", path: "/admin/payments" },
@@ -83,7 +84,6 @@ const getMenuItems = (): MenuItem[] => [
   { name: "Inventory", iconName: "inventory", path: "/admin/inventory" },
   { name: "Damage Records", iconName: "damage", path: "/admin/damage-records" },  
   { name: "Expenses", iconName: "expenses", path: "/admin/analytics/expenses" }, 
-  { name: "Analytics", iconName: "analytics", path: "/admin/analytics/profit-loss" },
 ];
 
 // Memoized Icon component
