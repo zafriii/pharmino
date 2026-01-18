@@ -512,6 +512,9 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
     const dayStart = new Date(currentDate);
     const dayEnd = new Date(dayStart.getTime() + (24 * 60 * 60 * 1000) - 1);
 
+    const targetDate = new Date(dayStart.getTime() + (12 * 60 * 60 * 1000));
+    const targetDateString = targetDate.toISOString().split('T')[0];
+
     const [salesData, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
       prisma.sale.findMany({
         where: {
@@ -535,10 +538,7 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
       }),
       prisma.expense.aggregate({
         where: {
-          date: {
-            gte: dayStart,
-            lte: dayEnd,
-          },
+          date: new Date(targetDateString),
         },
         _sum: {
           amount: true,

@@ -184,6 +184,11 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
     const dayStart = new Date(currentDate);
     const dayEnd = new Date(dayStart.getTime() + (24 * 60 * 60 * 1000) - 1);
 
+    // Other expenses (@db.Date field)
+    // We must pick exactly ONE local date string to avoid duplication due to range casting.
+    const targetDate = new Date(dayStart.getTime() + (12 * 60 * 60 * 1000));
+    const targetDateString = targetDate.toISOString().split('T')[0];
+
     const [payrollData, productData, otherExpenses] = await Promise.all([
       // Payroll expenses
       prisma.payroll.aggregate({
@@ -213,10 +218,7 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
       // Other expenses
       prisma.expense.aggregate({
         where: {
-          date: {
-            gte: dayStart,
-            lte: dayEnd,
-          },
+          date: new Date(targetDateString),
         },
         _sum: {
           amount: true,
