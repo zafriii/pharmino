@@ -17,6 +17,7 @@ import { ImSpinner2 } from 'react-icons/im';
 import { addSingleItemToInventoryAction } from '@/actions/inventory.actions';
 import { ReceivedItem } from '@/types/receivedProducts.types';
 import { InventoryFormData } from '@/types/inventory.types';
+import { getTodayLocalDate } from '@/lib/utils';
 
 interface SingleItemInventoryFormProps {
   open: boolean;
@@ -261,7 +262,7 @@ export default function SingleItemInventoryForm({
             <CustomInput
               label="Expiry Date (Optional)"
               type="date"
-              min={new Date().toISOString().split('T')[0]}
+              min={getTodayLocalDate()}
               {...register('expiryDate')}
             />
           </div>

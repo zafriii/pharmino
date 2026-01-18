@@ -16,6 +16,7 @@ import { ImSpinner2 } from 'react-icons/im';
 
 import { ProductBatch } from '@/types/inventory.types';
 import { updateBatchAction } from '@/actions/batch.actions';
+import { getTodayLocalDate } from '@/lib/utils';
 
 interface BatchListActionProps {
   batch: ProductBatch;
@@ -147,7 +148,7 @@ export default function BatchListAction({ batch, onSuccess }: BatchListActionPro
           <CustomInput
             label="Expiry Date"
             type="date"
-            min={new Date().toISOString().split('T')[0]}
+            min={getTodayLocalDate()}
             {...register('expiryDate')}
             error={errors.expiryDate?.message}
           />
