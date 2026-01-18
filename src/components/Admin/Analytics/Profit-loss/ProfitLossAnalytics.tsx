@@ -8,6 +8,8 @@ interface ProfitLossAnalyticsProps {
   searchParams: {
     period?: string;
     compare?: string;
+    startDate?: string;
+    endDate?: string;
   };
 }
 
@@ -17,10 +19,14 @@ async function fetchProfitLossData(
 ): Promise<ProfitLossData | null> {
   const period = params.period || "week";
   const compare = params.compare === "true";
+  const startDate = params.startDate;
+  const endDate = params.endDate;
 
   const queryParams = new URLSearchParams({
     period,
     ...(compare && { compare: "true" }),
+    ...(startDate && { startDate }),
+    ...(endDate && { endDate }),
   });
 
   try {

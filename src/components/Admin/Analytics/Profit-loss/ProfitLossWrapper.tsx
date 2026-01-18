@@ -4,13 +4,14 @@ import { useTransition, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/shared ui/Button';
 import { IoIosGitCompare } from "react-icons/io";
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 export default function ProfitLossWrapper() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
-  
+
   const rawPeriod = searchParams.get('period') || 'week';
   const currentPeriod = rawPeriod === 'today' ? 'week' : rawPeriod;
   const currentCompare = searchParams.get('compare') === 'true';
@@ -26,6 +27,39 @@ export default function ProfitLossWrapper() {
         params.set(key, value.trim());
       } else {
         params.delete(key);
+      }
+
+      // Calculate start/end dates for local time period
+      if (key === 'period') {
+        const now = new Date();
+        let start: Date | null = null;
+        let end: Date | null = null;
+
+        switch (value) {
+          case 'week':
+            // Last 7 days ending today (matching previous logic but consistent with Expense graph week)
+            // OR standard week? The API logic uses "Last 7 days"
+            // Let's stick to consistent "Last 7 days including today" as per API `period=week`
+            // But better yet, let's use standard Local Time calc like sales for consistency?
+            // Actually, the user wants "local date based filter".
+            // Let's us date-fns for standard ranges to accept "This Week" = Monday-Sunday locally.
+            start = startOfWeek(now, { weekStartsOn: 1 });
+            end = endOfWeek(now, { weekStartsOn: 1 });
+            break;
+          case 'month':
+            start = startOfMonth(now);
+            end = endOfMonth(now);
+            break;
+          case 'year':
+            start = startOfYear(now);
+            end = endOfYear(now);
+            break;
+        }
+
+        if (start && end) {
+          params.set('startDate', start.toISOString());
+          params.set('endDate', end.toISOString());
+        }
       }
 
       const newUrl = `?${params.toString()}`;
@@ -44,6 +78,9 @@ export default function ProfitLossWrapper() {
     } else {
       params.set('compare', 'true');
     }
+
+    // Ensure dates are set if missing (initial load case handled by effect usually, but here relies on URL)
+    // If we toggle compare, we just preserve existing dates.
 
     const newUrl = `?${params.toString()}`;
 

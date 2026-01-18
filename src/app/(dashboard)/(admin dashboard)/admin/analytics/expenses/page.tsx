@@ -8,6 +8,8 @@ interface PageProps {
     page?: string;
     search?: string;
     period?: string;
+    startDate?: string;
+    endDate?: string;
   }>;
 }
 
@@ -18,9 +20,13 @@ export default async function ExpensesPage({ searchParams }: PageProps) {
   return (
     <PageContainer title="Expense Management">
       <ExpenseWrapper />
-          
+
       <div className="mt-8">
-        <ExpenseGraph period={period} />
+        <ExpenseGraph
+          period={period}
+          startDate={resolvedParams.startDate}
+          endDate={resolvedParams.endDate}
+        />
       </div>
 
       <FetchExpense searchParams={resolvedParams} />

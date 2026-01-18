@@ -26,58 +26,79 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     let startDate: Date, endDate: Date, prevStartDate: Date, prevEndDate: Date;
 
-    // Set date ranges based on period using local date logic
-    console.log("Current date:", now.toISOString(), "Local:", now.toLocaleDateString());
-    
-    switch (period) {
-      case "week":
-        // Last 7 days ending with today (not calendar week)
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-        // Previous 7 days (8-14 days ago)
-        prevStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13, 0, 0, 0, 0);
-        prevEndDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 23, 59, 59, 999);
-        console.log("Week period date range (last 7 days):", {
-          current: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
-          today: now.getDate(),
-          daysShown: 7
-        });
-        break;
-      case "year":
-        // Last 12 months: from 12 months ago to current month end
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
-        // Start from 12 months ago
-        startDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
-        // End at the end of current month
-        endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
-        // Previous 12 months (12-23 months ago)
-        prevStartDate = new Date(currentYear, currentMonth - 23, 1, 0, 0, 0, 0);
-        prevEndDate = new Date(currentYear, currentMonth - 11, 0, 23, 59, 59, 999);
-        console.log("Year period date range:", {
-          current: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
-          previous: `${prevStartDate.toISOString().split('T')[0]} to ${prevEndDate.toISOString().split('T')[0]}`,
-          currentMonth: currentMonth,
-          currentYear: currentYear,
-          startMonth: startDate.getMonth(),
-          startYear: startDate.getFullYear(),
-          endMonth: endDate.getMonth(),
-          endYear: endDate.getFullYear()
-        });
-        break;
-      default: // month
-        // This month: from 1st 00:00:00 to today 23:59:59 (not the entire month)
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-        // For current month, only go up to today, not the entire month
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-        // Previous month
-        prevStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
-        prevEndDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-        console.log("Month period date range:", {
-          current: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
-          today: now.getDate(),
-          endDay: endDate.getDate()
-        });
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
+    if (startDateParam && endDateParam) {
+      // Use explicit dates from client
+      startDate = new Date(startDateParam);
+      endDate = new Date(endDateParam);
+
+      console.log("Using explicit date range:", {
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      });
+
+      // Calculate previous period based on selected period logic for consistency
+      switch (period) {
+        case "week":
+          prevStartDate = new Date(startDate);
+          prevStartDate.setDate(startDate.getDate() - 7);
+          prevEndDate = new Date(endDate);
+          prevEndDate.setDate(endDate.getDate() - 7);
+          break;
+        case "year":
+          prevStartDate = new Date(startDate);
+          prevStartDate.setFullYear(startDate.getFullYear() - 1);
+          prevEndDate = new Date(endDate);
+          prevEndDate.setFullYear(endDate.getFullYear() - 1);
+          break;
+        case "month":
+        default:
+          // For month, subtract 1 month
+          prevStartDate = new Date(startDate);
+          prevStartDate.setMonth(startDate.getMonth() - 1);
+          prevEndDate = new Date(endDate);
+          prevEndDate.setMonth(endDate.getMonth() - 1);
+          // Handle month edge cases (like March 31 -> Feb 28) automatically handled by Date, 
+          // but for strict comparison we might want to align dates. 
+          // Given the client sends "Start of Month" to "End of Month", subtracting 1 month usually works well for "Previous Month".
+          break;
+      }
+    } else {
+      // Fallback to server-side calc (UTC)
+      console.log("Current date:", now.toISOString(), "Local:", now.toLocaleDateString());
+
+      switch (period) {
+        case "week":
+          // Last 7 days ending with today (not calendar week)
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+          // Previous 7 days (8-14 days ago)
+          prevStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13, 0, 0, 0, 0);
+          prevEndDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 23, 59, 59, 999);
+          break;
+        case "year":
+          // Last 12 months: from 12 months ago to current month end
+          const currentYear = now.getFullYear();
+          const currentMonth = now.getMonth();
+          // Start from 12 months ago
+          startDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
+          // End at the end of current month
+          endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+          // Previous 12 months (12-23 months ago)
+          prevStartDate = new Date(currentYear, currentMonth - 23, 1, 0, 0, 0, 0);
+          prevEndDate = new Date(currentYear, currentMonth - 11, 0, 23, 59, 59, 999);
+          break;
+        default: // month
+          // This month: from 1st 00:00:00 to today 23:59:59 (not the entire month)
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+          // For current month, only go up to today, not the entire month
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+          // Previous month
+          prevStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+          prevEndDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      }
     }
 
     // Calculate Revenue (from PAID and PARTIALLY_REFUNDED sales with proper refund calculation)
@@ -166,17 +187,17 @@ export async function GET(request: NextRequest) {
       }),
       compare
         ? prisma.payroll.aggregate({
-            where: {
-              createdAt: {
-                gte: prevStartDate,
-                lte: prevEndDate,
-              },
-              paymentStatus: "PAID",
+          where: {
+            createdAt: {
+              gte: prevStartDate,
+              lte: prevEndDate,
             },
-            _sum: {
-              netPay: true,
-            },
-          })
+            paymentStatus: "PAID",
+          },
+          _sum: {
+            netPay: true,
+          },
+        })
         : null,
     ]);
 
@@ -196,16 +217,16 @@ export async function GET(request: NextRequest) {
 
     const prevProductCostTotal = compare
       ? await prisma.receivedItem.findMany({
-          where: {
-            receivedAt: {
-              gte: prevStartDate,
-              lte: prevEndDate,
-            },
+        where: {
+          receivedAt: {
+            gte: prevStartDate,
+            lte: prevEndDate,
           },
-          include: {
-            purchaseItem: true,
-          },
-        })
+        },
+        include: {
+          purchaseItem: true,
+        },
+      })
       : [];
 
     const currentProductCostSum = currentProductCostTotal.reduce(
@@ -222,7 +243,7 @@ export async function GET(request: NextRequest) {
     // For date-only fields, we need to use date strings in YYYY-MM-DD format
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
-    
+
     const [currentExpenses, prevExpenses] = await Promise.all([
       prisma.expense.aggregate({
         where: {
@@ -237,16 +258,16 @@ export async function GET(request: NextRequest) {
       }),
       compare
         ? prisma.expense.aggregate({
-            where: {
-              date: {
-                gte: new Date(prevStartDate.toISOString().split('T')[0]),
-                lte: new Date(prevEndDate.toISOString().split('T')[0] + 'T23:59:59.999Z'),
-              },
+          where: {
+            date: {
+              gte: new Date(prevStartDate.toISOString().split('T')[0]),
+              lte: new Date(prevEndDate.toISOString().split('T')[0] + 'T23:59:59.999Z'),
             },
-            _sum: {
-              amount: true,
-            },
-          })
+          },
+          _sum: {
+            amount: true,
+          },
+        })
         : null,
     ]);
 
@@ -304,23 +325,23 @@ export async function GET(request: NextRequest) {
       },
       previous: compare
         ? {
-            revenue: prevRevenueTotal,
-            expenses: {
-              payroll: prevPayrollTotal,
-              products: prevProductCostSum,
-              other: prevOtherExpensesTotal,
-              total: prevTotalExpenses,
-            },
-            profit: prevProfit,
-            profitMargin: prevRevenueTotal > 0 ? ((prevProfit / prevRevenueTotal) * 100).toFixed(2) : "0.00",
-          }
+          revenue: prevRevenueTotal,
+          expenses: {
+            payroll: prevPayrollTotal,
+            products: prevProductCostSum,
+            other: prevOtherExpensesTotal,
+            total: prevTotalExpenses,
+          },
+          profit: prevProfit,
+          profitMargin: prevRevenueTotal > 0 ? ((prevProfit / prevRevenueTotal) * 100).toFixed(2) : "0.00",
+        }
         : null,
       changes: compare
         ? {
-            revenue: prevRevenueTotal > 0 ? (((revenue - prevRevenueTotal) / prevRevenueTotal) * 100).toFixed(2) : "0.00",
-            expenses: prevTotalExpenses > 0 ? (((totalExpenses - prevTotalExpenses) / prevTotalExpenses) * 100).toFixed(2) : "0.00",
-            profit: prevProfit !== 0 ? (((profit - prevProfit) / Math.abs(prevProfit)) * 100).toFixed(2) : "0.00",
-          }
+          revenue: prevRevenueTotal > 0 ? (((revenue - prevRevenueTotal) / prevRevenueTotal) * 100).toFixed(2) : "0.00",
+          expenses: prevTotalExpenses > 0 ? (((totalExpenses - prevTotalExpenses) / prevTotalExpenses) * 100).toFixed(2) : "0.00",
+          profit: prevProfit !== 0 ? (((profit - prevProfit) / Math.abs(prevProfit)) * 100).toFixed(2) : "0.00",
+        }
         : null,
       expenseBreakdown,
       chartData,
@@ -340,45 +361,45 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
   // For year period, group by month to avoid too many queries
   // For month period, group by day
   // For week/today, group by day
-  
+
   console.log("getChartData called with:", {
     startDate: startDate.toISOString(),
     endDate: endDate.toISOString(),
     period: period
   });
-  
+
   if (period === 'year') {
     // Use exact same logic as dashboard but for 12 months instead of 6
     const chartData = [];
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
-    
+
     console.log("Current date info:", {
       currentDate: currentDate.toISOString(),
       currentYear: currentYear,
       currentMonth: currentMonth,
       currentMonthName: currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     });
-    
+
     // Generate last 12 months ending with current month
     for (let i = 11; i >= 0; i--) {
       // Calculate target year and month
       let targetYear = currentYear;
       let targetMonth = currentMonth - i;
-      
+
       // Handle negative months properly
       while (targetMonth < 0) {
         targetMonth += 12;
         targetYear -= 1;
       }
-      
+
       // Create date for the first day of the target month
       const date = new Date(targetYear, targetMonth, 1);
       const nextMonth = new Date(targetYear, targetMonth + 1, 1);
-      
+
       console.log(`Month ${i}: targetYear=${targetYear}, targetMonth=${targetMonth}, date=${date.toISOString()}, formatted=${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`);
-      
+
       try {
         const [salesData, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
           prisma.sale.findMany({
@@ -456,9 +477,9 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
           0
         );
 
-        const totalExpenses = Number(otherExpenses._sum?.amount || 0) + 
-                             Number(payrollExpenses._sum?.netPay || 0) + 
-                             productCostSum;
+        const totalExpenses = Number(otherExpenses._sum?.amount || 0) +
+          Number(payrollExpenses._sum?.netPay || 0) +
+          productCostSum;
 
         // Use the first day of the month as the date for consistency
         chartData.push({
@@ -482,11 +503,11 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
     })()})`));
     return chartData;
   }
-  
+
   // For other periods (week, month), group by day
   const days = [];
   const currentDate = new Date(startDate);
-  
+
   while (currentDate <= endDate) {
     days.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
@@ -575,15 +596,15 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
         0
       );
 
-      const totalExpenses = Number(otherExpenses._sum?.amount || 0) + 
-                           Number(payrollExpenses._sum?.netPay || 0) + 
-                           productCostSum;
+      const totalExpenses = Number(otherExpenses._sum?.amount || 0) +
+        Number(payrollExpenses._sum?.netPay || 0) +
+        productCostSum;
 
       // Format date as YYYY-MM-DD for consistency
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
-      
+
       return {
         date: `${year}-${month}-${day}`,
         revenue: revenue,

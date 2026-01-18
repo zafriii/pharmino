@@ -7,6 +7,7 @@ import CustomDropdown from '@/components/shared ui/CustomDropdown';
 import { GoPlus } from 'react-icons/go';
 import ExpenseForm from './ExpenseForm';
 import SearchExpense from './SearchExpense';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 interface Option {
   label: string;
@@ -15,7 +16,7 @@ interface Option {
 
 const periodOptions: Option[] = [
   { label: 'All Time', value: '' },
-  // { label: 'Today', value: 'today' },
+  { label: 'Today', value: 'today' },
   { label: 'This Week', value: 'week' },
   { label: 'This Month', value: 'month' },
   { label: 'This Year', value: 'year' },
@@ -32,8 +33,47 @@ export default function ExpenseWrapper() {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.set(key, value);
+
+      // Handle date calculation for period change
+      if (key === 'period') {
+        const now = new Date();
+        let start: Date | null = null;
+        let end: Date | null = null;
+
+        switch (value) {
+          case 'today':
+            start = startOfDay(now);
+            end = endOfDay(now);
+            break;
+          case 'week':
+            start = startOfWeek(now, { weekStartsOn: 1 });
+            end = endOfWeek(now, { weekStartsOn: 1 });
+            break;
+          case 'month':
+            start = startOfMonth(now);
+            end = endOfMonth(now);
+            break;
+          case 'year':
+            start = startOfYear(now);
+            end = endOfYear(now);
+            break;
+        }
+
+        if (start && end) {
+          params.set('startDate', start.toISOString());
+          params.set('endDate', end.toISOString());
+        } else {
+          params.delete('startDate');
+          params.delete('endDate');
+        }
+      }
+
     } else {
       params.delete(key);
+      if (key === 'period') {
+        params.delete('startDate');
+        params.delete('endDate');
+      }
     }
     params.set('page', '1');
     startTransition(() => {
@@ -56,13 +96,13 @@ export default function ExpenseWrapper() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-        <CustomDropdown
-          options={periodOptions}
-          selectedValue={searchParams.get('period') || ''}
-          onSelect={(value) => updateURL('period', value.toString())}
-          placeholder="All Time"
-        />
-      </div>
+          <CustomDropdown
+            options={periodOptions}
+            selectedValue={searchParams.get('period') || ''}
+            onSelect={(value) => updateURL('period', value.toString())}
+            placeholder="All Time"
+          />
+        </div>
 
         <div className="flex-shrink-0">
           <Button
@@ -76,7 +116,7 @@ export default function ExpenseWrapper() {
         </div>
       </div>
 
-      
+
       <ExpenseForm open={openForm} setOpen={setOpenForm} />
     </div>
   );

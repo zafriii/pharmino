@@ -19,10 +19,12 @@ interface ExpenseChartData {
 
 interface ExpenseGraphProps {
   period: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // Fetch comprehensive expense data from the dedicated expense analytics API
-async function fetchExpenseData(period: string): Promise<{
+async function fetchExpenseData(period: string, startDate?: string, endDate?: string): Promise<{
   expenseBreakdown: ExpenseBreakdownData;
   chartData: ExpenseChartData[];
 }> {
@@ -40,7 +42,13 @@ async function fetchExpenseData(period: string): Promise<{
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/analytics/expenses?period=${period}`, {
+    const queryParams = new URLSearchParams({
+      period,
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+    });
+
+    const response = await fetch(`${baseUrl}/api/admin/analytics/expenses?${queryParams}`, {
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieHeader,
@@ -50,7 +58,7 @@ async function fetchExpenseData(period: string): Promise<{
         tags: ['expense-analytics'],
       },
     });
-    
+
     if (!response.ok) {
       console.error('Failed to fetch expense data:', response.status);
       return {
@@ -60,7 +68,7 @@ async function fetchExpenseData(period: string): Promise<{
     }
 
     const data = await response.json();
-    
+
     return {
       expenseBreakdown: {
         payroll: data.totals?.payroll || 0,
@@ -79,11 +87,11 @@ async function fetchExpenseData(period: string): Promise<{
   }
 }
 
-export default async function ExpenseGraph({ period }: ExpenseGraphProps) {
-  const { expenseBreakdown, chartData } = await fetchExpenseData(period);
+export default async function ExpenseGraph({ period, startDate, endDate }: ExpenseGraphProps) {
+  const { expenseBreakdown, chartData } = await fetchExpenseData(period, startDate, endDate);
 
   return (
-    <ExpenseGraphCharts 
+    <ExpenseGraphCharts
       expenseBreakdown={expenseBreakdown}
       chartData={chartData}
       period={period}

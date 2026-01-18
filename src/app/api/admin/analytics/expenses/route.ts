@@ -20,27 +20,36 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     let startDate: Date, endDate: Date;
 
-    // Set date ranges based on period
-    switch (period) {
-      case "today":
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-        break;
-      case "week":
-        // Last 7 days ending with today
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-        break;
-      case "year":
-        // Last 12 months
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
-        startDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
-        endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
-        break;
-      default: // month
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
+    if (startDateParam && endDateParam) {
+      // Use explicit dates from client
+      startDate = new Date(startDateParam);
+      endDate = new Date(endDateParam);
+    } else {
+      // Fallback to server-side calc
+      switch (period) {
+        case "today":
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+          break;
+        case "week":
+          // Last 7 days ending with today
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+          break;
+        case "year":
+          // Last 12 months
+          const currentYear = now.getFullYear();
+          const currentMonth = now.getMonth();
+          startDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
+          endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+          break;
+        default: // month
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      }
     }
 
     // Get detailed expense breakdown by date
@@ -82,21 +91,21 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
-    
+
     // Generate last 12 months ending with current month
     for (let i = 11; i >= 0; i--) {
       let targetYear = currentYear;
       let targetMonth = currentMonth - i;
-      
+
       // Handle negative months
       while (targetMonth < 0) {
         targetMonth += 12;
         targetYear -= 1;
       }
-      
+
       const monthStart = new Date(targetYear, targetMonth, 1);
       const monthEnd = new Date(targetYear, targetMonth + 1, 1);
-      
+
       try {
         const [payrollData, productData, otherExpenses] = await Promise.all([
           // Payroll expenses
@@ -166,11 +175,11 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
 
     return chartData;
   }
-  
+
   // For other periods (today, week, month), group by day
   const days = [];
   const currentDate = new Date(startDate);
-  
+
   while (currentDate <= endDate) {
     days.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
@@ -234,7 +243,7 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
-      
+
       return {
         date: `${year}-${month}-${day}`,
         payroll: payrollAmount,
