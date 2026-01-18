@@ -113,7 +113,7 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(Number);
     const date = new Date(year, month - 1, day);
-    
+
     if (period === 'today') {
       return date.toLocaleDateString("en-US", { hour: '2-digit' });
     } else if (period === 'week') {
@@ -503,7 +503,7 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Expense Statistics - {getPeriodLabel(period)}
           </h3>
-          
+
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3">
@@ -527,7 +527,7 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
                   </div>
                   <span className="text-sm font-bold text-blue-800">{expenseBreakdown.payroll.toLocaleString()}</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
@@ -535,7 +535,7 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
                   </div>
                   <span className="text-sm font-bold text-purple-800">{expenseBreakdown.products.toLocaleString()}</span>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-orange-500 rounded-full mr-3"></div>
