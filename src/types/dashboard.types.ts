@@ -121,6 +121,8 @@ export interface DashboardWrapperProps {
     period?: string;
     startDate?: string;
     endDate?: string;
+    todayStart?: string;
+    todayEnd?: string;
   };
 }
 

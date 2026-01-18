@@ -4,6 +4,7 @@ import React, { useState, useTransition, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomDropdown from '@/components/shared ui/CustomDropdown';
 import { Calendar, Filter } from 'lucide-react';
+import { startOfDay, endOfDay } from 'date-fns';
 import Button from '@/components/shared ui/Button';
 
 interface Option {
@@ -23,11 +24,11 @@ export default function DashboardDataFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  
+
   const currentPeriod = searchParams.get('period') || '';
   const currentStartDate = searchParams.get('startDate') || '';
   const currentEndDate = searchParams.get('endDate') || '';
-  
+
   const [showCustomRange, setShowCustomRange] = useState(currentPeriod === 'custom');
   const [startDate, setStartDate] = useState(currentStartDate);
   const [endDate, setEndDate] = useState(currentEndDate);
@@ -37,7 +38,20 @@ export default function DashboardDataFilter() {
     setShowCustomRange(currentPeriod === 'custom');
     setStartDate(currentStartDate);
     setEndDate(currentEndDate);
-  }, [currentPeriod, currentStartDate, currentEndDate]);
+
+    // Auto-inject local today boundaries if missing or outdated
+    const todayStr = new Date().toISOString().split('T')[0];
+    const storedToday = searchParams.get('todayStr');
+
+    if (storedToday !== todayStr || !searchParams.has('todayStart')) {
+      const now = new Date();
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('todayStart', startOfDay(now).toISOString());
+      params.set('todayEnd', endOfDay(now).toISOString());
+      params.set('todayStr', todayStr);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
+  }, [currentPeriod, currentStartDate, currentEndDate, searchParams, router]);
 
   const updateURL = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -46,7 +60,7 @@ export default function DashboardDataFilter() {
     } else {
       params.delete(key);
     }
-    
+
     startTransition(() => {
       router.push(`?${params.toString()}`, { scroll: false });
     });
@@ -66,7 +80,7 @@ export default function DashboardDataFilter() {
       } else {
         params.delete('period');
       }
-      
+
       startTransition(() => {
         router.push(`?${params.toString()}`, { scroll: false });
       });
@@ -79,7 +93,7 @@ export default function DashboardDataFilter() {
       params.set('period', 'custom');
       params.set('startDate', startDate);
       params.set('endDate', endDate);
-      
+
       startTransition(() => {
         router.push(`?${params.toString()}`, { scroll: false });
       });
@@ -91,7 +105,7 @@ export default function DashboardDataFilter() {
     setShowCustomRange(false);
     setStartDate('');
     setEndDate('');
-    
+
     startTransition(() => {
       router.push('?', { scroll: false });
     });
@@ -101,8 +115,8 @@ export default function DashboardDataFilter() {
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-     
-      
+
+
       <div className="flex flex-wrap gap-2 items-center">
         <CustomDropdown
           options={periodOptions}
