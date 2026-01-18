@@ -264,17 +264,16 @@ export async function GET(request: NextRequest) {
       0
     );
 
-    // Calculate Other Expenses
-    // For date-only fields, we need to use date strings in YYYY-MM-DD format
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
+    // Calculate Other Expenses using local date strings to match browser/local view
+    const localStartStr = new Date(startDate.getTime() + 12 * 3600000).toISOString().split('T')[0];
+    const localEndStr = new Date(endDate.getTime() + 6 * 3600000).toISOString().split('T')[0];
 
     const [currentExpenses, prevExpenses] = await Promise.all([
       prisma.expense.aggregate({
         where: {
           date: {
-            gte: new Date(startDateStr), // Convert back to Date for Prisma
-            lte: new Date(endDateStr + 'T23:59:59.999Z'), // End of day
+            gte: new Date(localStartStr), // Correct local start date
+            lte: new Date(localEndStr),   // Correct local end date (inclusive for @db.Date)
           },
         },
         _sum: {
@@ -285,8 +284,8 @@ export async function GET(request: NextRequest) {
         ? prisma.expense.aggregate({
           where: {
             date: {
-              gte: new Date(prevStartDate.toISOString().split('T')[0]),
-              lte: new Date(prevEndDate.toISOString().split('T')[0] + 'T23:59:59.999Z'),
+              gte: new Date(new Date(prevStartDate.getTime() + 12 * 3600000).toISOString().split('T')[0]),
+              lte: new Date(new Date(prevEndDate.getTime() + 6 * 3600000).toISOString().split('T')[0]),
             },
           },
           _sum: {
@@ -314,8 +313,8 @@ export async function GET(request: NextRequest) {
     const expenseBreakdown = await prisma.expense.findMany({
       where: {
         date: {
-          gte: new Date(startDateStr), // Use proper Date objects
-          lte: new Date(endDateStr + 'T23:59:59.999Z'),
+          gte: new Date(localStartStr),
+          lte: new Date(localEndStr),
         },
       },
       select: {
