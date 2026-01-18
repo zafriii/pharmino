@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useCallback } from 'react';
+import React, { useState, useTransition, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/shared ui/Button';
 import CustomDropdown from '@/components/shared ui/CustomDropdown';
@@ -28,6 +28,42 @@ export default function ExpenseWrapper() {
   const [isPending, startTransition] = useTransition();
 
   const [openForm, setOpenForm] = useState(false);
+  const currentPeriod = searchParams.get('period');
+
+  // Initialize dates if missing for a period
+  useEffect(() => {
+    if (currentPeriod && !searchParams.has('startDate')) {
+      const now = new Date();
+      let start: Date | null = null;
+      let end: Date | null = null;
+
+      switch (currentPeriod) {
+        case 'today':
+          start = startOfDay(now);
+          end = endOfDay(now);
+          break;
+        case 'week':
+          start = startOfWeek(now, { weekStartsOn: 1 });
+          end = endOfWeek(now, { weekStartsOn: 1 });
+          break;
+        case 'month':
+          start = startOfMonth(now);
+          end = endOfMonth(now);
+          break;
+        case 'year':
+          start = startOfYear(now);
+          end = endOfYear(now);
+          break;
+      }
+
+      if (start && end) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('startDate', start.toISOString());
+        params.set('endDate', end.toISOString());
+        router.replace(`?${params.toString()}`, { scroll: false });
+      }
+    }
+  }, [currentPeriod, searchParams, router]);
 
   const updateURL = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());

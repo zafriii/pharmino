@@ -544,8 +544,8 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
         prisma.expense.aggregate({
           where: {
             date: {
-              gte: new Date(dayStart.toISOString().split('T')[0]),
-              lte: new Date(dayEnd.toISOString().split('T')[0] + 'T23:59:59.999Z'),
+              gte: dayStart,
+              lte: dayEnd,
             },
           },
           _sum: {
