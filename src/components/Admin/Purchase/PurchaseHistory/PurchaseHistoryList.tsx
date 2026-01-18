@@ -101,7 +101,7 @@ export default function PurchaseHistoryList({
       //   //   </span>
       //   // </div>
       // ),
-      render: (row: PurchaseOrder) => <LocalDate date={row.createdAt} />,
+      render: (row: PurchaseOrder) => <LocalDate date={row.updatedAt} />,
     },
     {
       key: "action",
