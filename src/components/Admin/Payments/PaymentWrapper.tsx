@@ -4,6 +4,7 @@ import React, { useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import CustomDropdown from '@/components/shared ui/CustomDropdown';
 import SearchPayment from './SearchPayment';
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 
 interface Option {
   label: string;
@@ -43,19 +44,54 @@ export default function PaymentWrapper() {
   const updateURL = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     const currentValue = params.get(key) || '';
-    
+
     // Only update if the value actually changed
     if (currentValue === value) return;
-    
+
     if (value && value.trim() !== '') {
       params.set(key, value.trim());
+
+      // Special handling for dateFilter
+      if (key === 'dateFilter') {
+        const now = new Date();
+        let start: Date | null = null;
+        let end: Date | null = null;
+
+        switch (value) {
+          case 'today':
+            start = startOfDay(now);
+            end = endOfDay(now);
+            break;
+          case 'week':
+            start = startOfWeek(now, { weekStartsOn: 1 }); // Monday start
+            end = endOfWeek(now, { weekStartsOn: 1 });
+            break;
+          case 'month':
+            start = startOfMonth(now);
+            end = endOfMonth(now);
+            break;
+        }
+
+        if (start && end) {
+          params.set('startDate', start.toISOString());
+          params.set('endDate', end.toISOString());
+        } else {
+          params.delete('startDate');
+          params.delete('endDate');
+        }
+      }
+
     } else {
       params.delete(key);
+      if (key === 'dateFilter') {
+        params.delete('startDate');
+        params.delete('endDate');
+      }
     }
     params.set('page', '1'); // Reset page to 1 on filter/search
-    
+
     const newUrl = `?${params.toString()}`;
-    
+
     startTransition(() => {
       // Use replace instead of push to avoid scroll jumping
       router.replace(newUrl, { scroll: false });

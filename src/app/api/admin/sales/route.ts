@@ -44,9 +44,16 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
 
     const where: any = {};
-    
+
     // Handle date filter based on local date
-    if (dateFilter) {
+    // Handle date filter 
+    if (startDate || endDate) {
+      // Prioritize explicit date range (from client-side local calc)
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    } else if (dateFilter) {
+      // Fallback to server-side calc (UTC based) if no explicit dates
       const now = new Date();
       let filterStartDate: Date;
       let filterEndDate: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
@@ -78,13 +85,8 @@ export async function GET(request: NextRequest) {
         gte: filterStartDate,
         lte: filterEndDate
       };
-    } else if (startDate || endDate) {
-      // Legacy date range filter
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
     }
-    
+
     // Handle search functionality
     if (search && search.trim()) {
       const searchTerm = search.trim();
@@ -111,7 +113,7 @@ export async function GET(request: NextRequest) {
         }
       ];
     }
-    
+
     if (status) where.status = status;
     if (paymentMethod) where.paymentMethod = paymentMethod;
     if (paymentStatus) where.paymentStatus = paymentStatus;
@@ -171,11 +173,11 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/sales - Create a new sale
 export async function POST(request: NextRequest) {
   let requestBody: any = null;
-  
+
   try {
     const user = await requireAdmin();
     requestBody = await request.json();
-    
+
     const validatedData = saleSchema.parse(requestBody);
 
     // Validate customer exists if provided
@@ -213,7 +215,7 @@ export async function POST(request: NextRequest) {
 
         // Calculate available quantity from ACTIVE batches only
         const activeStock = product.batches.reduce((sum, batch) => sum + batch.quantity, 0);
-        
+
         // Handle validation based on sell type
         if (item.sellType === 'SINGLE_TABLET' && product.tabletsPerStrip) {
           // For tablet sales, calculate total available tablets including partial strips
@@ -222,7 +224,7 @@ export async function POST(request: NextRequest) {
             const partialTablets = batch.remainingTablets || 0;
             return sum + completeStripTablets + partialTablets;
           }, 0);
-          
+
           if (availableTablets < item.quantity) {
             throw new Error(`Insufficient tablets for ${product.itemName}. Available: ${availableTablets} tablets, Required: ${item.quantity} tablets`);
           }
@@ -281,12 +283,12 @@ export async function POST(request: NextRequest) {
       // Execute all inventory deductions in parallel
       const deductionResults = await Promise.all(
         validatedData.items.map(async (itemData, index) => {
-          console.log("Processing item for deduction:", { 
-            itemId: itemData.itemId, 
-            sellType: itemData.sellType, 
-            quantity: itemData.quantity 
+          console.log("Processing item for deduction:", {
+            itemId: itemData.itemId,
+            sellType: itemData.sellType,
+            quantity: itemData.quantity
           });
-          
+
           // Check if this is a tablet sale
           if (itemData.sellType === 'SINGLE_TABLET') {
             console.log("🔍 TABLET SALE DETECTED:", {
@@ -294,7 +296,7 @@ export async function POST(request: NextRequest) {
               quantity: itemData.quantity,
               sellType: itemData.sellType
             });
-            
+
             // Get product info for tablets per strip
             const product = await tx.product.findUnique({
               where: { id: itemData.itemId },
@@ -307,25 +309,25 @@ export async function POST(request: NextRequest) {
               console.log("✅ USING TABLET DEDUCTION");
               // Use tablet-level deduction
               const result = await deductTabletsFromInventory(
-                itemData.itemId, 
+                itemData.itemId,
                 itemData.quantity, // This is the number of tablets
-                product.tabletsPerStrip, 
+                product.tabletsPerStrip,
                 tx
               );
-              
+
               if (!result.success) {
                 throw new Error(result.error || "Failed to deduct tablets from inventory");
               }
-              
+
               console.log("📊 TABLET DEDUCTION RESULT:", {
                 success: result.success,
                 batchDeductions: result.batchDeductions,
                 tabletDeductions: result.tabletDeductions
               });
-              
+
               // Add debugging info to the result
-              return { 
-                ...result, 
+              return {
+                ...result,
                 saleItemId: saleItems[index].id,
                 isTabletSale: true,
                 debugInfo: {
@@ -346,21 +348,21 @@ export async function POST(request: NextRequest) {
               quantity: itemData.quantity
             });
           }
-          
+
           console.log("📋 USING REGULAR STRIP DEDUCTION");
           // Regular inventory deduction for strips/units
           const result = await deductFromInventory(itemData.itemId, itemData.quantity, tx);
           if (!result.success) {
             throw new Error(result.error || "Failed to deduct from inventory");
           }
-          
+
           console.log("📊 REGULAR DEDUCTION RESULT:", {
             success: result.success,
             batchDeductions: result.batchDeductions
           });
-          
-          return { 
-            ...result, 
+
+          return {
+            ...result,
             saleItemId: saleItems[index].id,
             isTabletSale: false,
             debugInfo: {
@@ -380,7 +382,7 @@ export async function POST(request: NextRequest) {
             where: { id: batchDeduction.batchId },
             select: { purchasePrice: true, sellingPrice: true }
           });
-          
+
           if (batch) {
             saleBatchData.push({
               saleItemId: deductionResult.saleItemId,
@@ -502,7 +504,7 @@ export async function PUT(request: NextRequest) {
   try {
     const user = await requireAdmin();
     const body = await request.json();
-    
+
     const validatedData = returnSaleSchema.parse(body);
 
     const sale = await prisma.sale.findUnique({

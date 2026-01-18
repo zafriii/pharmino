@@ -35,9 +35,16 @@ export async function GET(request: NextRequest) {
     const where: any = {};
     if (status) where.status = status;
     if (method) where.method = method;
-    
+
     // Handle date filter based on local date
-    if (dateFilter) {
+    // Handle date filter 
+    if (startDate || endDate) {
+      // Prioritize explicit date range (from client-side local calc)
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    } else if (dateFilter) {
+      // Fallback to server-side calc (UTC based) if no explicit dates
       const now = new Date();
       let filterStartDate: Date;
       let filterEndDate: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
@@ -69,11 +76,6 @@ export async function GET(request: NextRequest) {
         gte: filterStartDate,
         lte: filterEndDate
       };
-    } else if (startDate || endDate) {
-      // Legacy date range filter
-      where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
     // Add search functionality
@@ -155,7 +157,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAdmin();
     const body = await request.json();
-    
+
     const validatedData = createPaymentSchema.parse(body);
 
     // Validate sale exists
@@ -210,7 +212,7 @@ export async function PUT(request: NextRequest) {
   try {
     const user = await requireAdmin();
     const body = await request.json();
-    
+
     const validatedData = refundPaymentSchema.parse(body);
 
     const payment = await prisma.payment.findUnique({
