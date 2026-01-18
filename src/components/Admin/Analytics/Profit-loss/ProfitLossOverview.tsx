@@ -1,5 +1,3 @@
-// "use client";
-
 import StatsCard from "@/components/shared ui/StatsCard";
 import type { ProfitLossData } from "@/types/expense.types";
 
@@ -68,7 +66,7 @@ export default function ProfitLossOverview({ data }: ProfitLossOverviewProps) {
             ? `Previous: ${previous.profitMargin}%`
             : undefined
         }
-      />      
+      />
     </div>
   );
 }

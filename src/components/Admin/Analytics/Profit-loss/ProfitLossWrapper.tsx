@@ -10,7 +10,7 @@ export default function ProfitLossWrapper() {
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
-  
+
   const rawPeriod = searchParams.get('period') || 'week';
   const currentPeriod = rawPeriod === 'today' ? 'week' : rawPeriod;
   const currentCompare = searchParams.get('compare') === 'true';

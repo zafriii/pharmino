@@ -43,7 +43,7 @@ async function fetchProfitLossData(
           Cookie: cookieHeader,
         },
         next: {
-          revalidate: 60, // No cache for debugging
+          revalidate: 0, // No cache for debugging
           tags: ["profit-loss"],
         },
       }
