@@ -54,7 +54,7 @@ async function fetchExpenseData(period: string, startDate?: string, endDate?: st
         Cookie: cookieHeader,
       },
       next: {
-        revalidate: 60,
+        revalidate: 0,
         tags: ['expense-analytics'],
       },
     });
