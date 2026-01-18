@@ -40,18 +40,17 @@ async function fetchExpenseData(period: string): Promise<{
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    // Initial fetch from server (UTC default as no timezone offset is passed)
     const response = await fetch(`${baseUrl}/api/admin/analytics/expenses?period=${period}`, {
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieHeader,
       },
       next: {
-        revalidate: 0,
+        revalidate: 60,
         tags: ['expense-analytics'],
       },
     });
-
+    
     if (!response.ok) {
       console.error('Failed to fetch expense data:', response.status);
       return {
@@ -61,7 +60,7 @@ async function fetchExpenseData(period: string): Promise<{
     }
 
     const data = await response.json();
-
+    
     return {
       expenseBreakdown: {
         payroll: data.totals?.payroll || 0,
@@ -84,7 +83,7 @@ export default async function ExpenseGraph({ period }: ExpenseGraphProps) {
   const { expenseBreakdown, chartData } = await fetchExpenseData(period);
 
   return (
-    <ExpenseGraphCharts
+    <ExpenseGraphCharts 
       expenseBreakdown={expenseBreakdown}
       chartData={chartData}
       period={period}

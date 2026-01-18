@@ -35,6 +35,22 @@ interface ProfitLossChartProps {
 export default function ProfitLossChart({ data }: ProfitLossChartProps) {
   const { chartData, period, current } = data;
 
+  // Debug logging
+  console.log("ProfitLossChart received data:", {
+    period,
+    chartDataLength: chartData.length,
+    firstDate: chartData[0]?.date,
+    lastDate: chartData[chartData.length - 1]?.date,
+    chartDates: chartData.map(item => {
+      const [year, month, day] = item.date.split('-').map(Number);
+      const localDate = new Date(year, month - 1, day);
+      return {
+        date: item.date,
+        formatted: localDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+      };
+    })
+  });
+
   // Calculate profit/loss for each data point
   const profitLossData = chartData.map((item) => ({
     ...item,
@@ -47,7 +63,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
     // dateString format is YYYY-MM-DD
     const [year, month, day] = dateString.split('-').map(Number);
     const date = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
-
+    
     if (period === "week") {
       return date.toLocaleDateString("en-US", { weekday: "short" }) + " " + day;
     } else if (period === "month") {
@@ -116,13 +132,13 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
             const label = context.dataset.label || "";
             const value = context.parsed.y.toLocaleString();
             const dataIndex = context.dataIndex;
-
+            
             if (label === "Profit Amount") {
               const actualProfit = profitLossData[dataIndex].profit;
               const status = actualProfit >= 0 ? "Profit" : "Loss";
               return `${status}: ${Math.abs(actualProfit).toLocaleString()}`;
             }
-
+            
             return `${label}: ${value}`;
           },
         },
@@ -182,10 +198,10 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
       {
         label: "Profit Amount",
         data: profitLossData.map((item) => Math.abs(item.profit)), // Always positive
-        backgroundColor: profitLossData.map((item) =>
+        backgroundColor: profitLossData.map((item) => 
           item.profit >= 0 ? "rgba(16, 185, 129, 0.8)" : "rgba(245, 158, 11, 0.8)"
         ),
-        borderColor: profitLossData.map((item) =>
+        borderColor: profitLossData.map((item) => 
           item.profit >= 0 ? "#10b981" : "#f59e0b"
         ),
         borderWidth: 1,
@@ -498,9 +514,9 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         data: profitLossData.map((item) => item.profit),
         borderColor: (context: any) => {
           const chart = context.chart;
-          const { ctx, chartArea } = chart;
+          const {ctx, chartArea} = chart;
           if (!chartArea) return "#10b981";
-
+          
           const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
           gradient.addColorStop(0, "#f59e0b"); // Orange for losses
           gradient.addColorStop(0.5, "#10b981"); // Green for profits
@@ -510,14 +526,14 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         backgroundColor: "rgba(16, 185, 129, 0.1)",
         borderWidth: 3,
         fill: false,
-        pointBackgroundColor: profitLossData.map((item) =>
+        pointBackgroundColor: profitLossData.map((item) => 
           item.profit >= 0 ? "#10b981" : "#f59e0b"
         ),
         pointBorderColor: "#ffffff",
         pointBorderWidth: 2,
         pointRadius: 6,
         pointHoverRadius: 8,
-        pointHoverBackgroundColor: profitLossData.map((item) =>
+        pointHoverBackgroundColor: profitLossData.map((item) => 
           item.profit >= 0 ? "#10b981" : "#f59e0b"
         ),
         pointHoverBorderColor: "#ffffff",
@@ -568,7 +584,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
             <h3 className="text-lg font-semibold text-gray-900">Profit Margin</h3>
             <span className="text-sm text-gray-500">Target: {targetMargin}%</span>
           </div>
-
+          
           <div className="flex items-center justify-center">
             <div className="relative w-40 h-40">
               <Doughnut data={gaugeData} options={gaugeOptions} />
@@ -580,9 +596,9 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
                   {isProfit ? 'Profit' : 'Loss'}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {profitMarginValue >= targetMargin ? 'Excellent' :
-                    profitMarginValue >= 10 ? 'Good' :
-                      profitMarginValue >= 0 ? 'Fair' : 'Loss'}
+                  {profitMarginValue >= targetMargin ? 'Excellent' : 
+                   profitMarginValue >= 10 ? 'Good' : 
+                   profitMarginValue >= 0 ? 'Fair' : 'Loss'}
                 </div>
               </div>
             </div>
@@ -630,13 +646,13 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
           <div className="h-80">
             <Line data={lineChartDataConfig} options={lineChartOptions} />
           </div>
-        </div>
+        </div>       
       </div>
 
       {/* Second Row: Daily Revenue vs Expenses and Profit Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-        {/* Expense Distribution Pie Chart */}
-        {/* <div className="bg-white rounded-xl  border border-gray-100 p-6">
+         {/* Expense Distribution Pie Chart */}
+         {/* <div className="bg-white rounded-xl  border border-gray-100 p-6">
           <div className="h-80">
             <Pie data={expenseDistributionData} options={expenseDistributionOptions} />
           </div>
@@ -663,7 +679,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
               <p className="text-xs text-blue-600">Per Day</p>
             </div>
           </div>
-
+          
           <div className="h-64">
             <Line data={profitTrendData} options={profitTrendOptions} />
           </div>

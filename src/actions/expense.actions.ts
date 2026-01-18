@@ -54,7 +54,6 @@ export async function createExpenseAction(
     revalidatePath("/admin/analytics/profit-loss");
     revalidatePath("/admin/analytics/expenses");
     revalidatePath("/admin/analytics/dashboard-overview");
-    revalidatePath("/admin/analytics/profit-loss");
 
     return {
       success: true,

@@ -97,7 +97,7 @@ export async function createPurchaseOrderAction(formData: FormData): Promise<Act
 
     // revalidateTag('purchases');
     revalidatePath("/admin/purchase/purchase-list");
-
+    
     return {
       success: true,
       message: 'Purchase order created successfully',
@@ -105,7 +105,7 @@ export async function createPurchaseOrderAction(formData: FormData): Promise<Act
     };
   } catch (error: any) {
     console.error('Create purchase order error:', error);
-
+    
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -113,7 +113,7 @@ export async function createPurchaseOrderAction(formData: FormData): Promise<Act
         error: error.issues[0].message,
       };
     }
-
+    
     return {
       success: false,
       message: 'Failed to create purchase order',
@@ -153,7 +153,7 @@ export async function updatePurchaseOrderAction(id: string, formData: FormData):
 
     // revalidateTag('purchases');
     revalidatePath("/admin/purchase/purchase-list");
-
+    
     return {
       success: true,
       message: 'Purchase order updated successfully',
@@ -161,7 +161,7 @@ export async function updatePurchaseOrderAction(id: string, formData: FormData):
     };
   } catch (error: any) {
     console.error('Update purchase order error:', error);
-
+    
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -169,7 +169,7 @@ export async function updatePurchaseOrderAction(id: string, formData: FormData):
         error: error.issues[0].message,
       };
     }
-
+    
     return {
       success: false,
       message: 'Failed to update purchase order',
@@ -205,7 +205,7 @@ export async function deletePurchaseOrderAction(id: string) {
 
     // revalidateTag('purchases');
     revalidatePath("/admin/purchase/purchase-list");
-
+    
     return {
       success: true,
       message: 'Purchase order deleted successfully',
@@ -252,10 +252,7 @@ export async function updatePurchaseOrderStatusAction(id: string, status: string
     revalidatePath("/admin/purchase/received-products");
     revalidatePath("/admin/purchase/purchase-history/ordered-items")
     revalidatePath("/admin/purchase/purchase-history/received-items")
-    revalidatePath("/admin/analytics/profit-loss");
-    revalidatePath("/admin/analytics/dashboard-overview");
-    revalidatePath("/admin/analytics/expenses");
-
+    
     return {
       success: true,
       message: `Purchase order marked as ${status.toLowerCase()}`,

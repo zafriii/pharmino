@@ -40,22 +40,22 @@ async function fetchDashboardData(searchParams?: DashboardWrapperProps['searchPa
 
     const queryString = queryParams.toString();
     // console.log("Fetching dashboard data with filters:", queryString);
-
+    
     const response = await fetch(`${baseUrl}/api/admin/dashboard${queryString ? `?${queryString}` : ''}`, {
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieHeader,
       },
       next: {
-        revalidate: 0, // 5 minutes
+        revalidate: 60, // 5 minutes
         tags: ["dashboard"],
       },
     });
-
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
+    
     const dashboardData = await response.json();
     console.log("Dashboard data received successfully");
     return dashboardData;

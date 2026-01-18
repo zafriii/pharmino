@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { SalePaymentStatus } from "@/generated/prisma";
 
 // GET - Fetch detailed expense analytics with daily breakdown by category
 export async function GET(request: NextRequest) {
@@ -15,52 +16,35 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "month";
-    // timezoneOffset in minutes (e.g., -360 for GMT+6)
-    // If not provided, default to 0 (UTC)
-    const timezoneOffset = parseInt(searchParams.get("timezoneOffset") || "0", 10);
 
-    // Helper to get a Date object in UTC that corresponds to the Local Time start of day
-    // For GMT+6 (Offset -360): Local 00:00 -> UTC 18:00 (Previous Day)
-    // We want to construct the Local Time, then shift it back to UTC to query the DB
+    const now = new Date();
+    let startDate: Date, endDate: Date;
 
-    // Current time in UTC
-    const nowUtc = new Date();
-    // Adjust to Local Time to calculate "Today", "Week", etc. based on user's calendar
-    const nowLocal = new Date(nowUtc.getTime() - (timezoneOffset * 60 * 1000));
-
-    let localStartDate: Date, localEndDate: Date;
-
-    // Set date ranges based on LOCAL time
+    // Set date ranges based on period
     switch (period) {
       case "today":
-        localStartDate = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate(), 0, 0, 0, 0);
-        localEndDate = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate(), 23, 59, 59, 999);
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
         break;
       case "week":
         // Last 7 days ending with today
-        localStartDate = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate() - 6, 0, 0, 0, 0);
-        localEndDate = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate(), 23, 59, 59, 999);
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
         break;
       case "year":
         // Last 12 months
-        const currentYear = nowLocal.getFullYear();
-        const currentMonth = nowLocal.getMonth();
-        // Start from 1st day of 11 months ago
-        localStartDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
-        // End at last moment of current month
-        localEndDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        startDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
+        endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
         break;
       default: // month
-        localStartDate = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), 1, 0, 0, 0, 0);
-        localEndDate = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate(), 23, 59, 59, 999);
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     }
 
-    // Now shift these LOCAL times back to UTC for the database query
-    const dbStartDate = new Date(localStartDate.getTime() + (timezoneOffset * 60 * 1000));
-    const dbEndDate = new Date(localEndDate.getTime() + (timezoneOffset * 60 * 1000));
-
     // Get detailed expense breakdown by date
-    const chartData = await getDetailedExpenseChartData(localStartDate, localEndDate, period, timezoneOffset);
+    const chartData = await getDetailedExpenseChartData(startDate, endDate, period);
 
     // Calculate totals for the period
     const totalPayroll = chartData.reduce((sum, item) => sum + item.payroll, 0);
@@ -70,12 +54,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       period,
-      timezoneOffset,
       dateRange: {
-        localStart: localStartDate,
-        localEnd: localEndDate,
-        dbStart: dbStartDate,
-        dbEnd: dbEndDate
+        start: startDate,
+        end: endDate,
       },
       totals: {
         payroll: totalPayroll,
@@ -94,43 +75,36 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: Date, period: string, timezoneOffset: number) {
+async function getDetailedExpenseChartData(startDate: Date, endDate: Date, period: string) {
   if (period === 'year') {
-    // For year period, group by month (This logic is usually fine with UTC approximations, but let's be consistent)
-    // Actually for 'year', using Local Date boundaries is safer.
-
+    // For year period, group by month
     const chartData = [];
-    // We iterate through months based on LOCAL time
-    const startYear = localStartDate.getFullYear();
-    const startMonth = localStartDate.getMonth();
-
-    // We want 12 months up to the localEndDate
-    for (let i = 0; i < 12; i++) {
-      const targetDate = new Date(startYear, startMonth + i, 1);
-      if (targetDate > localEndDate) break;
-
-      const year = targetDate.getFullYear();
-      const month = targetDate.getMonth();
-
-      const monthLocalStart = new Date(year, month, 1, 0, 0, 0, 0);
-      const monthLocalEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
-
-      // Shift to UTC for DB
-      const dbStart = new Date(monthLocalStart.getTime() + (timezoneOffset * 60 * 1000));
-      const dbEnd = new Date(monthLocalEnd.getTime() + (timezoneOffset * 60 * 1000));
-
-      // Use Date.UTC to ensure we are querying against UTC Midnight, ignoring server local time
-      const expenseDateStart = new Date(Date.UTC(year, month, 1));
-      const expenseDateEnd = new Date(Date.UTC(year, month + 1, 0));
-
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    
+    // Generate last 12 months ending with current month
+    for (let i = 11; i >= 0; i--) {
+      let targetYear = currentYear;
+      let targetMonth = currentMonth - i;
+      
+      // Handle negative months
+      while (targetMonth < 0) {
+        targetMonth += 12;
+        targetYear -= 1;
+      }
+      
+      const monthStart = new Date(targetYear, targetMonth, 1);
+      const monthEnd = new Date(targetYear, targetMonth + 1, 1);
+      
       try {
         const [payrollData, productData, otherExpenses] = await Promise.all([
           // Payroll expenses
           prisma.payroll.aggregate({
             where: {
               createdAt: {
-                gte: dbStart,
-                lt: dbEnd,
+                gte: monthStart,
+                lt: monthEnd,
               },
               paymentStatus: "PAID",
             },
@@ -142,8 +116,8 @@ async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: D
           prisma.receivedItem.findMany({
             where: {
               receivedAt: {
-                gte: dbStart,
-                lt: dbEnd,
+                gte: monthStart,
+                lt: monthEnd,
               },
             },
             include: {
@@ -154,8 +128,8 @@ async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: D
           prisma.expense.aggregate({
             where: {
               date: {
-                gte: expenseDateStart,
-                lte: expenseDateEnd,
+                gte: new Date(monthStart.toISOString().split('T')[0]),
+                lt: new Date(monthEnd.toISOString().split('T')[0]),
               },
             },
             _sum: {
@@ -172,17 +146,16 @@ async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: D
         const otherAmount = Number(otherExpenses._sum?.amount || 0);
 
         chartData.push({
-          date: `${year}-${String(month + 1).padStart(2, '0')}-01`,
+          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
           payroll: payrollAmount,
           products: productAmount,
           other: otherAmount,
           total: payrollAmount + productAmount + otherAmount,
         });
-
       } catch (err) {
-        console.error(`Error fetching expense data for month ${year}-${month}:`, err);
+        console.error(`Error fetching expense data for ${monthStart}:`, err);
         chartData.push({
-          date: `${year}-${String(month + 1).padStart(2, '0')}-01`,
+          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
           payroll: 0,
           products: 0,
           other: 0,
@@ -190,42 +163,33 @@ async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: D
         });
       }
     }
+
     return chartData;
   }
-
+  
   // For other periods (today, week, month), group by day
   const days = [];
-  const currentDate = new Date(localStartDate);
-
-  // Create array of LOCAL days
-  while (currentDate <= localEndDate) {
+  const currentDate = new Date(startDate);
+  
+  while (currentDate <= endDate) {
     days.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
   const chartData = await Promise.all(
-    days.map(async (localDate) => {
-      // Define the day in LOCAL time
-      const dayLocalStart = new Date(localDate);
-      dayLocalStart.setHours(0, 0, 0, 0);
-
-      const dayLocalEnd = new Date(localDate);
-      dayLocalEnd.setHours(23, 59, 59, 999);
-
-      // Convert boundaries to UTC for the database query
-      const dbStart = new Date(dayLocalStart.getTime() + (timezoneOffset * 60 * 1000));
-      const dbEnd = new Date(dayLocalEnd.getTime() + (timezoneOffset * 60 * 1000));
-
-      // Use Date.UTC to ensure strict date matching (2026-01-18 maps to 2026-01-18 UTC)
-      const expenseDate = new Date(Date.UTC(localDate.getFullYear(), localDate.getMonth(), localDate.getDate()));
+    days.map(async (date) => {
+      const dayStart = new Date(date);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(date);
+      dayEnd.setHours(23, 59, 59, 999);
 
       const [payrollData, productData, otherExpenses] = await Promise.all([
         // Payroll expenses
         prisma.payroll.aggregate({
           where: {
             createdAt: {
-              gte: dbStart,
-              lte: dbEnd,
+              gte: dayStart,
+              lte: dayEnd,
             },
             paymentStatus: "PAID",
           },
@@ -237,8 +201,8 @@ async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: D
         prisma.receivedItem.findMany({
           where: {
             receivedAt: {
-              gte: dbStart,
-              lte: dbEnd,
+              gte: dayStart,
+              lte: dayEnd,
             },
           },
           include: {
@@ -248,7 +212,10 @@ async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: D
         // Other expenses
         prisma.expense.aggregate({
           where: {
-            date: expenseDate,
+            date: {
+              gte: new Date(dayStart.toISOString().split('T')[0]),
+              lte: new Date(dayEnd.toISOString().split('T')[0] + 'T23:59:59.999Z'),
+            },
           },
           _sum: {
             amount: true,
@@ -263,13 +230,13 @@ async function getDetailedExpenseChartData(localStartDate: Date, localEndDate: D
       );
       const otherAmount = Number(otherExpenses._sum?.amount || 0);
 
-      // Format date as YYYY-MM-DD for consistency (using the Local Date)
-      const year = localDate.getFullYear();
-      const month = String(localDate.getMonth() + 1).padStart(2, '0');
-      const day = String(localDate.getDate()).padStart(2, '0');
-
+      // Format date as YYYY-MM-DD for consistency
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
       return {
-        date: `${year}-${month}-${day}`, // Return the local date string
+        date: `${year}-${month}-${day}`,
         payroll: payrollAmount,
         products: productAmount,
         other: otherAmount,
