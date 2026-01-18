@@ -35,22 +35,6 @@ interface ProfitLossChartProps {
 export default function ProfitLossChart({ data }: ProfitLossChartProps) {
   const { chartData, period, current } = data;
 
-  // // Debug logging
-  // console.log("ProfitLossChart received data:", {
-  //   period,
-  //   chartDataLength: chartData.length,
-  //   firstDate: chartData[0]?.date,
-  //   lastDate: chartData[chartData.length - 1]?.date,
-  //   chartDates: chartData.map(item => {
-  //     const [year, month, day] = item.date.split('-').map(Number);
-  //     const localDate = new Date(year, month - 1, day);
-  //     return {
-  //       date: item.date,
-  //       formatted: localDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })
-  //     };
-  //   })
-  // });
-
   // Calculate profit/loss for each data point
   const profitLossData = chartData.map((item) => ({
     ...item,
