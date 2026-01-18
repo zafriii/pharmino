@@ -176,83 +176,72 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
     return chartData;
   }
 
-  // For other periods (today, week, month), group by day
-  const days = [];
-  const currentDate = new Date(startDate);
+  // For other periods (today, week, month), group by day, respecting input timezone
+  const chartData = [];
+  const currentDate = new Date(startDate.getTime());
 
   while (currentDate <= endDate) {
-    days.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
+    const dayStart = new Date(currentDate);
+    const dayEnd = new Date(dayStart.getTime() + (24 * 60 * 60 * 1000) - 1);
+
+    const [payrollData, productData, otherExpenses] = await Promise.all([
+      // Payroll expenses
+      prisma.payroll.aggregate({
+        where: {
+          createdAt: {
+            gte: dayStart,
+            lte: dayEnd,
+          },
+          paymentStatus: "PAID",
+        },
+        _sum: {
+          netPay: true,
+        },
+      }),
+      // Product costs (received items)
+      prisma.receivedItem.findMany({
+        where: {
+          receivedAt: {
+            gte: dayStart,
+            lte: dayEnd,
+          },
+        },
+        include: {
+          purchaseItem: true,
+        },
+      }),
+      // Other expenses
+      prisma.expense.aggregate({
+        where: {
+          date: {
+            gte: dayStart,
+            lte: dayEnd,
+          },
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+    ]);
+
+    const payrollAmount = Number(payrollData._sum?.netPay || 0);
+    const productAmount = productData.reduce(
+      (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
+      0
+    );
+    const otherAmount = Number(otherExpenses._sum?.amount || 0);
+
+    chartData.push({
+      date: dayStart.toISOString(), // Send ISO for client labeling
+      payroll: payrollAmount,
+      products: productAmount,
+      other: otherAmount,
+      total: payrollAmount + productAmount + otherAmount,
+    });
+
+    currentDate.setTime(currentDate.getTime() + (24 * 60 * 60 * 1000));
   }
-
-  const chartData = await Promise.all(
-    days.map(async (date) => {
-      const dayStart = new Date(date);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(date);
-      dayEnd.setHours(23, 59, 59, 999);
-
-      const [payrollData, productData, otherExpenses] = await Promise.all([
-        // Payroll expenses
-        prisma.payroll.aggregate({
-          where: {
-            createdAt: {
-              gte: dayStart,
-              lte: dayEnd,
-            },
-            paymentStatus: "PAID",
-          },
-          _sum: {
-            netPay: true,
-          },
-        }),
-        // Product costs (received items)
-        prisma.receivedItem.findMany({
-          where: {
-            receivedAt: {
-              gte: dayStart,
-              lte: dayEnd,
-            },
-          },
-          include: {
-            purchaseItem: true,
-          },
-        }),
-        // Other expenses
-        prisma.expense.aggregate({
-          where: {
-            date: {
-              gte: dayStart,
-              lte: dayEnd,
-            },
-          },
-          _sum: {
-            amount: true,
-          },
-        }),
-      ]);
-
-      const payrollAmount = Number(payrollData._sum?.netPay || 0);
-      const productAmount = productData.reduce(
-        (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
-        0
-      );
-      const otherAmount = Number(otherExpenses._sum?.amount || 0);
-
-      // Format date as YYYY-MM-DD for consistency
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-
-      return {
-        date: `${year}-${month}-${day}`,
-        payroll: payrollAmount,
-        products: productAmount,
-        other: otherAmount,
-        total: payrollAmount + productAmount + otherAmount,
-      };
-    })
-  );
 
   return chartData;
 }
+

@@ -504,114 +504,102 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
     return chartData;
   }
 
-  // For other periods (week, month), group by day
-  const days = [];
-  const currentDate = new Date(startDate);
+  // For other periods (week, month), group by day, respecting input timezone
+  const chartData = [];
+  const currentDate = new Date(startDate.getTime());
 
   while (currentDate <= endDate) {
-    days.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
+    const dayStart = new Date(currentDate);
+    const dayEnd = new Date(dayStart.getTime() + (24 * 60 * 60 * 1000) - 1);
 
-  const chartData = await Promise.all(
-    days.map(async (date) => {
-      const dayStart = new Date(date);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(date);
-      dayEnd.setHours(23, 59, 59, 999);
-
-      const [salesData, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
-        prisma.sale.findMany({
-          where: {
-            createdAt: {
-              gte: dayStart,
-              lte: dayEnd,
-            },
-            paymentStatus: {
-              in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
-            },
+    const [salesData, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
+      prisma.sale.findMany({
+        where: {
+          createdAt: {
+            gte: dayStart,
+            lte: dayEnd,
           },
-          include: {
-            payments: {
-              select: {
-                amount: true,
-                status: true,
-                refundedAmount: true
-              }
+          paymentStatus: {
+            in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
+          },
+        },
+        include: {
+          payments: {
+            select: {
+              amount: true,
+              status: true,
+              refundedAmount: true
             }
           }
-        }),
-        prisma.expense.aggregate({
-          where: {
-            date: {
-              gte: dayStart,
-              lte: dayEnd,
-            },
-          },
-          _sum: {
-            amount: true,
-          },
-        }),
-        prisma.payroll.aggregate({
-          where: {
-            createdAt: {
-              gte: dayStart,
-              lte: dayEnd,
-            },
-            paymentStatus: "PAID",
-          },
-          _sum: {
-            netPay: true,
-          },
-        }),
-        prisma.receivedItem.findMany({
-          where: {
-            receivedAt: {
-              gte: dayStart,
-              lte: dayEnd,
-            },
-          },
-          include: {
-            purchaseItem: true,
-          },
-        }),
-      ]);
-
-      // Calculate revenue properly
-      const revenue = salesData.reduce((sum, sale) => {
-        if (sale.paymentStatus === "PAID") {
-          return sum + Number(sale.grandTotal);
-        } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
-          const totalRefunded = sale.payments.reduce((refundSum, payment) => {
-            return refundSum + (Number(payment.refundedAmount) || 0);
-          }, 0);
-          const remainingAmount = Number(sale.grandTotal) - totalRefunded;
-          return sum + Math.max(0, remainingAmount);
         }
-        return sum;
-      }, 0);
+      }),
+      prisma.expense.aggregate({
+        where: {
+          date: {
+            gte: dayStart,
+            lte: dayEnd,
+          },
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.payroll.aggregate({
+        where: {
+          createdAt: {
+            gte: dayStart,
+            lte: dayEnd,
+          },
+          paymentStatus: "PAID",
+        },
+        _sum: {
+          netPay: true,
+        },
+      }),
+      prisma.receivedItem.findMany({
+        where: {
+          receivedAt: {
+            gte: dayStart,
+            lte: dayEnd,
+          },
+        },
+        include: {
+          purchaseItem: true,
+        },
+      }),
+    ]);
 
-      const productCostSum = productCosts.reduce(
-        (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
-        0
-      );
+    // Calculate revenue properly
+    const revenue = salesData.reduce((sum, sale) => {
+      if (sale.paymentStatus === "PAID") {
+        return sum + Number(sale.grandTotal);
+      } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
+        const totalRefunded = sale.payments.reduce((refundSum, payment) => {
+          return refundSum + (Number(payment.refundedAmount) || 0);
+        }, 0);
+        const remainingAmount = Number(sale.grandTotal) - totalRefunded;
+        return sum + Math.max(0, remainingAmount);
+      }
+      return sum;
+    }, 0);
 
-      const totalExpenses = Number(otherExpenses._sum?.amount || 0) +
-        Number(payrollExpenses._sum?.netPay || 0) +
-        productCostSum;
+    const productCostSum = productCosts.reduce(
+      (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
+      0
+    );
 
-      // Format date as YYYY-MM-DD for consistency
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+    const totalExpenses = Number(otherExpenses._sum?.amount || 0) +
+      Number(payrollExpenses._sum?.netPay || 0) +
+      productCostSum;
 
-      return {
-        date: `${year}-${month}-${day}`,
-        revenue: revenue,
-        expenses: totalExpenses,
-      };
-    })
-  );
+    chartData.push({
+      date: dayStart.toISOString(), // Send ISO for client labeling
+      revenue: revenue,
+      expenses: totalExpenses,
+    });
+
+    currentDate.setTime(currentDate.getTime() + (24 * 60 * 60 * 1000));
+  }
 
   return chartData;
 }

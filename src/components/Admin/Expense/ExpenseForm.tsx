@@ -29,7 +29,7 @@ interface ExpenseFormProps {
 const initialValues: ExpenseFormData = {
   reason: '',
   amount: 0,
-  date: new Date().toISOString().split('T')[0],
+  date: new Date().toLocaleDateString('en-CA'), // Returns YYYY-MM-DD in local time
 };
 
 function ExpenseForm({
@@ -137,8 +137,8 @@ function ExpenseForm({
                   ? 'Updating'
                   : 'Creating'
                 : expense
-                ? 'Update'
-                : 'Create'}
+                  ? 'Update'
+                  : 'Create'}
             </Button>
           </>
         }
