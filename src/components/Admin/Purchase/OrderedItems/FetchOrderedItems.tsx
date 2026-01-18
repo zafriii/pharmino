@@ -61,8 +61,13 @@ async function fetchOrderedItems(
     // Handle new paginated response format (same as products API)
     const items = data.items || [];
     
+    // Sort purchases by updatedAt in descending order (newest first)
+    const sortedPurchases = (items as PurchaseOrder[]).sort((a, b) => {
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+    
     return {
-      purchases: items as PurchaseOrder[],
+      purchases: sortedPurchases,
       totalPages: data.pagination?.totalPages || 1,
       currentPage: page,
     };
