@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get("period") || "month";
+    const period = searchParams.get("period") || "week";
 
     const now = new Date();
     let startDate: Date, endDate: Date;
@@ -45,6 +45,25 @@ export async function GET(request: NextRequest) {
           const currentMonth = now.getMonth();
           startDate = new Date(currentYear, currentMonth - 11, 1, 0, 0, 0, 0);
           endDate = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+          break;
+        case "all":
+          // Find earliest date from all sources
+          const [earliestExpense, earliestPayroll, earliestReceived] = await Promise.all([
+            prisma.expense.findFirst({ orderBy: { date: 'asc' }, select: { date: true } }),
+            prisma.payroll.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
+            prisma.receivedItem.findFirst({ orderBy: { receivedAt: 'asc' }, select: { receivedAt: true } })
+          ]);
+
+          const dates = [
+            earliestExpense?.date,
+            earliestPayroll?.createdAt,
+            earliestReceived?.receivedAt
+          ].filter((d): d is Date => !!d);
+
+          startDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date(now.getFullYear(), now.getMonth(), 1);
+          startDate.setDate(1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
           break;
         default: // month
           startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
@@ -85,15 +104,28 @@ export async function GET(request: NextRequest) {
 }
 
 async function getDetailedExpenseChartData(startDate: Date, endDate: Date, period: string) {
-  if (period === 'year') {
-    // For year period, group by month
+  if (period === 'year' || period === 'all') {
+    // For year/all period, group by month
     const chartData = [];
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth();
+    const now = new Date();
 
-    // Generate last 12 months ending with current month
-    for (let i = 11; i >= 0; i--) {
+    // Calculate how many months to show
+    let monthsToShow = 12; // Default for year
+
+    if (period === 'all') {
+      const yearDiff = now.getFullYear() - startDate.getFullYear();
+      const monthDiff = now.getMonth() - startDate.getMonth();
+      monthsToShow = Math.max(1, (yearDiff * 12) + monthDiff + 1);
+
+      // Safety cap to avoid massive loops if data is very old or messy
+      if (monthsToShow > 120) monthsToShow = 120; // 10 years max
+    }
+
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    // Generate months ending with current month
+    for (let i = monthsToShow - 1; i >= 0; i--) {
       let targetYear = currentYear;
       let targetMonth = currentMonth - i;
 

@@ -15,8 +15,8 @@ interface Option {
 }
 
 const periodOptions: Option[] = [
-  { label: 'All Time', value: '' },
-  { label: 'Today', value: 'today' },
+  // { label: 'All Time', value: 'all' },
+  // { label: 'Today', value: 'today' },
   { label: 'This Week', value: 'week' },
   { label: 'This Month', value: 'month' },
   { label: 'This Year', value: 'year' },
@@ -32,6 +32,10 @@ export default function ExpenseWrapper() {
 
   // Initialize dates if missing for a period
   useEffect(() => {
+    if (!searchParams.has('period')) {
+      updateURL('period', 'week');
+      return;
+    }
     if (currentPeriod && !searchParams.has('startDate')) {
       const now = new Date();
       let start: Date | null = null;
@@ -136,7 +140,7 @@ export default function ExpenseWrapper() {
             options={periodOptions}
             selectedValue={searchParams.get('period') || ''}
             onSelect={(value) => updateURL('period', value.toString())}
-            placeholder="All Time"
+            placeholder="This week"
           />
         </div>
 

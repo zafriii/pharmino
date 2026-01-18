@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get("period") || "month"; // week, month, year (removed today)
+    const period = searchParams.get("period") || "week"; // week, month, year (removed today)
     const compare = searchParams.get("compare") === "true"; // Compare with previous period
 
     // Redirect 'today' to 'week' for profit/loss
@@ -89,6 +89,31 @@ export async function GET(request: NextRequest) {
           // Previous 12 months (12-23 months ago)
           prevStartDate = new Date(currentYear, currentMonth - 23, 1, 0, 0, 0, 0);
           prevEndDate = new Date(currentYear, currentMonth - 11, 0, 23, 59, 59, 999);
+          break;
+        case "all":
+          // Find earliest date from all sources
+          const [earliestSale, earliestExpense, earliestPayroll, earliestReceived] = await Promise.all([
+            prisma.sale.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
+            prisma.expense.findFirst({ orderBy: { date: 'asc' }, select: { date: true } }),
+            prisma.payroll.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
+            prisma.receivedItem.findFirst({ orderBy: { receivedAt: 'asc' }, select: { receivedAt: true } })
+          ]);
+
+          const dates = [
+            earliestSale?.createdAt,
+            earliestExpense?.date,
+            earliestPayroll?.createdAt,
+            earliestReceived?.receivedAt
+          ].filter((d): d is Date => !!d);
+
+          startDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date(now.getFullYear(), now.getMonth(), 1);
+          startDate.setDate(1);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+          // No comparison for "All Time"
+          prevStartDate = new Date(startDate);
+          prevEndDate = new Date(endDate);
           break;
         default: // month
           // This month: from 1st 00:00:00 to today 23:59:59 (not the entire month)
@@ -358,7 +383,7 @@ export async function GET(request: NextRequest) {
 }
 
 async function getChartData(startDate: Date, endDate: Date, period: string) {
-  // For year period, group by month to avoid too many queries
+  // For year/all period, group by month to avoid too many queries
   // For month period, group by day
   // For week/today, group by day
 
@@ -368,22 +393,28 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
     period: period
   });
 
-  if (period === 'year') {
-    // Use exact same logic as dashboard but for 12 months instead of 6
+  if (period === 'year' || period === 'all') {
+    // Use exact same logic for month grouping
     const chartData = [];
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth();
+    const now = new Date();
 
-    console.log("Current date info:", {
-      currentDate: currentDate.toISOString(),
-      currentYear: currentYear,
-      currentMonth: currentMonth,
-      currentMonthName: currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    });
+    // Calculate how many months to show
+    let monthsToShow = 12; // Default for year
 
-    // Generate last 12 months ending with current month
-    for (let i = 11; i >= 0; i--) {
+    if (period === 'all') {
+      const yearDiff = now.getFullYear() - startDate.getFullYear();
+      const monthDiff = now.getMonth() - startDate.getMonth();
+      monthsToShow = Math.max(1, (yearDiff * 12) + monthDiff + 1);
+
+      // Safety cap to avoid massive loops
+      if (monthsToShow > 120) monthsToShow = 120;
+    }
+
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    // Generate months ending with current month
+    for (let i = monthsToShow - 1; i >= 0; i--) {
       // Calculate target year and month
       let targetYear = currentYear;
       let targetMonth = currentMonth - i;
