@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useCallback } from 'react';
+import { useTransition, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/shared ui/Button';
 import { IoIosGitCompare } from "react-icons/io";
@@ -15,6 +15,41 @@ export default function ProfitLossWrapper() {
   const rawPeriod = searchParams.get('period') || 'week';
   const currentPeriod = rawPeriod === 'today' ? 'week' : rawPeriod;
   const currentCompare = searchParams.get('compare') === 'true';
+
+  // Auto-initialize dates if missing
+  useEffect(() => {
+    if (!searchParams.has('period')) {
+      updateURL('period', 'week');
+      return;
+    }
+    if (currentPeriod && !searchParams.has('startDate')) {
+      const now = new Date();
+      let start: Date | null = null;
+      let end: Date | null = null;
+
+      switch (currentPeriod) {
+        case 'week':
+          start = startOfWeek(now, { weekStartsOn: 1 });
+          end = endOfWeek(now, { weekStartsOn: 1 });
+          break;
+        case 'month':
+          start = startOfMonth(now);
+          end = endOfMonth(now);
+          break;
+        case 'year':
+          start = startOfYear(now);
+          end = endOfYear(now);
+          break;
+      }
+
+      if (start && end) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('startDate', start.toISOString());
+        params.set('endDate', end.toISOString());
+        router.replace(`?${params.toString()}`, { scroll: false });
+      }
+    }
+  }, [currentPeriod, searchParams, router]);
 
   const updateURL = useCallback(
     (key: string, value: string) => {
