@@ -73,7 +73,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
       return date.toLocaleDateString("en-US", { weekday: "short" }) + " " + date.getDate();
     } else if (period === "month") {
       return date.toLocaleDateString("en-US", { day: "numeric" });
-    } else if (period === "year") {
+    } else if (period === "year" || period === "all") {
       return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -88,6 +88,8 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         return 'This Month';
       case 'year':
         return 'This Year';
+      case 'all':
+        return 'All Time';
       default:
         return 'This Month';
     }

@@ -60,6 +60,8 @@ function getPeriodLabel(period: string) {
       return 'This Month';
     case 'year':
       return 'This Year';
+    case 'all':
+      return 'All Time';
     default:
       return 'This Month';
   }
@@ -73,6 +75,7 @@ function getAverageLabel(period: string) {
     case 'month':
       return 'Daily Average';
     case 'year':
+    case 'all':
       return 'Monthly Average';
     default:
       return 'Average';
@@ -125,8 +128,8 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
       return date.toLocaleDateString("en-US", { weekday: "short" }) + " " + date.getDate();
     } else if (period === 'month') {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    } else if (period === 'year') {
-      return date.toLocaleDateString("en-US", { month: "short" });
+    } else if (period === 'year' || period === 'all') {
+      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
