@@ -68,6 +68,7 @@ export async function recordDamageAction(
     revalidatePath('/admin/inventory');
     revalidatePath('/admin/damage-records');
     revalidatePath(`/admin/inventory/${itemId}/batches`);
+    revalidatePath(`/admin/dashboard-overview`);
 
     return {
       success: true,

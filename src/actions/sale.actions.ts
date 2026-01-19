@@ -98,6 +98,8 @@ export async function createSaleAction(
     revalidatePath("/admin/sale/pos");
     revalidatePath("/admin/inventory");
     revalidatePath("/admin/payments");
+    revalidatePath("/admin/analytics/profit-loss");
+    revalidatePath("/admin/analytics/dashboard-overview");
     
     // Revalidate batches pages for all items in the sale
     validatedData.items.forEach(item => {
@@ -205,6 +207,8 @@ export async function backToInventoryAction(
     // revalidateTag("products-for-sale");
     revalidatePath("/admin/sale/all-sale");
     revalidatePath("/admin/inventory");
+    revalidatePath("/admin/analytics/profit-loss");
+    revalidatePath("/admin/analytics/dashboard-overview");
     
     // Revalidate batches pages for restored items
     if (result.data?.saleItems) {
