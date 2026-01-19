@@ -52,34 +52,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
   });
 
   // Calculate profit/loss for each data point
-  let processedChartData = [...chartData];
-  
-  // For "All" period with only one data point, create additional points to show a trend
-  if (period === 'all' && chartData.length === 1) {
-    console.log("Single data point detected for 'all' period in ProfitLoss, creating trend data");
-    const singlePoint = chartData[0];
-    const currentDate = new Date(singlePoint.date);
-    
-    // Create 3 months of data: 2 months before and the current month
-    const prevMonth2 = new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1);
-    const prevMonth1 = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    
-    processedChartData = [
-      {
-        date: `${prevMonth2.getFullYear()}-${String(prevMonth2.getMonth() + 1).padStart(2, '0')}-01`,
-        revenue: Math.round(singlePoint.revenue * 0.75), // 75% of current
-        expenses: Math.round(singlePoint.expenses * 0.8), // 80% of current
-      },
-      {
-        date: `${prevMonth1.getFullYear()}-${String(prevMonth1.getMonth() + 1).padStart(2, '0')}-01`,
-        revenue: Math.round(singlePoint.revenue * 0.9), // 90% of current
-        expenses: Math.round(singlePoint.expenses * 0.85), // 85% of current
-      },
-      singlePoint // Current month
-    ];
-  }
-
-  const profitLossData = processedChartData.map((item) => ({
+  const profitLossData = chartData.map((item) => ({
     ...item,
     profit: item.revenue - item.expenses,
     profitMargin: item.revenue > 0 ? ((item.revenue - item.expenses) / item.revenue) * 100 : 0,
@@ -100,7 +73,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
       return date.toLocaleDateString("en-US", { weekday: "short" }) + " " + date.getDate();
     } else if (period === "month") {
       return date.toLocaleDateString("en-US", { day: "numeric" });
-    } else if (period === "year" || period === "all") {
+    } else if (period === "year") {
       return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -115,8 +88,6 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         return 'This Month';
       case 'year':
         return 'This Year';
-      case 'all':
-        return 'All Time';
       default:
         return 'This Month';
     }
@@ -211,11 +182,11 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
 
   // Bar chart data configuration - Better visualization
   const barChartDataConfig = {
-    labels: processedChartData.map((item) => formatDate(item.date)),
+    labels: chartData.map((item) => formatDate(item.date)),
     datasets: [
       {
         label: "Revenue",
-        data: processedChartData.map((item) => item.revenue),
+        data: chartData.map((item) => item.revenue),
         backgroundColor: "rgba(34, 197, 94, 0.8)",
         borderColor: "#22c55e",
         borderWidth: 1,
@@ -223,7 +194,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
       },
       {
         label: "Total Expenses",
-        data: processedChartData.map((item) => item.expenses),
+        data: chartData.map((item) => item.expenses),
         backgroundColor: "rgba(239, 68, 68, 0.8)",
         borderColor: "#ef4444",
         borderWidth: 1,
@@ -308,7 +279,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
   };
 
   const profitTrendData = {
-    labels: processedChartData.map((item) => formatDate(item.date)),
+    labels: chartData.map((item) => formatDate(item.date)),
     datasets: [
       {
         label: "Profit",
@@ -509,11 +480,11 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
   };
 
   const lineChartDataConfig = {
-    labels: processedChartData.map((item) => formatDate(item.date)),
+    labels: chartData.map((item) => formatDate(item.date)),
     datasets: [
       {
         label: "Revenue",
-        data: processedChartData.map((item) => item.revenue),
+        data: chartData.map((item) => item.revenue),
         borderColor: "#22c55e",
         backgroundColor: "rgba(34, 197, 94, 0.1)",
         borderWidth: 3,
@@ -529,7 +500,7 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
       },
       {
         label: "Total Expenses",
-        data: processedChartData.map((item) => item.expenses),
+        data: chartData.map((item) => item.expenses),
         borderColor: "#ef4444",
         backgroundColor: "rgba(239, 68, 68, 0.1)",
         borderWidth: 3,
