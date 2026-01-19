@@ -17,24 +17,6 @@ export default async function SaleBox({ searchParams }: SaleBoxProps) {
   const resolvedParams = await searchParams;
 
   return (
-    // <SaleProvider>
-    //   <div className="flex gap-4 h-full">
-    //     {/* Products Panel */}
-    //     <div className="flex-1">
-    //       <PageContainer title="Products">
-    //         <ProductPanel searchParams={resolvedParams} />
-    //       </PageContainer>
-    //     </div>
-
-    //     {/* Sale Panel */}
-    //     <div className="w-96">
-    //       <PageContainer title="Sale Panel">
-    //         <SalePanel />
-    //       </PageContainer>
-    //     </div>
-    //   </div>
-    // </SaleProvider>
-
     <SaleProvider>
     <div className="flex flex-col md:flex-row gap-4 h-full">
       
@@ -54,6 +36,5 @@ export default async function SaleBox({ searchParams }: SaleBoxProps) {
 
     </div>
   </SaleProvider>
-
   );
 }

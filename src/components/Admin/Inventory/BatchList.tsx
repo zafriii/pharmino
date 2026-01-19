@@ -238,7 +238,7 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center w-full gap-3">
   
-        {/* Back link */}
+        {/* Back to Inventory */}
         <Link
           href="/admin/inventory"
           className="text-[#4a90e2] flex items-center gap-1 w-fit"
@@ -247,8 +247,8 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
           <span className="text-sm md:text-base">Back to Inventory</span>
         </Link>
 
-        {/* Right side actions */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
+        {/* Right side buttons & stats */}
+        <div className="flex items-center gap-2 flex-wrap">
           
           <RecordDamageButton
             itemId={parseInt(itemId)}
@@ -260,6 +260,7 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
 
         </div>
       </div>
+
 
       {/* Item Details */}
       <h1 className="text-2xl font-bold">{item.itemName}</h1>
