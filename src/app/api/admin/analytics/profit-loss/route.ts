@@ -53,6 +53,11 @@ export async function GET(request: NextRequest) {
           prevEndDate = new Date(endDate);
           prevEndDate.setFullYear(endDate.getFullYear() - 1);
           break;
+        case "all":
+          // No comparison for "All Time" even with explicit dates
+          prevStartDate = new Date(startDate);
+          prevEndDate = new Date(endDate);
+          break;
         case "month":
         default:
           // For month, subtract 1 month
@@ -91,25 +96,31 @@ export async function GET(request: NextRequest) {
           prevEndDate = new Date(currentYear, currentMonth - 11, 0, 23, 59, 59, 999);
           break;
         case "all":
-          // Find earliest date from all sources
-          const [earliestSale, earliestExpense, earliestPayroll, earliestReceived] = await Promise.all([
-            prisma.sale.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
-            prisma.expense.findFirst({ orderBy: { date: 'asc' }, select: { date: true } }),
-            prisma.payroll.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
-            prisma.receivedItem.findFirst({ orderBy: { receivedAt: 'asc' }, select: { receivedAt: true } })
-          ]);
+          if (startDateParam && endDateParam) {
+            // Use explicit dates from client for "all" filter too
+            startDate = new Date(startDateParam);
+            endDate = new Date(endDateParam);
+          } else {
+            // Find earliest date from all sources only when no explicit dates provided
+            const [earliestSale, earliestExpense, earliestPayroll, earliestReceived] = await Promise.all([
+              prisma.sale.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
+              prisma.expense.findFirst({ orderBy: { date: 'asc' }, select: { date: true } }),
+              prisma.payroll.findFirst({ orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
+              prisma.receivedItem.findFirst({ orderBy: { receivedAt: 'asc' }, select: { receivedAt: true } })
+            ]);
 
-          const dates = [
-            earliestSale?.createdAt,
-            earliestExpense?.date,
-            earliestPayroll?.createdAt,
-            earliestReceived?.receivedAt
-          ].filter((d): d is Date => !!d);
+            const dates = [
+              earliestSale?.createdAt,
+              earliestExpense?.date,
+              earliestPayroll?.createdAt,
+              earliestReceived?.receivedAt
+            ].filter((d): d is Date => !!d);
 
-          startDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date(now.getFullYear(), now.getMonth(), 1);
-          startDate.setDate(1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            startDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date(now.getFullYear(), now.getMonth(), 1);
+            startDate.setDate(1);
+            startDate.setHours(0, 0, 0, 0);
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+          }
 
           // No comparison for "All Time"
           prevStartDate = new Date(startDate);
