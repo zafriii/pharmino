@@ -114,9 +114,16 @@ export default function ExpenseWrapper() {
 
         switch (value) {
           case 'all':
-            // For 'all', don't set dates - let API handle all data without date restrictions
-            params.delete('startDate');
-            params.delete('endDate');
+            // For 'all', set from earliest record date to end of today in local time
+            if (earliestDate) {
+              start = earliestDate;
+              end = endOfDay(now);
+            } else {
+              // If earliest date not loaded yet, don't set dates
+              params.delete('startDate');
+              params.delete('endDate');
+              break;
+            }
             break;
           case 'today':
             start = startOfDay(now);

@@ -83,6 +83,15 @@ function getAverageLabel(period: string) {
 }
 
 export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period }: ExpenseGraphChartsProps) {
+  // Debug logging for All period
+  console.log("ExpenseGraphCharts Debug:", {
+    period,
+    chartDataLength: chartData.length,
+    chartData: chartData.slice(0, 5), // Show first 5 items
+    firstDate: chartData[0]?.date,
+    lastDate: chartData[chartData.length - 1]?.date
+  });
+
   // Process chart data to extract expense categories by date
   const processChartDataForExpenses = () => {
     if (!chartData || chartData.length === 0) {

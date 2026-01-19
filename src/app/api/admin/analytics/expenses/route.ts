@@ -119,6 +119,14 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
 
       // Safety cap to avoid massive loops if data is very old or messy
       if (monthsToShow > 120) monthsToShow = 120; // 10 years max
+      
+      console.log("All period calculation:", {
+        startDate: startDate.toISOString(),
+        now: now.toISOString(),
+        yearDiff,
+        monthDiff,
+        monthsToShow
+      });
     }
 
     const currentYear = now.getFullYear();

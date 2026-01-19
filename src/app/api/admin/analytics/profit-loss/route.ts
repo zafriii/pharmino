@@ -407,6 +407,14 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
 
       // Safety cap to avoid massive loops
       if (monthsToShow > 120) monthsToShow = 120;
+      
+      console.log("Profit-Loss All period calculation:", {
+        startDate: startDate.toISOString(),
+        now: now.toISOString(),
+        yearDiff,
+        monthDiff,
+        monthsToShow
+      });
     }
 
     const currentYear = now.getFullYear();
