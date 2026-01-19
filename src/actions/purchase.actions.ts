@@ -254,6 +254,7 @@ export async function updatePurchaseOrderStatusAction(id: string, status: string
     revalidatePath("/admin/purchase/purchase-history/received-items");
     revalidatePath("/admin/analytics/profit-loss");
     revalidatePath("/admin/analytics/dashboard-overview");
+    revalidatePath("/admin/analytics/expenses");
     
     return {
       success: true,
