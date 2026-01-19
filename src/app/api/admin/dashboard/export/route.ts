@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
+import { getTimezoneFromRequest } from "@/lib/timezone-utils";
 import * as XLSX from 'xlsx';
 
 const prisma = new PrismaClient();
@@ -145,16 +146,37 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 6. Inventory Alerts
-    const twoDaysFromNow = new Date();
+    // 6. Inventory Alerts - Use timezone-aware expiration logic
+    const userTimezone = getTimezoneFromRequest(request);
+    
+    // Get current date in user's timezone for expiration calculations
+    let currentDateLocal: Date;
+    if (userTimezone) {
+      const now = new Date();
+      const userDate = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
+      currentDateLocal = new Date(userDate.getFullYear(), userDate.getMonth(), userDate.getDate());
+    } else {
+      const now = new Date();
+      currentDateLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+    
+    // Calculate 2 days from current date in user's timezone
+    const twoDaysFromNow = new Date(currentDateLocal);
     twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
+    
+    // Convert to UTC for database query
+    const twoDaysFromNowUTC = new Date(Date.UTC(
+      twoDaysFromNow.getFullYear(),
+      twoDaysFromNow.getMonth(),
+      twoDaysFromNow.getDate()
+    ));
     
     const expiringProducts = await prisma.productBatch.findMany({
       where: {
         status: 'ACTIVE',
         quantity: { gt: 0 },
         expiryDate: {
-          lte: twoDaysFromNow
+          lte: twoDaysFromNowUTC
         }
       },
       include: {

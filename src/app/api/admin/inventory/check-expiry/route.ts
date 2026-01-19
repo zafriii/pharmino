@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 import { checkAndUpdateExpiredBatches, getBatchesWithExpiryWarnings } from "@/lib/batch-expiry-utils";
+import { getTimezoneFromRequest } from "@/lib/timezone-utils";
 
 // POST /api/admin/inventory/check-expiry - Check and update expired batches
 export async function POST(request: NextRequest) {
@@ -10,11 +11,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const { itemId, daysThreshold = 30 } = body;
 
+    // Get user timezone from request headers
+    const userTimezone = getTimezoneFromRequest(request);
+
     // Check and update expired batches
-    const updateResult = await checkAndUpdateExpiredBatches(itemId);
+    const updateResult = await checkAndUpdateExpiredBatches(itemId, userTimezone || undefined);
     
     // Get batches with expiry warnings
-    const warningBatches = await getBatchesWithExpiryWarnings(daysThreshold);
+    const warningBatches = await getBatchesWithExpiryWarnings(daysThreshold, userTimezone || undefined);
 
     return successResponse({
       updateResult,
@@ -49,7 +53,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const daysThreshold = parseInt(searchParams.get('days') || '30');
 
-    const warningBatches = await getBatchesWithExpiryWarnings(daysThreshold);
+    // Get user timezone from request headers
+    const userTimezone = getTimezoneFromRequest(request);
+
+    const warningBatches = await getBatchesWithExpiryWarnings(daysThreshold, userTimezone || undefined);
 
     return successResponse({
       count: warningBatches.length,

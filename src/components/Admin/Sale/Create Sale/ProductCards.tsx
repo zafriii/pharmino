@@ -6,6 +6,7 @@ import { useSaleStore } from "@/stores/saleStore";
 import { useSaleContext } from "@/contexts/SaleContext";
 import ProductPagination from "../../Product Management/Products/ProductPagination";
 import { hasAvailableBatches } from "@/lib/batch-utils";
+import { useTimezone } from "@/hooks/useTimezone";
 
 interface ProductCardsProps {
   products: ProductForSale[];
@@ -16,6 +17,9 @@ interface ProductCardsProps {
 const ProductCards: React.FC<ProductCardsProps> = ({ products, totalPages, currentPage }) => {
   const addProduct = useSaleStore((state) => state.addProduct);
   const { setProducts } = useSaleContext();
+  
+  // Get user timezone for expiration checks
+  const userTimezone = useTimezone();
 
   // Update products in context when they change
   useEffect(() => {
@@ -38,7 +42,7 @@ const ProductCards: React.FC<ProductCardsProps> = ({ products, totalPages, curre
     }
     
     // Check if product has non-expired active batches
-    if (!hasAvailableBatches(product)) {
+    if (!hasAvailableBatches(product, userTimezone)) {
       return; // Don't add products with only expired batches
     }
     
@@ -64,7 +68,7 @@ const ProductCards: React.FC<ProductCardsProps> = ({ products, totalPages, curre
           const hasActiveBatches = product.batches?.some(batch => 
             batch.status === "ACTIVE" && (batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0))
           );
-          const hasNonExpiredBatches = hasAvailableBatches(product);
+          const hasNonExpiredBatches = hasAvailableBatches(product, userTimezone);
           
           const isUnavailable = isOutOfStock || !hasActiveBatches || !hasNonExpiredBatches;
           

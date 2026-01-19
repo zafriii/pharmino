@@ -149,13 +149,24 @@ export async function optimizeBatchActivation(itemId: number, tx?: any) {
 /**
  * Check and update expired batches for a specific item or all items
  * @param itemId - Optional item ID to check batches for specific item only
+ * @param userTimezone - Optional user timezone (e.g., 'Asia/Kolkata', 'America/New_York')
  * @returns Object with updated batch count and details
  */
-export async function checkAndUpdateExpiredBatches(itemId?: number) {
+export async function checkAndUpdateExpiredBatches(itemId?: number, userTimezone?: string) {
   try {
-    // Use the same logic as isBatchExpired function for consistency
-    const currentDate = new Date();
-    const currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    // Get current date in user's timezone or default to system timezone
+    let currentDateLocal: Date;
+    
+    if (userTimezone) {
+      // Use user's timezone
+      const now = new Date();
+      const userDate = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
+      currentDateLocal = new Date(userDate.getFullYear(), userDate.getMonth(), userDate.getDate());
+    } else {
+      // Fallback to system timezone
+      const currentDate = new Date();
+      currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    }
     
     // Convert to UTC for database comparison since Prisma stores dates in UTC
     const currentDateUTC = new Date(Date.UTC(
@@ -299,9 +310,10 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
 /**
  * Get batch expiry information with formatted dates
  * @param batch - ProductBatch object
+ * @param userTimezone - Optional user timezone (e.g., 'Asia/Kolkata', 'America/New_York')
  * @returns Object with expiry information
  */
-export function getBatchExpiryInfo(batch: any) {
+export function getBatchExpiryInfo(batch: any, userTimezone?: string) {
   if (!batch.expiryDate) {
     return {
       isExpired: false,
@@ -311,9 +323,19 @@ export function getBatchExpiryInfo(batch: any) {
     };
   }
 
-  // Get current date in local timezone (not UTC)
-  const currentDate = new Date();
-  const currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+  // Get current date in user's timezone or system timezone
+  let currentDateLocal: Date;
+  
+  if (userTimezone) {
+    // Use user's timezone
+    const now = new Date();
+    const userDate = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
+    currentDateLocal = new Date(userDate.getFullYear(), userDate.getMonth(), userDate.getDate());
+  } else {
+    // Fallback to system timezone
+    const currentDate = new Date();
+    currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+  }
   
   const expiry = new Date(batch.expiryDate);
   const expiryLocal = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
@@ -342,17 +364,37 @@ export function getBatchExpiryInfo(batch: any) {
 /**
  * Get all batches with expiry warnings for dashboard/alerts
  * @param daysThreshold - Number of days to consider as "expiring soon" (default: 30)
+ * @param userTimezone - Optional user timezone (e.g., 'Asia/Kolkata', 'America/New_York')
  * @returns Array of batches expiring soon or expired
  */
-export async function getBatchesWithExpiryWarnings(daysThreshold: number = 30) {
+export async function getBatchesWithExpiryWarnings(daysThreshold: number = 30, userTimezone?: string) {
   try {
-    const futureDate = new Date();
+    // Get current date in user's timezone
+    let currentDateLocal: Date;
+    if (userTimezone) {
+      const now = new Date();
+      const userDate = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
+      currentDateLocal = new Date(userDate.getFullYear(), userDate.getMonth(), userDate.getDate());
+    } else {
+      const now = new Date();
+      currentDateLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+    
+    // Calculate future date in user's timezone
+    const futureDate = new Date(currentDateLocal);
     futureDate.setDate(futureDate.getDate() + daysThreshold);
+    
+    // Convert to UTC for database query
+    const futureDateUTC = new Date(Date.UTC(
+      futureDate.getFullYear(),
+      futureDate.getMonth(),
+      futureDate.getDate()
+    ));
     
     const batches = await prisma.productBatch.findMany({
       where: {
         expiryDate: {
-          lte: futureDate
+          lte: futureDateUTC
         },
         status: {
           in: ['ACTIVE', 'INACTIVE']
@@ -381,7 +423,7 @@ export async function getBatchesWithExpiryWarnings(daysThreshold: number = 30) {
 
     return batches.map(batch => ({
       ...batch,
-      ...getBatchExpiryInfo(batch)
+      ...getBatchExpiryInfo(batch, userTimezone)
     }));
 
   } catch (error) {

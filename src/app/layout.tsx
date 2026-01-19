@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import { startCronJobs } from "@/lib/cron-service";
+import TimezoneProvider from "@/components/TimezoneProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,7 +58,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <TimezoneProvider>
+            {children}
+          </TimezoneProvider>
         </ThemeProvider>
       </body>
     </html>

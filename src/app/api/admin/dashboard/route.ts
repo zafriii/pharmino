@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
+import { getTimezoneFromRequest } from "@/lib/timezone-utils";
 
 const prisma = new PrismaClient();
 
@@ -826,9 +827,30 @@ export async function GET(request: NextRequest) {
     }
 
     console.log("Fetching inventory alerts...");
-    // Inventory Alerts Data
-    const twoDaysFromNow = new Date();
+    // Inventory Alerts Data - Use timezone-aware expiration logic
+    const userTimezone = getTimezoneFromRequest(request);
+    
+    // Get current date in user's timezone for expiration calculations
+    let currentDateLocal: Date;
+    if (userTimezone) {
+      const now = new Date();
+      const userDate = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
+      currentDateLocal = new Date(userDate.getFullYear(), userDate.getMonth(), userDate.getDate());
+    } else {
+      const now = new Date();
+      currentDateLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+    
+    // Calculate 2 days from current date in user's timezone
+    const twoDaysFromNow = new Date(currentDateLocal);
     twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
+    
+    // Convert to UTC for database query
+    const twoDaysFromNowUTC = new Date(Date.UTC(
+      twoDaysFromNow.getFullYear(),
+      twoDaysFromNow.getMonth(),
+      twoDaysFromNow.getDate()
+    ));
 
     // Products expiring within 2 days
     const expiringProducts = await prisma.productBatch.findMany({
@@ -836,7 +858,7 @@ export async function GET(request: NextRequest) {
         status: 'ACTIVE',
         quantity: { gt: 0 },
         expiryDate: {
-          lte: twoDaysFromNow
+          lte: twoDaysFromNowUTC
         }
       },
       include: {
@@ -858,8 +880,8 @@ export async function GET(request: NextRequest) {
 
     const expiringProductsData = expiringProducts.map(batch => {
       const expiryDate = batch.expiryDate ? new Date(batch.expiryDate) : new Date();
-      const today = new Date();
-      const timeDiff = expiryDate.getTime() - today.getTime();
+      const expiryLocal = new Date(expiryDate.getFullYear(), expiryDate.getMonth(), expiryDate.getDate());
+      const timeDiff = expiryLocal.getTime() - currentDateLocal.getTime();
       const daysUntilExpiry = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
       return {
