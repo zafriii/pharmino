@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 import { checkAndUpdateExpiredBatches } from "@/lib/batch-expiry-utils";
-import { getTimezoneFromRequest } from "@/lib/timezone-utils";
 import { z } from "zod";
 
 // Schema validation
@@ -56,11 +55,9 @@ export async function GET(request: NextRequest) {
     // Check and update expired batches before fetching products
     // This ensures batch status is synchronized in real-time
     try {
-      // Get user timezone from request headers
-      const userTimezone = getTimezoneFromRequest(request);
-      const expiryResult = await checkAndUpdateExpiredBatches(undefined, userTimezone || undefined);
+      const expiryResult = await checkAndUpdateExpiredBatches();
       if (expiryResult.updatedCount > 0) {
-        console.log(`🔄 Updated ${expiryResult.updatedCount} expired batches before fetching products (timezone: ${userTimezone || 'system'})`);
+        console.log(`🔄 Updated ${expiryResult.updatedCount} expired batches before fetching products`);
       }
     } catch (expiryError) {
       console.error('⚠️ Failed to update expired batches:', expiryError);

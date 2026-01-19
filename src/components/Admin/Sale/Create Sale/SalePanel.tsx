@@ -12,7 +12,6 @@ import { ImSpinner2 } from "react-icons/im";
 import { GoCheck } from "react-icons/go";
 import TabletSellSection from "@/components/Admin/Sale/Create Sale/TabletSellSection";
 import { TabletSaleConfig } from "@/types/tablet-sale.types";
-import { useTimezone } from "@/hooks/useTimezone";
 
 
 const SalePanel: React.FC = () => {
@@ -27,9 +26,6 @@ const SalePanel: React.FC = () => {
   } = useSaleStore();
 
   const { getAvailableStock, getProductById } = useSaleContext();
-  
-  // Get user timezone for expiration checks
-  const userTimezone = useTimezone();
 
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD">("CASH");
@@ -181,25 +177,13 @@ const SalePanel: React.FC = () => {
       
       if (!isActiveWithStock) return false;
       
-      // Check if batch is not expired using timezone-aware logic
+      // Check if batch is not expired
       if (!batch.expiryDate) return true; // No expiry date means it doesn't expire
-      
-      // Get current date in user's timezone
-      let currentDateLocal: Date;
-      if (userTimezone) {
-        const now = new Date();
-        const userDate = new Date(now.toLocaleString("en-US", { timeZone: userTimezone }));
-        currentDateLocal = new Date(userDate.getFullYear(), userDate.getMonth(), userDate.getDate());
-      } else {
-        const currentDate = new Date();
-        currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-      }
-      
-      const expiry = new Date(batch.expiryDate);
-      const expiryLocal = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
-      
-      // Batch expires the day AFTER the expiry date
-      return expiryLocal >= currentDateLocal;
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+      const expiryDate = new Date(batch.expiryDate);
+      expiryDate.setHours(0, 0, 0, 0);
+      return expiryDate >= currentDate;
     });
   };
 
