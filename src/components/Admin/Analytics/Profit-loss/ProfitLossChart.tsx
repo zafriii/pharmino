@@ -75,6 +75,9 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
       return date.toLocaleDateString("en-US", { day: "numeric" });
     } else if (period === "year") {
       return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    } else if (period === "all") {
+      // For "all" filter, show month and year for better readability
+      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
@@ -88,6 +91,8 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         return 'This Month';
       case 'year':
         return 'This Year';
+      case 'all':
+        return 'All Time';
       default:
         return 'This Month';
     }
@@ -156,9 +161,10 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         },
         ticks: {
           font: {
-            size: 10,
+            size: period === 'all' ? 9 : 10, // Smaller font for "all" period
           },
           color: '#6b7280',
+          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
@@ -255,9 +261,10 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         },
         ticks: {
           font: {
-            size: 10,
+            size: period === 'all' ? 9 : 10, // Smaller font for "all" period
           },
           color: '#6b7280',
+          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
@@ -440,9 +447,10 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         },
         ticks: {
           font: {
-            size: 11,
+            size: period === 'all' ? 10 : 11, // Smaller font for "all" period
           },
           color: '#6b7280',
+          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {

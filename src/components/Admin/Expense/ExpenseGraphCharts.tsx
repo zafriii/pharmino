@@ -60,6 +60,8 @@ function getPeriodLabel(period: string) {
       return 'This Month';
     case 'year':
       return 'This Year';
+    case 'all':
+      return 'All Time';
     default:
       return 'This Month';
   }
@@ -73,6 +75,7 @@ function getAverageLabel(period: string) {
     case 'month':
       return 'Daily Average';
     case 'year':
+    case 'all':
       return 'Monthly Average';
     default:
       return 'Average';
@@ -126,7 +129,10 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
     } else if (period === 'month') {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } else if (period === 'year') {
-      return date.toLocaleDateString("en-US", { month: "short" });
+      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    } else if (period === 'all') {
+      // For "all" filter, show month and year for better readability
+      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
@@ -196,9 +202,10 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
         },
         ticks: {
           font: {
-            size: 11,
+            size: period === 'all' ? 10 : 11, // Smaller font for "all" period
           },
           color: '#6b7280',
+          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
@@ -305,9 +312,10 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
         },
         ticks: {
           font: {
-            size: 11,
+            size: period === 'all' ? 10 : 11, // Smaller font for "all" period
           },
           color: '#6b7280',
+          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
