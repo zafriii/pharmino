@@ -14,12 +14,18 @@ interface Option {
   value: string | number;
 }
 
-const periodOptions: Option[] = [
-  // { label: 'All Time', value: 'all' },
-  // { label: 'Today', value: 'today' },
-  { label: 'This Week', value: 'week' },
-  { label: 'This Month', value: 'month' },
-  { label: 'This Year', value: 'year' },
+// Chart filter options (with URL date range)
+const chartPeriodOptions: Option[] = [
+  { label: 'Weekly Chart', value: 'week' },
+  { label: 'Monthly Chart', value: 'month' },
+  { label: 'Yearly Chart', value: 'year' },
+];
+
+// List filter options (normal filter with URL change)
+const listFilterOptions: Option[] = [
+  { label: 'All Other Expense', value: 'all' },
+  { label: 'Weekly Other Expense', value: 'week' },
+  { label: 'Monthly Other Expense', value: 'month' },
 ];
 
 export default function ExpenseWrapper() {
@@ -29,8 +35,9 @@ export default function ExpenseWrapper() {
 
   const [openForm, setOpenForm] = useState(false);
   const currentPeriod = searchParams.get('period');
+  const currentListFilter = searchParams.get('listFilter');
 
-  // Initialize dates if missing for a period
+  // Initialize dates if missing for a period (for chart)
   useEffect(() => {
     if (!searchParams.has('period')) {
       updateURL('period', 'week');
@@ -69,12 +76,19 @@ export default function ExpenseWrapper() {
     }
   }, [currentPeriod, searchParams, router]);
 
+  // Initialize list filter if missing
+  useEffect(() => {
+    if (!searchParams.has('listFilter')) {
+      updateURL('listFilter', 'all');
+    }
+  }, [searchParams]);
+
   const updateURL = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.set(key, value);
 
-      // Handle date calculation for period change
+      // Handle date calculation for chart period change
       if (key === 'period') {
         const now = new Date();
         let start: Date | null = null;
@@ -127,35 +141,51 @@ export default function ExpenseWrapper() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4">
-        <div className="flex-1 w-full md:max-w-3xl">
-          <SearchExpense
-            value={searchParams.get('search') || ''}
-            onSearch={handleSearch}
-          />
-        </div>
-
+      {/* Chart Filter Section */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Chart Filters</h3>
         <div className="flex flex-wrap gap-3">
           <CustomDropdown
-            options={periodOptions}
-            selectedValue={searchParams.get('period') || ''}
+            options={chartPeriodOptions}
+            selectedValue={searchParams.get('period') || 'week'}
             onSelect={(value) => updateURL('period', value.toString())}
-            placeholder="This week"
+            placeholder="Weekly Chart"
           />
-        </div>
-
-        <div className="flex-shrink-0">
-          <Button
-            className="flex items-center gap-2 px-3 py-2 rounded-full h-10"
-            variant="primary"
-            onClick={() => setOpenForm(true)}
-          >
-            <GoPlus className="w-4 h-4" />
-            Add Expense
-          </Button>
         </div>
       </div>
 
+      {/* List Filter Section */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">List Filters</h3>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex-1 w-full md:max-w-3xl">
+            <SearchExpense
+              value={searchParams.get('search') || ''}
+              onSearch={handleSearch}
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <CustomDropdown
+              options={listFilterOptions}
+              selectedValue={searchParams.get('listFilter') || 'all'}
+              onSelect={(value) => updateURL('listFilter', value.toString())}
+              placeholder="All Other Expense"
+            />
+          </div>
+
+          <div className="flex-shrink-0">
+            <Button
+              className="flex items-center gap-2 px-3 py-2 rounded-full h-10"
+              variant="primary"
+              onClick={() => setOpenForm(true)}
+            >
+              <GoPlus className="w-4 h-4" />
+              Add Expense
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <ExpenseForm open={openForm} setOpen={setOpenForm} />
     </div>

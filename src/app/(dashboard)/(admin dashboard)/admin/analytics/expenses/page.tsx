@@ -10,6 +10,7 @@ interface PageProps {
     period?: string;
     startDate?: string;
     endDate?: string;
+    listFilter?: string;
   }>;
 }
 

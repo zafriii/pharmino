@@ -13,6 +13,7 @@ interface FetchExpenseProps {
     period?: string;
     startDate?: string;
     endDate?: string;
+    listFilter?: string;
   };
 }
 
@@ -24,9 +25,7 @@ async function fetchExpenses(
   const queryParams = new URLSearchParams({
     page: String(page),
     ...(params.search && { search: params.search }),
-    ...(params.period && { period: params.period }),
-    ...(params.startDate && { startDate: params.startDate }),
-    ...(params.endDate && { endDate: params.endDate }),
+    ...(params.listFilter && { listFilter: params.listFilter }),
   });
 
   try {

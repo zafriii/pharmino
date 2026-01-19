@@ -24,9 +24,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
-    const period = searchParams.get("period");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const listFilter = searchParams.get("listFilter");
 
     const skip = (page - 1) * limit;
 
@@ -40,17 +38,13 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Handle period filter based on local date
-    if (period) {
+    // Handle list filter for expense list
+    if (listFilter && listFilter !== 'all') {
       const now = new Date();
       let filterStartDate: Date;
-      let filterEndDate: Date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      let filterEndDate: Date;
 
-      switch (period) {
-        case 'today':
-          // Today: from 00:00:00 to 23:59:59 of current date
-          filterStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-          break;
+      switch (listFilter) {
         case 'week':
           // This week: from Monday 00:00:00 to Sunday 23:59:59
           const dayOfWeek = now.getDay();
@@ -65,25 +59,13 @@ export async function GET(request: NextRequest) {
           filterStartDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
           filterEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
           break;
-        case 'year':
-          // This year: from Jan 1st 00:00:00 to Dec 31st 23:59:59
-          filterStartDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
-          filterEndDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-          break;
         default:
           filterStartDate = new Date(0); // Beginning of time
+          filterEndDate = new Date(); // Now
       }
 
       const startDateStr = filterStartDate.toISOString().split('T')[0];
       const endDateStr = filterEndDate.toISOString().split('T')[0];
-      
-      where.date = {
-        gte: new Date(startDateStr),
-        lte: new Date(endDateStr + 'T23:59:59.999Z'),
-      };
-    } else if (startDate && endDate) {
-      const startDateStr = new Date(startDate).toISOString().split('T')[0];
-      const endDateStr = new Date(endDate).toISOString().split('T')[0];
       
       where.date = {
         gte: new Date(startDateStr),
