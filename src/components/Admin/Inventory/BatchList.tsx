@@ -236,15 +236,19 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center w-full">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center w-full gap-3">
+  
+        {/* Back link */}
         <Link
           href="/admin/inventory"
-          className="text-[#4a90e2] flex items-center gap-1"
+          className="text-[#4a90e2] flex items-center gap-1 w-fit"
         >
-          <GoArrowLeft className="text-lg" /> Back to Inventory
+          <GoArrowLeft className="text-lg" />
+          <span className="text-sm md:text-base">Back to Inventory</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        {/* Right side actions */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
           
           <RecordDamageButton
             itemId={parseInt(itemId)}
@@ -252,15 +256,11 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
             batches={batches.all}
           />
 
-          {/* Batch Stats */}
           <BatchStats summary={summary} />
 
-          {/* <BatchWrapper/> */}
-                
         </div>
       </div>
 
-  
       {/* Item Details */}
       <h1 className="text-2xl font-bold">{item.itemName}</h1>
       <div className="flex flex-wrap gap-4 text-sm text-gray-600">
