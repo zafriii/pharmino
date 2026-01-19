@@ -15,7 +15,7 @@ interface Option {
 }
 
 const periodOptions: Option[] = [
-  { label: 'All Time', value: 'all' },
+  // { label: 'All Time', value: 'all' },
   // { label: 'Today', value: 'today' },
   { label: 'This Week', value: 'week' },
   { label: 'This Month', value: 'month' },
@@ -26,37 +26,14 @@ export default function ExpenseWrapper() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [earliestDate, setEarliestDate] = useState<Date | null>(null);
 
   const [openForm, setOpenForm] = useState(false);
   const currentPeriod = searchParams.get('period');
 
-  // Fetch earliest record date for "All Time" filter
-  const fetchEarliestDate = useCallback(async () => {
-    try {
-      // You'll need to create this API endpoint to get the earliest expense record
-      const response = await fetch('/api/expenses/earliest-date');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.earliestDate) {
-          setEarliestDate(new Date(data.earliestDate));
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch earliest date:', error);
-      // Fallback to a reasonable default if API fails
-      setEarliestDate(new Date('2024-01-01'));
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchEarliestDate();
-  }, [fetchEarliestDate]);
-
   // Initialize dates if missing for a period
   useEffect(() => {
     if (!searchParams.has('period')) {
-      updateURL('period', 'all');
+      updateURL('period', 'week');
       return;
     }
     if (currentPeriod && !searchParams.has('startDate')) {
@@ -65,15 +42,6 @@ export default function ExpenseWrapper() {
       let end: Date | null = null;
 
       switch (currentPeriod) {
-        case 'all':
-          // For 'all', set from earliest record date to end of today in local time
-          if (earliestDate) {
-            start = earliestDate;
-            end = endOfDay(now);
-          } else {
-            return; // Wait for earliest date to be fetched
-          }
-          break;
         case 'today':
           start = startOfDay(now);
           end = endOfDay(now);
@@ -113,11 +81,6 @@ export default function ExpenseWrapper() {
         let end: Date | null = null;
 
         switch (value) {
-          case 'all':
-            // For 'all', don't set dates - let API handle all data without date restrictions
-            params.delete('startDate');
-            params.delete('endDate');
-            break;
           case 'today':
             start = startOfDay(now);
             end = endOfDay(now);
@@ -139,6 +102,9 @@ export default function ExpenseWrapper() {
         if (start && end) {
           params.set('startDate', start.toISOString());
           params.set('endDate', end.toISOString());
+        } else {
+          params.delete('startDate');
+          params.delete('endDate');
         }
       }
 
@@ -172,9 +138,9 @@ export default function ExpenseWrapper() {
         <div className="flex flex-wrap gap-3">
           <CustomDropdown
             options={periodOptions}
-            selectedValue={searchParams.get('period') || 'all'}
+            selectedValue={searchParams.get('period') || ''}
             onSelect={(value) => updateURL('period', value.toString())}
-            placeholder="All Time"
+            placeholder="This week"
           />
         </div>
 
