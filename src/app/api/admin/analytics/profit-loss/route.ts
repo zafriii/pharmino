@@ -382,9 +382,8 @@ export async function GET(request: NextRequest) {
 }
 
 async function getChartData(startDate: Date, endDate: Date, period: string) {
-  // For year/all period, group by month to avoid too many queries
-  // For month period, group by day
-  // For week/today, group by day
+  // For all periods including "all", group by day to show individual dates with data
+  // Skip days with no data to avoid empty points
 
   console.log("getChartData called with:", {
     startDate: startDate.toISOString(),
@@ -392,149 +391,6 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
     period: period
   });
 
-  if (period === 'year' || period === 'all') {
-    // Use exact same logic for month grouping
-    const chartData = [];
-    const now = new Date();
-
-    // Calculate how many months to show
-    let monthsToShow = 12; // Default for year
-
-    if (period === 'all') {
-      const yearDiff = now.getFullYear() - startDate.getFullYear();
-      const monthDiff = now.getMonth() - startDate.getMonth();
-      monthsToShow = Math.max(1, (yearDiff * 12) + monthDiff + 1);
-
-      // Safety cap to avoid massive loops
-      if (monthsToShow > 120) monthsToShow = 120;
-    }
-
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
-    // Generate months ending with current month
-    for (let i = monthsToShow - 1; i >= 0; i--) {
-      // Calculate target year and month
-      let targetYear = currentYear;
-      let targetMonth = currentMonth - i;
-
-      // Handle negative months properly
-      while (targetMonth < 0) {
-        targetMonth += 12;
-        targetYear -= 1;
-      }
-
-      // Create date for the first day of the target month
-      const date = new Date(targetYear, targetMonth, 1);
-      const nextMonth = new Date(targetYear, targetMonth + 1, 1);
-
-      console.log(`Month ${i}: targetYear=${targetYear}, targetMonth=${targetMonth}, date=${date.toISOString()}, formatted=${date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`);
-
-      try {
-        const [salesData, otherExpenses, payrollExpenses, productCosts] = await Promise.all([
-          prisma.sale.findMany({
-            where: {
-              createdAt: {
-                gte: date,
-                lt: nextMonth,
-              },
-              paymentStatus: {
-                in: [SalePaymentStatus.PAID, SalePaymentStatus.PARTIALLY_REFUNDED],
-              },
-            },
-            include: {
-              payments: {
-                select: {
-                  amount: true,
-                  status: true,
-                  refundedAmount: true
-                }
-              }
-            }
-          }),
-          prisma.expense.aggregate({
-            where: {
-              date: {
-                gte: new Date(date.toISOString().split('T')[0]),
-                lt: new Date(nextMonth.toISOString().split('T')[0]),
-              },
-            },
-            _sum: {
-              amount: true,
-            },
-          }),
-          prisma.payroll.aggregate({
-            where: {
-              createdAt: {
-                gte: date,
-                lt: nextMonth,
-              },
-              paymentStatus: "PAID",
-            },
-            _sum: {
-              netPay: true,
-            },
-          }),
-          prisma.receivedItem.findMany({
-            where: {
-              receivedAt: {
-                gte: date,
-                lt: nextMonth,
-              },
-            },
-            include: {
-              purchaseItem: true,
-            },
-          }),
-        ]);
-
-        // Calculate revenue properly (same as dashboard)
-        const revenue = salesData.reduce((sum, sale) => {
-          if (sale.paymentStatus === "PAID") {
-            return sum + Number(sale.grandTotal);
-          } else if (sale.paymentStatus === "PARTIALLY_REFUNDED" && sale.payments) {
-            const totalRefunded = sale.payments.reduce((refundSum, payment) => {
-              return refundSum + (Number(payment.refundedAmount) || 0);
-            }, 0);
-            const remainingAmount = Number(sale.grandTotal) - totalRefunded;
-            return sum + Math.max(0, remainingAmount);
-          }
-          return sum;
-        }, 0);
-
-        const productCostSum = productCosts.reduce(
-          (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
-          0
-        );
-
-        const totalExpenses = Number(otherExpenses._sum?.amount || 0) +
-          Number(payrollExpenses._sum?.netPay || 0) +
-          productCostSum;
-
-        // Use the first day of the month as the date for consistency
-        chartData.push({
-          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
-          revenue: revenue,
-          expenses: totalExpenses,
-        });
-      } catch (err) {
-        console.error(`Error fetching data for ${date}:`, err);
-        chartData.push({
-          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
-          revenue: 0,
-          expenses: 0,
-        });
-      }
-    }
-
-    console.log("Year chart data generated:", chartData.map(d => `${d.date}: Revenue=${d.revenue}, Expenses=${d.expenses} (${(() => {
-      const [year, month] = d.date.split('-').map(Number);
-      return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-    })()})`));
-    return chartData;
-  }
-
-  // For other periods (week, month), group by day, respecting input timezone
   const chartData = [];
   const currentDate = new Date(startDate.getTime());
 
@@ -622,14 +478,18 @@ async function getChartData(startDate: Date, endDate: Date, period: string) {
       Number(payrollExpenses._sum?.netPay || 0) +
       productCostSum;
 
-    chartData.push({
-      date: dayStart.toISOString(), // Send ISO for client labeling
-      revenue: revenue,
-      expenses: totalExpenses,
-    });
+    // Only add data points for days that have any activity (revenue or expenses > 0)
+    if (revenue > 0 || totalExpenses > 0) {
+      chartData.push({
+        date: dayStart.toISOString(), // Send ISO for client labeling
+        revenue: revenue,
+        expenses: totalExpenses,
+      });
+    }
 
     currentDate.setTime(currentDate.getTime() + (24 * 60 * 60 * 1000));
   }
 
+  console.log(`Generated ${chartData.length} data points for period ${period}`);
   return chartData;
 }

@@ -104,111 +104,9 @@ export async function GET(request: NextRequest) {
 }
 
 async function getDetailedExpenseChartData(startDate: Date, endDate: Date, period: string) {
-  if (period === 'year' || period === 'all') {
-    // For year/all period, group by month
-    const chartData = [];
-    const now = new Date();
+  // For all periods including "all", group by day to show individual dates with data
+  // Skip days with no data to avoid empty points
 
-    // Calculate how many months to show
-    let monthsToShow = 12; // Default for year
-
-    if (period === 'all') {
-      const yearDiff = now.getFullYear() - startDate.getFullYear();
-      const monthDiff = now.getMonth() - startDate.getMonth();
-      monthsToShow = Math.max(1, (yearDiff * 12) + monthDiff + 1);
-
-      // Safety cap to avoid massive loops if data is very old or messy
-      if (monthsToShow > 120) monthsToShow = 120; // 10 years max
-    }
-
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth();
-
-    // Generate months ending with current month
-    for (let i = monthsToShow - 1; i >= 0; i--) {
-      let targetYear = currentYear;
-      let targetMonth = currentMonth - i;
-
-      // Handle negative months
-      while (targetMonth < 0) {
-        targetMonth += 12;
-        targetYear -= 1;
-      }
-
-      const monthStart = new Date(targetYear, targetMonth, 1);
-      const monthEnd = new Date(targetYear, targetMonth + 1, 1);
-
-      try {
-        const [payrollData, productData, otherExpenses] = await Promise.all([
-          // Payroll expenses
-          prisma.payroll.aggregate({
-            where: {
-              createdAt: {
-                gte: monthStart,
-                lt: monthEnd,
-              },
-              paymentStatus: "PAID",
-            },
-            _sum: {
-              netPay: true,
-            },
-          }),
-          // Product costs (received items)
-          prisma.receivedItem.findMany({
-            where: {
-              receivedAt: {
-                gte: monthStart,
-                lt: monthEnd,
-              },
-            },
-            include: {
-              purchaseItem: true,
-            },
-          }),
-          // Other expenses
-          prisma.expense.aggregate({
-            where: {
-              date: {
-                gte: new Date(monthStart.toISOString().split('T')[0]),
-                lt: new Date(monthEnd.toISOString().split('T')[0]),
-              },
-            },
-            _sum: {
-              amount: true,
-            },
-          }),
-        ]);
-
-        const payrollAmount = Number(payrollData._sum?.netPay || 0);
-        const productAmount = productData.reduce(
-          (sum, item) => sum + (item.receivedQuantity * Number(item.purchaseItem.puchasePrice)),
-          0
-        );
-        const otherAmount = Number(otherExpenses._sum?.amount || 0);
-
-        chartData.push({
-          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
-          payroll: payrollAmount,
-          products: productAmount,
-          other: otherAmount,
-          total: payrollAmount + productAmount + otherAmount,
-        });
-      } catch (err) {
-        console.error(`Error fetching expense data for ${monthStart}:`, err);
-        chartData.push({
-          date: `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-01`,
-          payroll: 0,
-          products: 0,
-          other: 0,
-          total: 0,
-        });
-      }
-    }
-
-    return chartData;
-  }
-
-  // For other periods (today, week, month), group by day, respecting input timezone
   const chartData = [];
   const currentDate = new Date(startDate.getTime());
 
@@ -264,18 +162,23 @@ async function getDetailedExpenseChartData(startDate: Date, endDate: Date, perio
       0
     );
     const otherAmount = Number(otherExpenses._sum?.amount || 0);
+    const totalAmount = payrollAmount + productAmount + otherAmount;
 
-    chartData.push({
-      date: dayStart.toISOString(), // Send ISO for client labeling
-      payroll: payrollAmount,
-      products: productAmount,
-      other: otherAmount,
-      total: payrollAmount + productAmount + otherAmount,
-    });
+    // Only add data points for days that have any expenses > 0
+    if (totalAmount > 0) {
+      chartData.push({
+        date: dayStart.toISOString(), // Send ISO for client labeling
+        payroll: payrollAmount,
+        products: productAmount,
+        other: otherAmount,
+        total: totalAmount,
+      });
+    }
 
     currentDate.setTime(currentDate.getTime() + (24 * 60 * 60 * 1000));
   }
 
+  console.log(`Generated ${chartData.length} expense data points for period ${period}`);
   return chartData;
 }
 

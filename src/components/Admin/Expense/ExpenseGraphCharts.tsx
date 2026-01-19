@@ -76,7 +76,7 @@ function getAverageLabel(period: string) {
       return 'Daily Average';
     case 'year':
     case 'all':
-      return 'Monthly Average';
+      return 'Daily Average';
     default:
       return 'Average';
   }
@@ -129,10 +129,10 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
     } else if (period === 'month') {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } else if (period === 'year') {
-      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      return date.toLocaleDateString("en-US", { month: "short" });
     } else if (period === 'all') {
-      // For "all" filter, show month and year for better readability
-      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      // For "all" filter, show month and day for better readability
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
@@ -202,10 +202,9 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
         },
         ticks: {
           font: {
-            size: period === 'all' ? 10 : 11, // Smaller font for "all" period
+            size: 11,
           },
           color: '#6b7280',
-          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
@@ -312,10 +311,9 @@ export default function ExpenseGraphCharts({ expenseBreakdown, chartData, period
         },
         ticks: {
           font: {
-            size: period === 'all' ? 10 : 11, // Smaller font for "all" period
+            size: 11,
           },
           color: '#6b7280',
-          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {

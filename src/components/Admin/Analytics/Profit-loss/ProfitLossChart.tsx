@@ -76,8 +76,8 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
     } else if (period === "year") {
       return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
     } else if (period === "all") {
-      // For "all" filter, show month and year for better readability
-      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      // For "all" filter, show month and day for better readability
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     } else {
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
@@ -161,10 +161,9 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         },
         ticks: {
           font: {
-            size: period === 'all' ? 9 : 10, // Smaller font for "all" period
+            size: 10,
           },
           color: '#6b7280',
-          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
@@ -261,10 +260,9 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         },
         ticks: {
           font: {
-            size: period === 'all' ? 9 : 10, // Smaller font for "all" period
+            size: 10,
           },
           color: '#6b7280',
-          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
@@ -447,10 +445,9 @@ export default function ProfitLossChart({ data }: ProfitLossChartProps) {
         },
         ticks: {
           font: {
-            size: period === 'all' ? 10 : 11, // Smaller font for "all" period
+            size: 11,
           },
           color: '#6b7280',
-          maxRotation: period === 'all' ? 45 : 0, // Rotate labels for "all" period
         },
       },
       y: {
