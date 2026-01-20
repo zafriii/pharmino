@@ -156,15 +156,16 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
   try {
     // Use local date string for comparison against @db.Date field
     const localTodayStr = getTodayLocalDate();
-    const currentDateDate = new Date(localTodayStr);
+    const currentDateUTC = getTodayMidnightInTimezone();
 
-    console.log(`Checking for expired batches. App Timezone: ${getAppTimezone()}, Local Today: ${localTodayStr}`);
+    console.log(`[BatchExpiry] App Timezone: ${getAppTimezone()}`);
+    console.log(`[BatchExpiry] Local Today: ${localTodayStr}`);
+    console.log(`[BatchExpiry] Reference Midnight (UTC): ${currentDateUTC.toISOString()}`);
 
+    // Safer comparison for @db.Date: everything before Today's local start (UTC equivalent)
     const whereClause: any = {
       expiryDate: {
-        // Batch expires the day AFTER the expiry date
-        // Since database is @db.Date, comparing with a Date object at 00:00:00 is safest
-        lt: currentDateDate
+        lt: currentDateUTC
       },
       status: {
         not: 'EXPIRED'
@@ -188,6 +189,23 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
         }
       }
     });
+
+    console.log(`[BatchExpiry] Found ${expiredBatches.length} expired batches that need status update.`);
+    if (expiredBatches.length > 0) {
+      console.log(`[BatchExpiry] Sample Expired Batch: ID=${expiredBatches[0].id}, Number=${expiredBatches[0].batchNumber}, Expiry=${expiredBatches[0].expiryDate?.toISOString()}, Status=${expiredBatches[0].status}`);
+    } else {
+      // Check a few non-expired batches for debugging
+      const sampleBatches = await prisma.productBatch.findMany({
+        take: 3,
+        orderBy: { expiryDate: 'asc' },
+        where: { status: { not: 'EXPIRED' } }
+      });
+      console.log(`[BatchExpiry] No expired batches found by query. Sample non-expired batches:`, sampleBatches.map(b => ({
+        id: b.id,
+        expiry: b.expiryDate?.toISOString(),
+        status: b.status
+      })));
+    }
 
     if (expiredBatches.length === 0) {
       // Even if no batches expired, optimize batch activation for the item

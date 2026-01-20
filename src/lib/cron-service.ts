@@ -53,7 +53,10 @@ export function startCronJobs() {
 
     // Run an initial check on startup to handle missed checks due to downtime or deployment
     console.log('🚀 Running initial batch expiry check on startup...');
-    checkAndUpdateExpiredBatches();
+    await checkAndUpdateExpiredBatches().catch(err => {
+      console.error('❌ Initial batch expiry check failed:', err);
+    });
+    console.log('✅ Initial batch expiry check completed on startup');
   } catch (error) {
     console.error('❌ Failed to initialize cron jobs:', error);
   }
