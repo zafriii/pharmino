@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
-import { checkAndUpdateExpiredBatches } from "@/lib/batch-expiry-utils";
 import { z } from "zod";
 
 // Schema validation
@@ -52,25 +51,13 @@ export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
 
-    // Check and update expired batches before fetching products
-    // This ensures batch status is synchronized in real-time
-    try {
-      const expiryResult = await checkAndUpdateExpiredBatches();
-      if (expiryResult.updatedCount > 0) {
-        console.log(`🔄 Updated ${expiryResult.updatedCount} expired batches before fetching products`);
-      }
-    } catch (expiryError) {
-      console.error('⚠️ Failed to update expired batches:', expiryError);
-      // Continue with product fetch even if expiry update fails
-    }
-
     const { searchParams } = new URL(request.url);
     const page = Number(searchParams.get("page") || 1);
     const limit = Number(searchParams.get("limit") || 20);
     const categoryId = searchParams.get("categoryId");
     const status = searchParams.get("status");
     const search = searchParams.get("search");
-    const brand = searchParams.get("brand"); 
+    const brand = searchParams.get("brand");
 
     const where: any = {};
     if (categoryId) where.categoryId = Number(categoryId);
@@ -122,10 +109,10 @@ export async function GET(request: NextRequest) {
     const productsWithStock = products.map(product => {
       let totalStock = 0;
       let totalTablets = 0;
-      
+
       // Only count ACTIVE and INACTIVE batches for stock calculation (exclude EXPIRED)
       const availableBatches = product.batches.filter(batch => batch.status !== 'EXPIRED');
-      
+
       if (product.tabletsPerStrip) {
         // For tablet products, calculate both strips and tablets
         totalStock = availableBatches.reduce((sum, batch) => sum + batch.quantity, 0);
@@ -138,11 +125,11 @@ export async function GET(request: NextRequest) {
         // For non-tablet products, use regular calculation
         totalStock = availableBatches.reduce((sum, batch) => sum + batch.quantity, 0);
       }
-      
+
       const stockForThreshold = product.tabletsPerStrip ? Math.floor(totalTablets / product.tabletsPerStrip) : totalStock;
-      const stockStatus = stockForThreshold === 0 ? "OUT_OF_STOCK" : 
-                         stockForThreshold <= product.lowStockThreshold ? "LOW_STOCK" : "IN_STOCK";
-      
+      const stockStatus = stockForThreshold === 0 ? "OUT_OF_STOCK" :
+        stockForThreshold <= product.lowStockThreshold ? "LOW_STOCK" : "IN_STOCK";
+
       return {
         ...product,
         totalStock: product.tabletsPerStrip ? totalTablets : totalStock, // Show tablets for tablet products

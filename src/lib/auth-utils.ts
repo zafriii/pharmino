@@ -1,16 +1,21 @@
 import { getServerSession } from "@/lib/get-session";
 import { NextResponse } from "next/server";
+import { checkAndUpdateExpiredBatchesThrottled } from "./batch-expiry-utils";
 
 /**
  * Require authentication - returns user or throws error
  */
 export async function requireAuth() {
   const session = await getServerSession();
-  
+
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
-  
+
+  // Trigger throttled expiration check globally for any authenticated request
+  // This ensures that even if a user stays on one page, any action will eventually keep data fresh
+  checkAndUpdateExpiredBatchesThrottled().catch(e => console.error("Global trigger fail:", e));
+
   return session.user;
 }
 
@@ -19,11 +24,11 @@ export async function requireAuth() {
  */
 export async function requireAdmin() {
   const user = await requireAuth();
-  
+
   if (user.role !== "ADMIN") {
     throw new Error("Forbidden - Admin access required");
   }
-  
+
   return user;
 }
 
@@ -32,11 +37,11 @@ export async function requireAdmin() {
  */
 export async function requireCounterOrAdmin() {
   const user = await requireAuth();
-  
+
   if (user.role !== "ADMIN" && user.role !== "COUNTER") {
     throw new Error("Forbidden - Admin or Counter access required");
   }
-  
+
   return user;
 }
 
@@ -45,11 +50,11 @@ export async function requireCounterOrAdmin() {
  */
 export async function requireKitchenOrAdmin() {
   const user = await requireAuth();
-  
+
   if (user.role !== "ADMIN" && user.role !== "KITCHEN") {
     throw new Error("Forbidden - Admin or Kitchen access required");
   }
-  
+
   return user;
 }
 
@@ -58,11 +63,11 @@ export async function requireKitchenOrAdmin() {
  */
 export async function requireCounterOrKitchenOrAdmin() {
   const user = await requireAuth();
-  
+
   if (user.role !== "ADMIN" && user.role !== "COUNTER" && user.role !== "KITCHEN") {
     throw new Error("Forbidden - Admin, Counter or Kitchen access required");
   }
-  
+
   return user;
 }
 
@@ -71,11 +76,11 @@ export async function requireCounterOrKitchenOrAdmin() {
  */
 export async function requirePharmacyOrAdmin() {
   const user = await requireAuth();
-  
+
   if (!["ADMIN", "OWNER", "PHARMACIST", "CASHIER", "STOREKEEPER"].includes(user.role)) {
     throw new Error("Forbidden - Pharmacy access required");
   }
-  
+
   return user;
 }
 
@@ -84,11 +89,11 @@ export async function requirePharmacyOrAdmin() {
  */
 export async function requirePharmacistOrOwnerOrAdmin() {
   const user = await requireAuth();
-  
+
   if (!["ADMIN", "OWNER", "PHARMACIST"].includes(user.role)) {
     throw new Error("Forbidden - Pharmacist, Owner or Admin access required");
   }
-  
+
   return user;
 }
 

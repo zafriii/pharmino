@@ -148,6 +148,25 @@ export async function optimizeBatchActivation(itemId: number, tx?: any) {
 }
 
 /**
+ * Throttled version of batch checking to prevent excessive DB calls on serverless
+ */
+let lastCheckTime = 0;
+const CHECK_COOLDOWN = 60 * 60 * 1000; // 1 hour
+
+export async function checkAndUpdateExpiredBatchesThrottled() {
+  const now = Date.now();
+  if (now - lastCheckTime < CHECK_COOLDOWN) {
+    return { success: true, message: 'Check skipped due to cooldown', throttled: true };
+  }
+
+  const result = await checkAndUpdateExpiredBatches();
+  if (result.success) {
+    lastCheckTime = now;
+  }
+  return result;
+}
+
+/**
  * Check and update expired batches for a specific item or all items
  * @param itemId - Optional item ID to check batches for specific item only
  * @returns Object with updated batch count and details
@@ -156,12 +175,8 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
   try {
     // Use local date string for comparison against @db.Date field
     const localTodayStr = getTodayLocalDate();
-    const currentDateUTC = getTodayMidnightInTimezone();
 
-    console.log(`[BatchExpiry] Checking for expired batches...`);
-    console.log(`[BatchExpiry] App Timezone: ${getAppTimezone()}`);
-    console.log(`[BatchExpiry] Local Today: ${localTodayStr}`);
-    console.log(`[BatchExpiry] Reference Midnight (UTC): ${currentDateUTC.toISOString()}`);
+    // console.log(`[BatchExpiry] Checking for expired batches at ${localTodayStr}...`);
 
     // Safer comparison for @db.Date: everything with expiryDate strictly less than today's local date string
     const whereClause: any = {
@@ -191,21 +206,8 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
       }
     });
 
-    console.log(`[BatchExpiry] Found ${expiredBatches.length} expired batches that need status update.`);
     if (expiredBatches.length > 0) {
-      console.log(`[BatchExpiry] Sample Expired Batch: ID=${expiredBatches[0].id}, Number=${expiredBatches[0].batchNumber}, Expiry=${expiredBatches[0].expiryDate?.toISOString()}, Status=${expiredBatches[0].status}`);
-    } else {
-      // Check a few non-expired batches for debugging
-      const sampleBatches = await prisma.productBatch.findMany({
-        take: 3,
-        orderBy: { expiryDate: 'asc' },
-        where: { status: { not: 'EXPIRED' } }
-      });
-      console.log(`[BatchExpiry] No expired batches found by query. Sample non-expired batches:`, sampleBatches.map(b => ({
-        id: b.id,
-        expiry: b.expiryDate?.toISOString(),
-        status: b.status
-      })));
+      console.log(`[BatchExpiry] Found ${expiredBatches.length} expired batches to update.`);
     }
 
     if (expiredBatches.length === 0) {

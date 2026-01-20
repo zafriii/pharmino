@@ -56,13 +56,13 @@ export async function GET(request: NextRequest) {
     const inventoryItems = items.map(item => {
       // Get inventory record for proper quantity tracking
       const inventoryRecord = item.inventory;
-      
+
       // Calculate batch-based quantities
       let totalBatchStock = 0;
       let totalTablets = 0;
       let activeBatchStock = 0;
       let inactiveBatchStock = 0;
-      
+
       if (item.tabletsPerStrip) {
         // For tablet products, calculate both strips and tablets
         totalBatchStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
           const partialTablets = batch.remainingTablets || 0;
           return sum + completeStripTablets + partialTablets;
         }, 0);
-        
+
         // Calculate active and inactive batch quantities
         activeBatchStock = item.batches
           .filter(batch => batch.status === 'ACTIVE')
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       } else {
         // For non-tablet products, use regular calculation
         totalBatchStock = item.batches.reduce((sum, batch) => sum + batch.quantity, 0);
-        
+
         // Calculate active and inactive batch quantities
         activeBatchStock = item.batches
           .filter(batch => batch.status === 'ACTIVE')
@@ -91,17 +91,17 @@ export async function GET(request: NextRequest) {
           .filter(batch => batch.status === 'INACTIVE')
           .reduce((sum, batch) => sum + batch.quantity, 0);
       }
-      
+
       const activeBatches = item.batches.filter(batch => batch.status === 'ACTIVE');
       const inactiveBatches = item.batches.filter(batch => batch.status === 'INACTIVE');
-      
+
       // Use inventory record quantities if available, otherwise fall back to batch calculations
       const totalQuantity = inventoryRecord?.totalQuantity ?? totalBatchStock;
       const availableQuantity = inventoryRecord?.availableQuantity ?? activeBatchStock;
       const reservedQuantity = inventoryRecord?.reservedQuantity ?? inactiveBatchStock;
-      
+
       let stockStatus = 'OUT_OF_STOCK';
-      
+
       // Fix stock status calculation for tablet products
       if (item.tabletsPerStrip) {
         // For tablet products, use total tablets for status calculation
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
           // Convert tablets to equivalent strips for threshold comparison
           const equivalentStrips = Math.floor(totalTablets / item.tabletsPerStrip);
           stockStatus = equivalentStrips >= item.lowStockThreshold ? 'IN_STOCK' : 'LOW_STOCK';
-          
+
           // If we have partial tablets but no complete strips, still show as IN_STOCK if tablets available
           if (equivalentStrips === 0 && totalTablets > 0) {
             stockStatus = 'LOW_STOCK'; // Partial tablets available
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       return {
         id: item.id,
         itemName: item.itemName,
-        imageUrl:item.imageUrl,
+        imageUrl: item.imageUrl,
         genericName: item.genericName,
         brand: item.brand,
         strength: item.strength,
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
         lowStockThreshold: item.lowStockThreshold,
         sellingPrice: item.sellingPrice,
         status: item.status,
-        tabletsPerStrip: item.tabletsPerStrip, 
+        tabletsPerStrip: item.tabletsPerStrip,
         totalStock: totalQuantity,
         availableStock: availableQuantity,
         reservedStock: reservedQuantity,
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter by stock status if provided
-    const filteredItems = stockStatus 
+    const filteredItems = stockStatus
       ? inventoryItems.filter(item => item.stockStatus === stockStatus)
       : inventoryItems;
 
