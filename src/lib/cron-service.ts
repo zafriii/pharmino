@@ -50,6 +50,10 @@ export function startCronJobs() {
     isInitialized = true;
     console.log('✅ Cron jobs initialized successfully');
     console.log(`⏰ Batch expiry check: Every day at midnight (00:00 ${appTimezone})`);
+
+    // Run an initial check on startup to handle missed checks due to downtime or deployment
+    console.log('🚀 Running initial batch expiry check on startup...');
+    checkAndUpdateExpiredBatches();
   } catch (error) {
     console.error('❌ Failed to initialize cron jobs:', error);
   }

@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { getAppTimezone, getTodayMidnightInTimezone } from "./utils";
+import { getAppTimezone, getTodayLocalDate, getTodayMidnightInTimezone } from "./utils";
 
 
 
@@ -154,15 +154,17 @@ export async function optimizeBatchActivation(itemId: number, tx?: any) {
  */
 export async function checkAndUpdateExpiredBatches(itemId?: number) {
   try {
-    // Use timezone-aware midnight for comparison
-    const currentDateUTC = getTodayMidnightInTimezone();
+    // Use local date string for comparison against @db.Date field
+    const localTodayStr = getTodayLocalDate();
+    const currentDateDate = new Date(localTodayStr);
 
-    console.log(`Checking for expired batches. App Timezone: ${getAppTimezone()}, Reference Midnight (UTC): ${currentDateUTC.toISOString()}`);
+    console.log(`Checking for expired batches. App Timezone: ${getAppTimezone()}, Local Today: ${localTodayStr}`);
 
     const whereClause: any = {
       expiryDate: {
-        // Batch expires the day AFTER the expiry date, so use < instead of <=
-        lt: currentDateUTC
+        // Batch expires the day AFTER the expiry date
+        // Since database is @db.Date, comparing with a Date object at 00:00:00 is safest
+        lt: currentDateDate
       },
       status: {
         not: 'EXPIRED'
