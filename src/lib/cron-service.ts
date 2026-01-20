@@ -10,7 +10,7 @@ let isInitialized = false;
  * Initialize and start all cron jobs
  * This should be called once when the server starts
  */
-export function startCronJobs() {
+export async function startCronJobs() {
   if (isInitialized) {
     console.log('⏰ Cron jobs already initialized');
     return;
