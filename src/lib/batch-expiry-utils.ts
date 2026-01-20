@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { getAppTimezone, getTodayMidnightInTimezone } from "./utils";
 
 
 
@@ -10,7 +11,7 @@ import prisma from "@/lib/prisma";
  */
 export async function activateNextBestBatch(itemId: number, tx?: any) {
   const client = tx || prisma;
-  
+
   try {
     // Find the best inactive batch (earliest expiry date, then earliest creation)
     const nextBatch = await client.productBatch.findFirst({
@@ -66,7 +67,7 @@ export async function activateNextBestBatch(itemId: number, tx?: any) {
  */
 export async function optimizeBatchActivation(itemId: number, tx?: any) {
   const client = tx || prisma;
-  
+
   try {
     // Get all non-expired, non-sold-out batches for this item
     const availableBatches = await client.productBatch.findMany({
@@ -153,17 +154,11 @@ export async function optimizeBatchActivation(itemId: number, tx?: any) {
  */
 export async function checkAndUpdateExpiredBatches(itemId?: number) {
   try {
-    // Use the same logic as isBatchExpired function for consistency
-    const currentDate = new Date();
-    const currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-    
-    // Convert to UTC for database comparison since Prisma stores dates in UTC
-    const currentDateUTC = new Date(Date.UTC(
-      currentDateLocal.getFullYear(), 
-      currentDateLocal.getMonth(), 
-      currentDateLocal.getDate()
-    ));
-    
+    // Use timezone-aware midnight for comparison
+    const currentDateUTC = getTodayMidnightInTimezone();
+
+    console.log(`Checking for expired batches. App Timezone: ${getAppTimezone()}, Reference Midnight (UTC): ${currentDateUTC.toISOString()}`);
+
     const whereClause: any = {
       expiryDate: {
         // Batch expires the day AFTER the expiry date, so use < instead of <=
@@ -204,7 +199,7 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
           optimizationResult
         };
       }
-      
+
       return {
         success: true,
         updatedCount: 0,
@@ -240,10 +235,10 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
       // For each item that had expired batches, optimize batch activation
       for (const [itemIdStr, itemExpiredBatches] of Object.entries(expiredBatchesByItem)) {
         const itemIdNum = parseInt(itemIdStr);
-        
+
         // Check if any of the expired batches were active
         const hadActiveBatch = itemExpiredBatches.some((batch: any) => batch.status === 'ACTIVE');
-        
+
         if (hadActiveBatch) {
           // Activate the next best batch since an active batch expired
           const activationResult = await activateNextBestBatch(itemIdNum, tx);
@@ -311,17 +306,17 @@ export function getBatchExpiryInfo(batch: any) {
     };
   }
 
-  // Get current date in local timezone (not UTC)
-  const currentDate = new Date();
-  const currentDateLocal = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-  
+  // Get today's midnight in app timezone for comparison
+  const currentDateUTC = getTodayMidnightInTimezone();
+
   const expiry = new Date(batch.expiryDate);
-  const expiryLocal = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
-  
+  // Ensure we compare start of day for the expiry date as well
+  const expiryMidnight = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+
   // Batch expires the day AFTER the expiry date
-  const isExpired = expiryLocal < currentDateLocal;
-  const daysUntilExpiry = Math.ceil((expiryLocal.getTime() - currentDateLocal.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const isExpired = expiryMidnight < currentDateUTC;
+  const daysUntilExpiry = Math.ceil((expiryMidnight.getTime() - currentDateUTC.getTime()) / (1000 * 60 * 60 * 24));
+
   let expiryStatus = 'VALID';
   if (isExpired) {
     expiryStatus = 'EXPIRED';
@@ -333,7 +328,7 @@ export function getBatchExpiryInfo(batch: any) {
 
   return {
     isExpired,
-    expiryDateFormatted: batch.expiryDate.toLocaleDateString(),
+    expiryDateFormatted: batch.expiryDate.toLocaleDateString('en-US', { timeZone: getAppTimezone() }),
     daysUntilExpiry,
     expiryStatus
   };
@@ -348,7 +343,7 @@ export async function getBatchesWithExpiryWarnings(daysThreshold: number = 30) {
   try {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + daysThreshold);
-    
+
     const batches = await prisma.productBatch.findMany({
       where: {
         expiryDate: {

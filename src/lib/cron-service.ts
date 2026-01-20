@@ -1,5 +1,6 @@
 import cron, { ScheduledTask } from 'node-cron';
 import { checkAndUpdateExpiredBatches } from './batch-expiry-utils';
+import { getAppTimezone } from './utils';
 
 // Store cron jobs
 let batchExpiryJob: ScheduledTask | null = null;
@@ -16,13 +17,13 @@ export function startCronJobs() {
   }
 
   try {
-    // Get system's local timezone
-    const systemTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    
-    // Batch Expiry Check - Every day at midnight in system's local timezone
+    // Get application's timezone
+    const appTimezone = getAppTimezone();
+
+    // Batch Expiry Check - Every day at midnight in application's timezone
     batchExpiryJob = cron.schedule('0 0 * * *', async () => {
       console.log('🔄 Running scheduled batch expiry check...');
-      console.log('📅 Current local time:', new Date().toLocaleString());
+      console.log('📅 Current local time:', new Date().toLocaleString('en-US', { timeZone: appTimezone }));
       try {
         const result = await checkAndUpdateExpiredBatches();
         console.log('✅ Batch expiry check completed:', {
@@ -30,7 +31,7 @@ export function startCronJobs() {
           success: result.success,
           message: result.message
         });
-        
+
         if (result.activationResults && result.activationResults.length > 0) {
           console.log('📋 Batch activation results:', result.activationResults.map(r => ({
             itemName: r.itemName,
@@ -43,12 +44,12 @@ export function startCronJobs() {
         console.error('❌ Batch expiry check failed:', error);
       }
     }, {
-      timezone: systemTimezone
+      timezone: appTimezone
     });
 
     isInitialized = true;
     console.log('✅ Cron jobs initialized successfully');
-    console.log(`⏰ Batch expiry check: Every day at midnight (00:00 ${systemTimezone})`);
+    console.log(`⏰ Batch expiry check: Every day at midnight (00:00 ${appTimezone})`);
   } catch (error) {
     console.error('❌ Failed to initialize cron jobs:', error);
   }
@@ -62,7 +63,7 @@ export function stopCronJobs() {
     batchExpiryJob.stop();
     batchExpiryJob = null;
   }
-  
+
   isInitialized = false;
   console.log('🛑 Cron jobs stopped');
 }
