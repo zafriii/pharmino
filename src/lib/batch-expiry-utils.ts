@@ -158,14 +158,15 @@ export async function checkAndUpdateExpiredBatches(itemId?: number) {
     const localTodayStr = getTodayLocalDate();
     const currentDateUTC = getTodayMidnightInTimezone();
 
+    console.log(`[BatchExpiry] Checking for expired batches...`);
     console.log(`[BatchExpiry] App Timezone: ${getAppTimezone()}`);
     console.log(`[BatchExpiry] Local Today: ${localTodayStr}`);
     console.log(`[BatchExpiry] Reference Midnight (UTC): ${currentDateUTC.toISOString()}`);
 
-    // Safer comparison for @db.Date: everything before Today's local start (UTC equivalent)
+    // Safer comparison for @db.Date: everything with expiryDate strictly less than today's local date string
     const whereClause: any = {
       expiryDate: {
-        lt: currentDateUTC
+        lt: new Date(localTodayStr)
       },
       status: {
         not: 'EXPIRED'

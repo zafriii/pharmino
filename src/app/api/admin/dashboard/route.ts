@@ -1,7 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { PrismaClient } from "@/generated/prisma";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 import { checkAndUpdateExpiredBatches } from "@/lib/batch-expiry-utils";
 
 // Helper function to calculate date ranges based on period
