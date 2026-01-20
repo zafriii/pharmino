@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/generated/prisma";
 
 const prisma = new PrismaClient();
+import { checkAndUpdateExpiredBatches } from "@/lib/batch-expiry-utils";
 
 // Helper function to calculate date ranges based on period
 function getDateRange(period?: string, startDate?: string, endDate?: string) {
@@ -49,6 +50,13 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
 
     console.log('Dashboard API called with filters:', { period, startDate, endDate });
+
+    // Force an expiration check to ensure data is fresh on Vercel
+    try {
+      await checkAndUpdateExpiredBatches();
+    } catch (e) {
+      console.error("Failed to run expiration check in Dashboard API:", e);
+    }
 
     const { filterStartDate, filterEndDate } = getDateRange(period || undefined, startDate || undefined, endDate || undefined);
 
