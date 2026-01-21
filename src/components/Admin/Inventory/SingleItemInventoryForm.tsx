@@ -231,6 +231,7 @@ export default function SingleItemInventoryForm({
                 required: 'Quantity is required'
               })}
               error={errors.quantity?.message}
+              readOnly
             />
             <CustomInput
               label="Purchase Price"
@@ -243,6 +244,7 @@ export default function SingleItemInventoryForm({
                 required: 'Purchase price is required'
               })}
               error={errors.purchasePrice?.message}
+              readOnly
             />
           </div>
 
