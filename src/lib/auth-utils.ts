@@ -1,6 +1,5 @@
 import { getServerSession } from "@/lib/get-session";
 import { NextResponse } from "next/server";
-import { checkAndUpdateExpiredBatchesThrottled } from "./batch-expiry-utils";
 
 /**
  * Require authentication - returns user or throws error
@@ -11,10 +10,6 @@ export async function requireAuth() {
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
-
-  // Trigger throttled expiration check globally for any authenticated request
-  // This ensures that even if a user stays on one page, any action will eventually keep data fresh
-  checkAndUpdateExpiredBatchesThrottled().catch(e => console.error("Global trigger fail:", e));
 
   return session.user;
 }
