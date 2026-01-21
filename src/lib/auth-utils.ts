@@ -27,44 +27,6 @@ export async function requireAdmin() {
   return user;
 }
 
-/**
- * Require counter or admin role - returns user or throws error
- */
-export async function requireCounterOrAdmin() {
-  const user = await requireAuth();
-
-  if (user.role !== "ADMIN" && user.role !== "COUNTER") {
-    throw new Error("Forbidden - Admin or Counter access required");
-  }
-
-  return user;
-}
-
-/**
- * Require kitchen or admin role - returns user or throws error
- */
-export async function requireKitchenOrAdmin() {
-  const user = await requireAuth();
-
-  if (user.role !== "ADMIN" && user.role !== "KITCHEN") {
-    throw new Error("Forbidden - Admin or Kitchen access required");
-  }
-
-  return user;
-}
-
-/**
- * Require counter, kitchen or admin role - returns user or throws error
- */
-export async function requireCounterOrKitchenOrAdmin() {
-  const user = await requireAuth();
-
-  if (user.role !== "ADMIN" && user.role !== "COUNTER" && user.role !== "KITCHEN") {
-    throw new Error("Forbidden - Admin, Counter or Kitchen access required");
-  }
-
-  return user;
-}
 
 /**
  * Require pharmacy roles (Owner, Pharmacist, Cashier, Storekeeper) or admin - returns user or throws error
