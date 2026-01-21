@@ -571,6 +571,7 @@ export default function SingleItemInventoryForm({
             <CustomInput
               label="Expiry Date (Optional)"
               type="date"
+              min=""
               {...register('expiryDate')}
             />
           </div>
