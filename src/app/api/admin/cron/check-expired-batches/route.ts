@@ -32,21 +32,21 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/admin/cron/check-expired-batches - Manual trigger for testing
-export async function GET() {
-  try {
-    console.log('Manual batch expiry check triggered...');
+// // GET /api/admin/cron/check-expired-batches - Manual trigger for testing
+// export async function GET() {
+//   try {
+//     console.log('Manual batch expiry check triggered...');
     
-    const updateResult = await checkAndUpdateExpiredBatches();
+//     const updateResult = await checkAndUpdateExpiredBatches();
     
-    return successResponse({
-      ...updateResult,
-      timestamp: new Date().toISOString(),
-      message: `Manual check completed. ${updateResult.updatedCount} batches updated to EXPIRED status.`
-    });
+//     return successResponse({
+//       ...updateResult,
+//       timestamp: new Date().toISOString(),
+//       message: `Manual check completed. ${updateResult.updatedCount} batches updated to EXPIRED status.`
+//     });
 
-  } catch (error) {
-    console.error("Error in manual batch expiry check:", error);
-    return errorResponse("Failed to run manual batch expiry check", 500);
-  }
-}
+//   } catch (error) {
+//     console.error("Error in manual batch expiry check:", error);
+//     return errorResponse("Failed to run manual batch expiry check", 500);
+//   }
+// }
