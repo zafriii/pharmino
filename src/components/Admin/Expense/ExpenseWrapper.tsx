@@ -38,18 +38,25 @@ export default function ExpenseWrapper() {
   const [openForm, setOpenForm] = useState(false);
   const currentPeriod = searchParams.get('period');
   const currentListFilter = searchParams.get('listFilter');
-  const currentStartDate = searchParams.get('startDate') || '';
-  const currentEndDate = searchParams.get('endDate') || '';
+  const currentStartDateRaw = searchParams.get('startDate') || '';
+  const currentEndDateRaw = searchParams.get('endDate') || '';
+
+  // Function to convert ISO or any date to local YYYY-MM-DD
+  const toLocalYYYYMMDD = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
 
   const [showCustomRange, setShowCustomRange] = useState(currentPeriod === 'custom');
-  const [startDate, setStartDate] = useState(currentStartDate);
-  const [endDate, setEndDate] = useState(currentEndDate);
+  const [startDate, setStartDate] = useState(toLocalYYYYMMDD(currentStartDateRaw));
+  const [endDate, setEndDate] = useState(toLocalYYYYMMDD(currentEndDateRaw));
 
   // Initialize dates if missing for a period (for chart)
   useEffect(() => {
     setShowCustomRange(currentPeriod === 'custom');
-    setStartDate(currentStartDate);
-    setEndDate(currentEndDate);
+    setStartDate(toLocalYYYYMMDD(currentStartDateRaw));
+    setEndDate(toLocalYYYYMMDD(currentEndDateRaw));
 
     if (!searchParams.has('period')) {
       updateURL('period', 'week');
@@ -157,9 +164,17 @@ export default function ExpenseWrapper() {
   const handleCustomDateApply = useCallback(() => {
     if (startDate && endDate) {
       const params = new URLSearchParams(searchParams.toString());
+
+      // Correctly create local midnights
+      const [sYear, sMonth, sDay] = startDate.split('-').map(Number);
+      const [eYear, eMonth, eDay] = endDate.split('-').map(Number);
+
+      const start = new Date(sYear, sMonth - 1, sDay, 0, 0, 0, 0);
+      const end = new Date(eYear, eMonth - 1, eDay, 23, 59, 59, 999);
+
       params.set('period', 'custom');
-      params.set('startDate', new Date(startDate).toISOString());
-      params.set('endDate', new Date(endDate).toISOString());
+      params.set('startDate', start.toISOString());
+      params.set('endDate', end.toISOString());
       params.set('page', '1');
 
       startTransition(() => {
@@ -190,7 +205,7 @@ export default function ExpenseWrapper() {
               <Calendar className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
               <input
                 type="date"
-                value={startDate.split('T')[0]}
+                value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="text-xs border-0 bg-transparent focus:outline-none w-24"
                 placeholder="Start Date"
@@ -198,7 +213,7 @@ export default function ExpenseWrapper() {
               <span className="text-gray-400 text-xs">to</span>
               <input
                 type="date"
-                value={endDate.split('T')[0]}
+                value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="text-xs border-0 bg-transparent focus:outline-none w-24"
                 placeholder="End Date"
