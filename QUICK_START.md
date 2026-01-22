@@ -22,6 +22,7 @@ npm install
 DATABASE_URL="your_postgresql_connection_string"
 BETTER_AUTH_SECRET="your_secret_key"
 BETTER_AUTH_URL="http://localhost:3000"
+APP_TIMEZONE="your_timezone"
 
 # 4. Run database migrations
 npx prisma migrate dev

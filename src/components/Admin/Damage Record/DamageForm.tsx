@@ -48,7 +48,7 @@ export default function DamageForm({
 
   // Filter active and inactive batches with available quantity (exclude sold out and expired)
   const availableBatches = batches.filter(
-    (batch) => 
+    (batch) =>
       (batch.status === 'ACTIVE' || batch.status === 'INACTIVE') &&
       (batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0))
   );
@@ -91,9 +91,9 @@ export default function DamageForm({
     ...availableBatches.map((batch) => {
       const totalUnits = batch.quantity;
       const partialTablets = batch.remainingTablets || 0;
-      
+
       let label = `${batch.batchNumber} (`;
-      
+
       if (totalUnits > 0 && partialTablets > 0) {
         label += `${totalUnits} units + ${partialTablets} tablets`;
       } else if (totalUnits > 0) {
@@ -101,7 +101,7 @@ export default function DamageForm({
       } else if (partialTablets > 0) {
         label += `${partialTablets} tablets`;
       }
-      
+
       label += ` available) - ${batch.status}`;
 
       return {
@@ -114,6 +114,17 @@ export default function DamageForm({
   const selectedBatch = availableBatches.find(
     (batch) => batch.id.toString() === watchedBatchId
   );
+
+  // Check if selected batch has only tablets (no strips)
+  const hasOnlyTablets = selectedBatch && selectedBatch.quantity === 0 && (selectedBatch.remainingTablets || 0) > 0;
+  const hasStrips = selectedBatch && selectedBatch.quantity > 0;
+
+  // Auto-set damage type to SINGLE_TABLET when only tablets are available
+  React.useEffect(() => {
+    if (hasOnlyTablets && watchedDamageType === 'FULL_STRIP') {
+      setValue('damageType', 'SINGLE_TABLET');
+    }
+  }, [hasOnlyTablets, watchedDamageType, setValue]);
 
   const onSubmit = async (data: DamageFormData) => {
     if (!data.batchId) {
@@ -266,11 +277,11 @@ export default function DamageForm({
                   <div>
                     <span className="text-gray-600">Available: </span>
                     <span className="font-medium">
-                      {selectedBatch.quantity > 0 && (selectedBatch.remainingTablets || 0) > 0 
+                      {selectedBatch.quantity > 0 && (selectedBatch.remainingTablets || 0) > 0
                         ? `${selectedBatch.quantity} strips + ${selectedBatch.remainingTablets} tablets`
-                        : selectedBatch.quantity > 0 
-                        ? `${selectedBatch.quantity} strips`
-                        : `${selectedBatch.remainingTablets} tablets`
+                        : selectedBatch.quantity > 0
+                          ? `${selectedBatch.quantity} strips`
+                          : `${selectedBatch.remainingTablets} tablets`
                       }
                     </span>
                   </div>
@@ -296,24 +307,41 @@ export default function DamageForm({
                   Damage Type *
                 </label>
                 <div className="flex gap-4 p-2 bg-gray-50 rounded-lg">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="FULL_STRIP"
-                      {...register('damageType')}
-                      className="w-4 h-4 text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm font-medium">Full Strip</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="SINGLE_TABLET"
-                      {...register('damageType')}
-                      className="w-4 h-4 text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm font-medium">Single Tablet</span>
-                  </label>
+                  {hasOnlyTablets ? (
+                    // Only show tablet option when no strips available
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        value="SINGLE_TABLET"
+                        {...register('damageType')}
+                        className="w-4 h-4 text-primary focus:ring-primary"
+                        checked
+                      />
+                      <span className="text-sm font-medium">Single Tablet</span>
+                    </label>
+                  ) : (
+                    // Show both options when strips are available
+                    <>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="FULL_STRIP"
+                          {...register('damageType')}
+                          className="w-4 h-4 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium">Full Strip</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="SINGLE_TABLET"
+                          {...register('damageType')}
+                          className="w-4 h-4 text-primary focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium">Single Tablet</span>
+                      </label>
+                    </>
+                  )}
                 </div>
               </div>
             )}
