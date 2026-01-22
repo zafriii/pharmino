@@ -5,12 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/shared ui/Button';
 import { IoIosGitCompare } from "react-icons/io";
 import { Calendar } from 'lucide-react';
+import { ImSpinner2 } from "react-icons/im";
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 export default function ProfitLossWrapper() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
 
   const rawPeriod = searchParams.get('period') || 'week';
@@ -177,27 +178,46 @@ export default function ProfitLossWrapper() {
         <Button
           variant={currentPeriod === 'week' ? 'primary' : 'secondary'}
           onClick={() => updateURL('period', 'week')}
-          className="text-sm whitespace-nowrap"
+          disabled={isPending}
+          className="text-sm whitespace-nowrap min-w-[100px]"
         >
-          This Week
+          {isPending && currentPeriod === 'week' ? (
+            <div className="flex items-center gap-2">
+              <ImSpinner2 className="animate-spin h-3.5 w-3.5" />
+              <span>Applying</span>
+            </div>
+          ) : 'This Week'}
         </Button>
         <Button
           variant={currentPeriod === 'month' ? 'primary' : 'secondary'}
           onClick={() => updateURL('period', 'month')}
-          className="text-sm whitespace-nowrap"
+          disabled={isPending}
+          className="text-sm whitespace-nowrap min-w-[100px]"
         >
-          This Month
+          {isPending && currentPeriod === 'month' ? (
+            <div className="flex items-center gap-2">
+              <ImSpinner2 className="animate-spin h-3.5 w-3.5" />
+              <span>Applying</span>
+            </div>
+          ) : 'This Month'}
         </Button>
         <Button
           variant={currentPeriod === 'year' ? 'primary' : 'secondary'}
           onClick={() => updateURL('period', 'year')}
-          className="text-sm whitespace-nowrap"
+          disabled={isPending}
+          className="text-sm whitespace-nowrap min-w-[100px]"
         >
-          This Year
+          {isPending && currentPeriod === 'year' ? (
+            <div className="flex items-center gap-2">
+              <ImSpinner2 className="animate-spin h-3.5 w-3.5" />
+              <span>Applying</span>
+            </div>
+          ) : 'This Year'}
         </Button>
         <Button
           variant={currentPeriod === 'custom' ? 'primary' : 'secondary'}
           onClick={() => updateURL('period', 'custom')}
+          disabled={isPending}
           className="text-sm whitespace-nowrap"
         >
           Custom
@@ -223,10 +243,15 @@ export default function ProfitLossWrapper() {
             />
             <button
               onClick={handleCustomDateApply}
-              disabled={!startDate || !endDate}
-              className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 ml-1 h-6"
+              disabled={!startDate || !endDate || isPending}
+              className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 ml-1 h-6 min-w-[70px] justify-center"
             >
-              Apply
+              {isPending && currentPeriod === 'custom' ? (
+                <>
+                  <ImSpinner2 className="animate-spin" />
+                  <span>Applying</span>
+                </>
+              ) : 'Apply'}
             </button>
           </div>
         )}

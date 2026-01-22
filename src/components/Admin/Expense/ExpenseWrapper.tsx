@@ -227,7 +227,7 @@ export default function ExpenseWrapper() {
                 {isPending ? (
                   <>
                     {/* <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin"></div> */}
-                    <ImSpinner2 />
+                    <ImSpinner2 className="animate-spin" />
                     <span>Applying</span>
                   </>
                 ) : (
