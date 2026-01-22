@@ -46,9 +46,11 @@ export default function DamageForm({
     type: 'success' | 'error' | 'fail';
   } | null>(null);
 
-  // Filter active batches with available quantity
+  // Filter active and inactive batches with available quantity (exclude sold out and expired)
   const availableBatches = batches.filter(
-    (batch) => batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0)
+    (batch) => 
+      (batch.status === 'ACTIVE' || batch.status === 'INACTIVE') &&
+      (batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0))
   );
 
   const {
@@ -91,7 +93,7 @@ export default function DamageForm({
       const partialTablets = batch.remainingTablets || 0;
       let label = `${batch.batchNumber} (${totalUnits} units`;
       if (partialTablets > 0) label += ` + ${partialTablets} tablets`;
-      label += ` available)`;
+      label += ` available) - ${batch.status}`;
 
       return {
         value: batch.id.toString(),
@@ -231,7 +233,7 @@ export default function DamageForm({
               />
               {availableBatches.length === 0 && (
                 <p className="text-yellow-600 text-sm mt-1">
-                  No active batches with available quantity found
+                  No active or inactive batches with available quantity found
                 </p>
               )}
             </div>
@@ -245,6 +247,12 @@ export default function DamageForm({
                   <div>
                     <span className="text-gray-600">Batch: </span>
                     <span className="font-medium">{selectedBatch.batchNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Status: </span>
+                    <span className={`font-medium ${selectedBatch.status === 'ACTIVE' ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {selectedBatch.status}
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Available: </span>
