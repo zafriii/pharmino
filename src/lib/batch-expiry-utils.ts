@@ -351,7 +351,7 @@ export function getBatchExpiryInfo(batch: any) {
 
   return {
     isExpired,
-    expiryDateFormatted: batch.expiryDate.toLocaleDateString('en-US', { timeZone: getAppTimezone() }),
+    expiryDateFormatted: new Date(batch.expiryDate).toLocaleDateString('en-US', { timeZone: getAppTimezone() }),
     daysUntilExpiry,
     expiryStatus
   };

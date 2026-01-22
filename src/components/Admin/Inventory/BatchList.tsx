@@ -87,7 +87,7 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
   if (!item) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">Item not found</p>
+        <p className="text-gray-500">Item not found or error loading data</p>
         <Link href="/admin/inventory">
           <Button variant="secondary" leftIcon={<GoArrowLeft />}>
             Back to Inventory
@@ -97,7 +97,9 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
     );
   }
 
-  const tabletsPerStrip = item.tabletsPerStrip || 0;
+  const tabletsPerStrip = Number(item.tabletsPerStrip) || 0;
+
+  console.log(`[BatchList] Rendering for Item: ${item.itemName} (ID: ${item.id}), TabletsPerStrip: ${tabletsPerStrip}, Batches found: ${batches.all.length}`);
 
   const getBatchStatusVariant = (status: string) => {
     switch (status) {

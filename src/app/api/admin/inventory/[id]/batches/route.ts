@@ -28,14 +28,28 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get("status");
 
-    // check & update expired batches
-    const expiryUpdateResult =
-      await checkAndUpdateExpiredBatches(itemId);
+    // check & update expired batches with safety
+    let expiryUpdateResult = null;
+    try {
+      expiryUpdateResult = await checkAndUpdateExpiredBatches(itemId);
+    } catch (err) {
+      console.error("Expiry update failed safely:", err);
+    }
 
-    if (expiryUpdateResult.updatedCount > 0) {
+    if (expiryUpdateResult && expiryUpdateResult.updatedCount > 0) {
       console.log(
         `Updated ${expiryUpdateResult.updatedCount} expired batches for item ${itemId}`
       );
+    }
+
+    // Fetch item metadata first
+    const item = await prisma.product.findUnique({
+      where: { id: itemId },
+      include: { category: true },
+    });
+
+    if (!item) {
+      return errorResponse("Item not found", 404);
     }
 
     const whereClause: any = { itemId };
@@ -46,9 +60,6 @@ export async function GET(
     const batches = await prisma.productBatch.findMany({
       where: whereClause,
       include: {
-        item: {
-          include: { category: true },
-        },
         receivedItem: {
           include: {
             purchaseItem: {
@@ -61,16 +72,9 @@ export async function GET(
       orderBy: { expiryDate: "asc" },
     });
 
+    console.log(`[BatchesAPI] Found ${batches.length} batches for item ${itemId} (Status Filter: ${statusFilter || 'None'})`);
+
     if (batches.length === 0) {
-      const item = await prisma.product.findUnique({
-        where: { id: itemId },
-        include: { category: true },
-      });
-
-      if (!item) {
-        return errorResponse("Item not found", 404);
-      }
-
       return successResponse({
         item,
         batches: {
@@ -92,31 +96,47 @@ export async function GET(
     }
 
     const batchesWithDamage = batches.map((batch) => {
-      const damageRecords = (batch as any).damageRecords || [];
-      const stripDamage = damageRecords
-        .filter((d: any) => d.damageType === 'FULL_STRIP')
-        .reduce((sum: number, d: any) => sum + d.quantity, 0);
-      const tabletDamage = damageRecords
-        .filter((d: any) => d.damageType === 'SINGLE_TABLET')
-        .reduce((sum: number, d: any) => sum + d.quantity, 0);
-
+      let damageQuantity = 0;
       let damageDisplay = "0";
-      if (stripDamage > 0 && tabletDamage > 0) {
-        damageDisplay = `${stripDamage} units + ${tabletDamage} tablets`;
-      } else if (stripDamage > 0) {
-        damageDisplay = `${stripDamage} ${stripDamage > 1 ? 'units' : 'unit'}`;
-      } else if (tabletDamage > 0) {
-        damageDisplay = `${tabletDamage} ${tabletDamage > 1 ? 'tablets' : 'tablet'}`;
+
+      try {
+        const damageRecords = (batch as any).damageRecords || [];
+        const stripDamage = damageRecords
+          .filter((d: any) => d.damageType !== 'SINGLE_TABLET')
+          .reduce((sum: number, d: any) => sum + (Number(d.quantity) || 0), 0);
+        const tabletDamage = damageRecords
+          .filter((d: any) => d.damageType === 'SINGLE_TABLET')
+          .reduce((sum: number, d: any) => sum + (Number(d.quantity) || 0), 0);
+
+        if (stripDamage > 0 && tabletDamage > 0) {
+          damageDisplay = `${stripDamage} units + ${tabletDamage} tablets`;
+        } else if (stripDamage > 0) {
+          damageDisplay = `${stripDamage} ${stripDamage > 1 ? 'units' : 'unit'}`;
+        } else if (tabletDamage > 0) {
+          damageDisplay = `${tabletDamage} ${tabletDamage > 1 ? 'tablets' : 'tablet'}`;
+        }
+        damageQuantity = stripDamage + tabletDamage;
+      } catch (err) {
+        console.error("Error calculating damage for batch:", batch.id, err);
       }
 
-      const damageQuantity = stripDamage + tabletDamage;
+      let expiryInfo: any = {
+        isExpired: false,
+        expiryDateFormatted: null,
+        daysUntilExpiry: null,
+        expiryStatus: 'UNKNOWN'
+      };
 
-      const expiryInfo = getBatchExpiryInfo(batch);
+      try {
+        expiryInfo = getBatchExpiryInfo(batch);
+      } catch (err) {
+        console.error("Error getting expiry info for batch:", batch.id, err);
+      }
 
       return {
         ...batch,
-        damageQuantity,
-        damageDisplay,
+        damageQuantity: Number(damageQuantity) || 0,
+        damageDisplay: String(damageDisplay),
         ...expiryInfo,
       };
     });
@@ -125,7 +145,7 @@ export async function GET(
       batchesWithDamage.filter((b) => b.status === status);
 
     return successResponse({
-      item: batches[0]?.item || null,
+      item,
       batches: {
         active: byStatus("ACTIVE"),
         inactive: byStatus("INACTIVE"),
@@ -136,9 +156,9 @@ export async function GET(
       summary: {
         totalStock: batchesWithDamage
           .filter((b) => ["ACTIVE", "INACTIVE"].includes(b.status))
-          .reduce((sum, b) => sum + b.quantity, 0),
+          .reduce((sum, b) => sum + (Number(b.quantity) || 0), 0),
         totalDamageQuantity: batchesWithDamage.reduce(
-          (sum, b) => sum + (b.damageQuantity || 0),
+          (sum, b) => sum + (Number(b.damageQuantity) || 0),
           0
         ),
         activeBatchesCount: byStatus("ACTIVE").length,
@@ -146,6 +166,7 @@ export async function GET(
         soldOutBatchesCount: byStatus("SOLD_OUT").length,
         expiredBatchesCount: byStatus("EXPIRED").length,
       },
+      _debugCount: batches.length,
       expiryUpdateResult,
     });
   } catch (error) {
