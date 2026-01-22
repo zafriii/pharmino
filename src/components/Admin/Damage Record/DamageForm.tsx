@@ -70,17 +70,17 @@ export default function DamageForm({
   });
 
   // Reset form when modal opens
-  React.useEffect(() => {
-    if (open) {
-      reset({
-        batchId: '',
-        quantity: 1,
-        damageType: 'FULL_STRIP',
-        reason: '',
-      });
-      setToastMessage(null);
-    }
-  }, [open, reset]);
+  // React.useEffect(() => {
+  //   if (open) {
+  //     reset({
+  //       batchId: '',
+  //       quantity: 1,
+  //       damageType: 'FULL_STRIP',
+  //       reason: '',
+  //     });
+  //     setToastMessage(null);
+  //   }
+  // }, [open, reset]);
 
   const watchedBatchId = watch('batchId');
   const watchedDamageType = watch('damageType');
@@ -91,8 +91,17 @@ export default function DamageForm({
     ...availableBatches.map((batch) => {
       const totalUnits = batch.quantity;
       const partialTablets = batch.remainingTablets || 0;
-      let label = `${batch.batchNumber} (${totalUnits} units`;
-      if (partialTablets > 0) label += ` + ${partialTablets} tablets`;
+      
+      let label = `${batch.batchNumber} (`;
+      
+      if (totalUnits > 0 && partialTablets > 0) {
+        label += `${totalUnits} units + ${partialTablets} tablets`;
+      } else if (totalUnits > 0) {
+        label += `${totalUnits} units`;
+      } else if (partialTablets > 0) {
+        label += `${partialTablets} tablets`;
+      }
+      
       label += ` available) - ${batch.status}`;
 
       return {
@@ -257,8 +266,12 @@ export default function DamageForm({
                   <div>
                     <span className="text-gray-600">Available: </span>
                     <span className="font-medium">
-                      {selectedBatch.quantity} strips
-                      {(selectedBatch.remainingTablets || 0) > 0 && ` + ${selectedBatch.remainingTablets} tablets`}
+                      {selectedBatch.quantity > 0 && (selectedBatch.remainingTablets || 0) > 0 
+                        ? `${selectedBatch.quantity} strips + ${selectedBatch.remainingTablets} tablets`
+                        : selectedBatch.quantity > 0 
+                        ? `${selectedBatch.quantity} strips`
+                        : `${selectedBatch.remainingTablets} tablets`
+                      }
                     </span>
                   </div>
                   <div>
