@@ -11,6 +11,7 @@ interface BatchDamageDetailsProps {
   batchId: number;
   batchNumber: string;
   damageQuantity: number;
+  damageDisplay?: string;
 }
 
 interface DamageResponse {
@@ -23,10 +24,11 @@ interface DamageResponse {
   };
 }
 
-export default function BatchDamageDetails({ 
-  batchId, 
-  batchNumber, 
-  damageQuantity 
+export default function BatchDamageDetails({
+  batchId,
+  batchNumber,
+  damageQuantity,
+  damageDisplay
 }: BatchDamageDetailsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [damages, setDamages] = useState<DamageRecord[]>([]);
@@ -35,17 +37,17 @@ export default function BatchDamageDetails({
 
   const fetchDamageDetails = async () => {
     if (damageQuantity === 0) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch(`/api/admin/damage?batchId=${batchId}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch damage details');
       }
-      
+
       const result: DamageResponse = await response.json();
       setDamages(result.damages || []);
     } catch (err) {
@@ -73,7 +75,7 @@ export default function BatchDamageDetails({
         onClick={() => setIsOpen(true)}
         className="text-red-600 hover:text-red-800 font-medium text-sm flex items-center gap-1 transition-colors"
       >
-        {damageQuantity}
+        {damageDisplay || damageQuantity}
         <FiEye className="w-3 h-3" />
       </button>
 
@@ -96,7 +98,7 @@ export default function BatchDamageDetails({
               <FiAlertTriangle className="w-12 h-12 text-red-500" />
             </div>
             <p className="text-red-600 mb-4">{error}</p>
-            <Button 
+            <Button
               onClick={fetchDamageDetails}
               variant="secondary"
             >
@@ -120,7 +122,7 @@ export default function BatchDamageDetails({
                 <div>
                   <h3 className="font-semibold text-red-900">Damage Summary</h3>
                   <p className="text-sm text-red-700">
-                    Total damaged quantity: <span className="font-bold">{damageQuantity} units</span>
+                    This batch has recorded damage incidents. See details below.
                   </p>
                 </div>
               </div>
@@ -132,7 +134,7 @@ export default function BatchDamageDetails({
                 <FiClock className="w-4 h-4" />
                 Damage History ({damages.length} records)
               </h4>
-              
+
               {damages.map((damage, index) => (
                 <div key={damage.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
                   <div className="flex justify-between items-start mb-3">
@@ -141,7 +143,7 @@ export default function BatchDamageDetails({
                         Record #{damages.length - index}
                       </span>
                       <span className="text-red-600 font-bold text-lg">
-                        -{damage.quantity} units
+                        -{damage.quantity} {damage.damageType === 'SINGLE_TABLET' ? 'tablets' : 'units'}
                       </span>
                     </div>
                     <div className="text-right text-sm text-gray-500">
@@ -163,7 +165,7 @@ export default function BatchDamageDetails({
                         {damage.reason}
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-sm">
                       <FiUser className="w-4 h-4 text-gray-500" />
                       <span className="text-gray-600">Recorded by:</span>
@@ -180,7 +182,6 @@ export default function BatchDamageDetails({
               <div className="text-sm text-blue-800">
                 <p>Batch Number: <span className="font-medium">{batchNumber}</span></p>
                 <p>Total Damage Records: <span className="font-medium">{damages.length}</span></p>
-                <p>Total Damaged Quantity: <span className="font-medium">{damageQuantity} units</span></p>
               </div>
             </div>
           </div>

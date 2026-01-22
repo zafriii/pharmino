@@ -43,7 +43,7 @@ async function fetchBatches(itemId: string, status?: string) {
         // ...(sessionToken
         //   ? { Cookie: `better-auth.session_token=${sessionToken}` }
         //   : {}),
-        Cookie:cookieHeader
+        Cookie: cookieHeader
       },
     });
 
@@ -130,7 +130,7 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
           const completeStripTablets = row.quantity * tabletsPerStrip;
           const partialTablets = row.remainingTablets || 0;
           const totalTablets = completeStripTablets + partialTablets;
-          
+
           return (
             <div className="text-sm">
               <span className="font-medium">
@@ -164,15 +164,16 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
       header: "Damage Qty",
       render: (row: ProductBatch) => (
         <div className="text-sm">
-          <BatchDamageDetails 
+          <BatchDamageDetails
             batchId={row.id}
             batchNumber={row.batchNumber}
             damageQuantity={row.damageQuantity || 0}
+            damageDisplay={row.damageDisplay}
           />
-          
+
         </div>
       ),
-    },    
+    },
     {
       key: "prices",
       header: "Prices",
@@ -237,7 +238,7 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center w-full flex-wrap gap-y-2">
-        
+
         {/* Back link */}
         <Link
           href="/admin/inventory"
@@ -253,6 +254,7 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
             itemId={parseInt(itemId)}
             itemName={item.itemName}
             batches={batches.all}
+            tabletsPerStrip={tabletsPerStrip}
           />
           <BatchStats summary={summary} />
         </div>
@@ -276,8 +278,8 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
       {/* Batches Table */}
       <div className="p-0">
         <h2 className="text-lg font-semibold mb-4">
-          {searchParams?.status 
-            ? `${searchParams.status.replace('_', ' ')} Batches` 
+          {searchParams?.status
+            ? `${searchParams.status.replace('_', ' ')} Batches`
             : 'All Batches'
           }
         </h2>
@@ -285,7 +287,7 @@ export default async function BatchList({ itemId, searchParams }: BatchListProps
           <ReusableTable columns={columns} data={batches.all} />
         ) : (
           <div className="text-center py-8 text-gray-500">
-            {searchParams?.status 
+            {searchParams?.status
               ? `No ${searchParams.status.toLowerCase().replace('_', ' ')} batches found for this item`
               : 'No batches found for this item'
             }

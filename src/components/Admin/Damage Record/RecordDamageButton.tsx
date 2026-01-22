@@ -10,12 +10,14 @@ interface RecordDamageButtonProps {
   itemId: number;
   itemName: string;
   batches: ProductBatch[];
+  tabletsPerStrip?: number;
 }
 
 export default function RecordDamageButton({
   itemId,
   itemName,
   batches,
+  tabletsPerStrip = 0,
 }: RecordDamageButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -24,7 +26,8 @@ export default function RecordDamageButton({
   };
 
   const hasAvailableBatches = batches.some(
-    (batch) => batch.status === 'ACTIVE' && batch.quantity > 0
+    (batch) => (batch.status === 'ACTIVE' || batch.status === 'INACTIVE') &&
+      (batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0))
   );
 
   return (
@@ -46,6 +49,7 @@ export default function RecordDamageButton({
         itemName={itemName}
         batches={batches}
         onSuccess={handleSuccess}
+        tabletsPerStrip={tabletsPerStrip}
       />
     </>
   );

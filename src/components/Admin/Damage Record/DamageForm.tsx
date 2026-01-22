@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { ProductBatch } from '@/types/inventory.types';
 import { recordDamageAction } from '@/actions/damage.actions';
@@ -17,6 +17,7 @@ import { RxCross2 } from 'react-icons/rx';
 interface DamageFormData {
   batchId: string;
   quantity: number;
+  damageType: 'FULL_STRIP' | 'SINGLE_TABLET';
   reason: string;
 }
 
@@ -26,6 +27,7 @@ interface DamageFormProps {
   itemId: number;
   itemName: string;
   batches: ProductBatch[];
+  tabletsPerStrip?: number;
   onSuccess?: () => void;
 }
 
@@ -35,6 +37,7 @@ export default function DamageForm({
   itemId,
   itemName,
   batches,
+  tabletsPerStrip = 0,
   onSuccess,
 }: DamageFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -45,20 +48,21 @@ export default function DamageForm({
 
   // Filter active batches with available quantity
   const availableBatches = batches.filter(
-    (batch) => batch.quantity > 0
+    (batch) => batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0)
   );
 
-  const { 
-    register, 
-    handleSubmit, 
+  const {
+    register,
+    handleSubmit,
     watch,
-    reset, 
-    formState: { errors }, 
-    setValue 
+    reset,
+    formState: { errors },
+    setValue
   } = useForm<DamageFormData>({
     defaultValues: {
       batchId: '',
       quantity: 1,
+      damageType: 'FULL_STRIP',
       reason: '',
     },
   });
@@ -69,6 +73,7 @@ export default function DamageForm({
       reset({
         batchId: '',
         quantity: 1,
+        damageType: 'FULL_STRIP',
         reason: '',
       });
       setToastMessage(null);
@@ -76,15 +81,23 @@ export default function DamageForm({
   }, [open, reset]);
 
   const watchedBatchId = watch('batchId');
-  const watchedQuantity = watch('quantity');
+  const watchedDamageType = watch('damageType');
   const watchedReason = watch('reason');
 
   const batchOptions = [
     { value: '', label: 'Choose a batch' },
-    ...availableBatches.map((batch) => ({
-      value: batch.id.toString(),
-      label: `${batch.batchNumber} (${batch.quantity} available)`,
-    }))
+    ...availableBatches.map((batch) => {
+      const totalUnits = batch.quantity;
+      const partialTablets = batch.remainingTablets || 0;
+      let label = `${batch.batchNumber} (${totalUnits} units`;
+      if (partialTablets > 0) label += ` + ${partialTablets} tablets`;
+      label += ` available)`;
+
+      return {
+        value: batch.id.toString(),
+        label: label,
+      };
+    })
   ];
 
   const selectedBatch = availableBatches.find(
@@ -101,11 +114,11 @@ export default function DamageForm({
     }
 
     // Find the selected batch from the current batches array (fresh data)
-    const selectedBatch = availableBatches.find(
+    const currentBatch = availableBatches.find(
       (batch) => batch.id.toString() === data.batchId
     );
 
-    if (!selectedBatch) {
+    if (!currentBatch) {
       setToastMessage({
         message: 'Selected batch not found or no longer available',
         type: 'error',
@@ -113,9 +126,18 @@ export default function DamageForm({
       return;
     }
 
-    if (data.quantity > selectedBatch.quantity) {
+    if (data.damageType === 'SINGLE_TABLET' && tabletsPerStrip > 0) {
+      const totalTablets = (currentBatch.quantity * tabletsPerStrip) + (currentBatch.remainingTablets || 0);
+      if (data.quantity > totalTablets) {
+        setToastMessage({
+          message: `Quantity cannot exceed available tablets (${totalTablets})`,
+          type: 'error',
+        });
+        return;
+      }
+    } else if (data.quantity > currentBatch.quantity) {
       setToastMessage({
-        message: `Quantity cannot exceed available stock (${selectedBatch.quantity})`,
+        message: `Quantity cannot exceed available stock (${currentBatch.quantity} strips)`,
         type: 'error',
       });
       return;
@@ -129,19 +151,12 @@ export default function DamageForm({
       return;
     }
 
-    if (watchedReason.length > 500) {
-      setToastMessage({
-        message: 'Reason must be less than 500 characters',
-        type: 'error',
-      });
-      return;
-    }
-
     startTransition(async () => {
       try {
         const result = await recordDamageAction(itemId, {
           batchId: parseInt(data.batchId),
           quantity: data.quantity,
+          damageType: data.damageType,
           reason: watchedReason.trim(),
         });
 
@@ -150,7 +165,7 @@ export default function DamageForm({
             message: result.message || 'Damage recorded successfully',
             type: 'success',
           });
-          
+
           reset();
           setOpen(false);
           onSuccess?.();
@@ -198,11 +213,11 @@ export default function DamageForm({
           </>
         }
       >
-        <form id="damageForm" onSubmit={handleSubmit(onSubmit)} className="space-y-6">          
+        <form id="damageForm" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <h3 className="text-lg font-medium text-gray-900 ">
-               {itemName}
-            </h3>            
+              {itemName}
+            </h3>
           </div>
 
           <div className="space-y-4">
@@ -233,7 +248,10 @@ export default function DamageForm({
                   </div>
                   <div>
                     <span className="text-gray-600">Available: </span>
-                    <span className="font-medium">{selectedBatch.quantity} units</span>
+                    <span className="font-medium">
+                      {selectedBatch.quantity} strips
+                      {(selectedBatch.remainingTablets || 0) > 0 && ` + ${selectedBatch.remainingTablets} tablets`}
+                    </span>
                   </div>
                   <div>
                     <span className="text-gray-600">Supplier: </span>
@@ -251,21 +269,44 @@ export default function DamageForm({
               </div>
             )}
 
+            {tabletsPerStrip > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Damage Type *
+                </label>
+                <div className="flex gap-4 p-2 bg-gray-50 rounded-lg">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="FULL_STRIP"
+                      {...register('damageType')}
+                      className="w-4 h-4 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm font-medium">Full Strip</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="SINGLE_TABLET"
+                      {...register('damageType')}
+                      className="w-4 h-4 text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm font-medium">Single Tablet</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             <div>
               <CustomInput
-                label="Damage Quantity *"
+                label={watchedDamageType === 'SINGLE_TABLET' ? "Tablet Damage Quantity *" : "Unit Damage Quantity *"}
                 type="number"
                 placeholder="Enter quantity"
                 min="1"
-                max={selectedBatch?.quantity || undefined}
-                {...register('quantity', { 
+                {...register('quantity', {
                   required: 'Quantity is required',
                   valueAsNumber: true,
-                  min: { value: 1, message: 'Quantity must be at least 1' },
-                  max: { 
-                    value: selectedBatch?.quantity || 999999, 
-                    message: `Quantity cannot exceed available stock (${selectedBatch?.quantity || 0})` 
-                  }
+                  min: { value: 1, message: 'Quantity must be at least 1' }
                 })}
                 error={errors.quantity?.message}
               />
@@ -302,4 +343,3 @@ export default function DamageForm({
     </>
   );
 }
-

@@ -70,7 +70,7 @@ export default function DamageList({
             {row.quantity}
           </span>
           <span className="text-gray-500 text-sm block">
-            {row.quantity > 1 ? 'units' : 'unit'}
+            {row.damageType === 'SINGLE_TABLET' ? 'tablets' : (row.quantity > 1 ? 'units' : 'unit')}
           </span>
         </div>
       ),
@@ -116,11 +116,11 @@ export default function DamageList({
     //   ),
     // },
 
-     {
+    {
       key: "createdAt",
       header: "Damage Recorded",
       render: (row: DamageRecord) => <LocalDate date={row.createdAt} />,
-     },
+    },
   ];
 
   return (

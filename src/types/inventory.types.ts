@@ -12,7 +12,7 @@ export interface InventoryItem {
     };
     lowStockThreshold: number;
     rackLocation?: string | null;
-    tabletsPerStrip?:number;
+    tabletsPerStrip?: number;
   };
   totalQuantity: number;
   availableQuantity: number;
@@ -35,7 +35,8 @@ export interface ProductBatch {
   sellingPrice: number;
   supplier: string;
   status: 'ACTIVE' | 'INACTIVE' | 'SOLD_OUT' | 'EXPIRED';
-  damageQuantity?: number; // Total damage quantity for this batch
+  damageQuantity?: number; // Total damage quantity (sum of counts)
+  damageDisplay?: string; // Formatted damage string (e.g., "2 tablets")
   createdAt: string;
   updatedAt: string;
   item?: {

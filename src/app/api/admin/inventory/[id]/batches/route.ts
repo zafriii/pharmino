@@ -92,17 +92,31 @@ export async function GET(
     }
 
     const batchesWithDamage = batches.map((batch) => {
-      const damageQuantity =
-        batch.damageRecords?.reduce(
-          (sum, d) => sum + d.quantity,
-          0
-        ) || 0;
+      const damageRecords = (batch as any).damageRecords || [];
+      const stripDamage = damageRecords
+        .filter((d: any) => d.damageType === 'FULL_STRIP')
+        .reduce((sum: number, d: any) => sum + d.quantity, 0);
+      const tabletDamage = damageRecords
+        .filter((d: any) => d.damageType === 'SINGLE_TABLET')
+        .reduce((sum: number, d: any) => sum + d.quantity, 0);
+
+      let damageDisplay = "0";
+      if (stripDamage > 0 && tabletDamage > 0) {
+        damageDisplay = `${stripDamage} units + ${tabletDamage} tablets`;
+      } else if (stripDamage > 0) {
+        damageDisplay = `${stripDamage} ${stripDamage > 1 ? 'units' : 'unit'}`;
+      } else if (tabletDamage > 0) {
+        damageDisplay = `${tabletDamage} ${tabletDamage > 1 ? 'tablets' : 'tablet'}`;
+      }
+
+      const damageQuantity = stripDamage + tabletDamage;
 
       const expiryInfo = getBatchExpiryInfo(batch);
 
       return {
         ...batch,
         damageQuantity,
+        damageDisplay,
         ...expiryInfo,
       };
     });

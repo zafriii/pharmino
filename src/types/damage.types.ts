@@ -3,6 +3,7 @@ export interface DamageRecord {
   itemId: number;
   batchId: number;
   quantity: number;
+  damageType: 'FULL_STRIP' | 'SINGLE_TABLET' | 'ML';
   reason: string;
   createdBy: number;
   createdAt: string;
@@ -29,6 +30,7 @@ export interface DamageRecord {
 export interface DamageFormData {
   batchId: number;
   quantity: number;
+  damageType: 'FULL_STRIP' | 'SINGLE_TABLET' | 'ML';
   reason: string;
 }
 

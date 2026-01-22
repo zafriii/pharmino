@@ -9,6 +9,7 @@ import { getSessionToken } from '@/lib/cookie-utils';
 const damageFormSchema = z.object({
   batchId: z.number().int().positive("Batch ID is required"),
   quantity: z.number().int().positive("Quantity must be positive"),
+  damageType: z.enum(['FULL_STRIP', 'SINGLE_TABLET', 'ML']).default('FULL_STRIP'),
   reason: z.string().min(1, "Reason is required").max(500, "Reason must be less than 500 characters"),
 });
 
@@ -26,18 +27,20 @@ export async function recordDamageAction(
   damageData: {
     batchId: number;
     quantity: number;
+    damageType: 'FULL_STRIP' | 'SINGLE_TABLET' | 'ML';
     reason: string;
   }
 ): Promise<ActionResponse> {
   try {
     // Validate damage data with Zod
     const validatedData = damageFormSchema.parse(damageData);
-    
+
     // Prepare damage record data
     const damageRecordData = {
       itemId: itemId,
       batchId: validatedData.batchId,
       quantity: validatedData.quantity,
+      damageType: validatedData.damageType,
       reason: validatedData.reason,
     };
 
@@ -77,7 +80,7 @@ export async function recordDamageAction(
     };
   } catch (error: any) {
     console.error('Record damage error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -85,7 +88,7 @@ export async function recordDamageAction(
         error: error.issues[0].message,
       };
     }
-    
+
     return {
       success: false,
       message: 'Failed to record damage',

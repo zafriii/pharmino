@@ -1,12 +1,14 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
+import { calculateStripImpact } from "@/lib/tablet-calculation.utils";
 import { z } from "zod";
 
 const damageSchema = z.object({
   itemId: z.number().int().positive("Item ID is required"),
   batchId: z.number().int().positive("Batch ID is required"),
   quantity: z.number().int().positive("Quantity must be positive"),
+  damageType: z.enum(['FULL_STRIP', 'SINGLE_TABLET', 'ML']).default('FULL_STRIP'),
   reason: z.string().min(1, "Reason is required")
 });
 
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAdmin();
     const body = await request.json();
-    
+
     const validatedData = damageSchema.parse(body);
 
     // Validate item exists
@@ -106,7 +108,12 @@ export async function POST(request: NextRequest) {
         throw new Error("Batch does not belong to the specified item");
       }
 
-      if (batch.quantity < validatedData.quantity) {
+      if (validatedData.damageType === 'SINGLE_TABLET' && item.tabletsPerStrip) {
+        const totalTabletsInBatch = (batch.quantity * item.tabletsPerStrip) + (batch.remainingTablets || 0);
+        if (totalTabletsInBatch < validatedData.quantity) {
+          throw new Error(`Insufficient tablets in batch. Available: ${totalTabletsInBatch}, Required: ${validatedData.quantity}`);
+        }
+      } else if (batch.quantity < validatedData.quantity) {
         throw new Error(`Insufficient quantity in batch. Available: ${batch.quantity}, Required: ${validatedData.quantity}`);
       }
       // Create damage record
@@ -115,6 +122,7 @@ export async function POST(request: NextRequest) {
           itemId: validatedData.itemId,
           batchId: validatedData.batchId,
           quantity: validatedData.quantity,
+          damageType: validatedData.damageType,
           reason: validatedData.reason,
           createdBy: user.id
         },
@@ -131,13 +139,25 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // Update batch quantity
-      const newBatchQuantity = batch.quantity - validatedData.quantity;
+      // Update batch quantity and tablets
+      let newBatchQuantity = batch.quantity;
+      let newRemainingTablets = batch.remainingTablets;
+
+      if (validatedData.damageType === 'SINGLE_TABLET' && item.tabletsPerStrip) {
+        const totalTablets = (batch.quantity * item.tabletsPerStrip) + (batch.remainingTablets || 0) - validatedData.quantity;
+        newBatchQuantity = Math.floor(totalTablets / item.tabletsPerStrip);
+        const remainder = totalTablets % item.tabletsPerStrip;
+        newRemainingTablets = remainder > 0 ? remainder : null;
+      } else {
+        newBatchQuantity = batch.quantity - validatedData.quantity;
+      }
+
       await tx.productBatch.update({
         where: { id: validatedData.batchId },
         data: {
           quantity: newBatchQuantity,
-          status: newBatchQuantity === 0 ? 'SOLD_OUT' : batch.status
+          remainingTablets: newRemainingTablets,
+          status: (newBatchQuantity === 0 && !newRemainingTablets) ? 'SOLD_OUT' : batch.status
         }
       });
 
@@ -169,8 +189,21 @@ export async function POST(request: NextRequest) {
       });
 
       if (inventory) {
-        const newTotalQuantity = inventory.totalQuantity - validatedData.quantity;
-        const newAvailableQuantity = inventory.availableQuantity - validatedData.quantity;
+        let stripsToDeduct = 0;
+        if (validatedData.damageType === 'SINGLE_TABLET' && item.tabletsPerStrip) {
+          // Calculate how many FULL strips are gone from inventory
+          // Total tablets before - Total tablets after
+          const totalBefore = (batch.quantity * item.tabletsPerStrip) + (batch.remainingTablets || 0);
+          const totalAfter = (newBatchQuantity * item.tabletsPerStrip) + (newRemainingTablets || 0);
+
+          // The quantity of strips to deduct from inventory is (Initial Strips - Current Strips)
+          stripsToDeduct = batch.quantity - newBatchQuantity;
+        } else {
+          stripsToDeduct = validatedData.quantity;
+        }
+
+        const newTotalQuantity = inventory.totalQuantity - stripsToDeduct;
+        const newAvailableQuantity = inventory.availableQuantity - stripsToDeduct;
 
         let newStatus = inventory.status;
         if (newTotalQuantity === 0) {

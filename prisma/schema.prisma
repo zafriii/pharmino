@@ -394,6 +394,7 @@ model Damage {
   itemId      Int
   batchId     Int
   quantity    Int
+  damageType  SellType @default(FULL_STRIP)
   reason      String
   createdBy   String
   createdAt   DateTime @default(now())
