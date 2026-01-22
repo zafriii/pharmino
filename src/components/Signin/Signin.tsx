@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 import Button from "../shared ui/Button";
 import { ImSpinner2 } from "react-icons/im";
@@ -25,13 +26,19 @@ function Signin() {
       const { data: sessionData, error } = await authClient.signIn.email({ email, password });
 
       if (error) {
-        alert(error.message); 
+        toast.error(error.message || "Sign in failed");
         return;
       }
 
-      router.push("/admin/dashboard-overview");
+      // Add a small delay to ensure the session cookie is fully set by the browser
+      // before navigating. This prevents race condition on first login.
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Use window.location.href for full page reload to ensure the session cookie
+      // is sent with the next request. This fixes the first-time login routing issue.
+      window.location.href = "/admin/dashboard-overview";
     } catch (err: any) {
-      alert(err.message || "Something went wrong");
+      toast.error(err.message || "Something went wrong");
     }
   };
 
@@ -87,7 +94,7 @@ function Signin() {
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <>                  
+                <>
                   Signing in
                   <ImSpinner2 className="animate-spin ml-1" />
                 </>
@@ -103,12 +110,4 @@ function Signin() {
 }
 
 export default Signin;
-
-
-
-
-
-
-
-
 
