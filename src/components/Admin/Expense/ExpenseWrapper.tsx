@@ -198,7 +198,15 @@ export default function ExpenseWrapper() {
             selectedValue={searchParams.get('period') || 'week'}
             onSelect={(value) => updateURL('period', value.toString())}
             placeholder="Weekly Chart"
+            disabled={isPending}
           />
+
+          {isPending && currentPeriod !== 'custom' && (
+            <div className="flex items-center gap-2 text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-full animate-pulse">
+              <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>Updating Chart...</span>
+            </div>
+          )}
 
           {showCustomRange && (
             <div className="flex items-center gap-1.5 px-2 py-1.5 border border-gray-200 rounded-md bg-gray-50 text-sm">
@@ -254,6 +262,7 @@ export default function ExpenseWrapper() {
               selectedValue={searchParams.get('listFilter') || 'all'}
               onSelect={(value) => updateURL('listFilter', value.toString())}
               placeholder="All Other Expense"
+              disabled={isPending}
             />
           </div>
 
