@@ -46,7 +46,7 @@ export default function InventoryList({
       key: "product",
       header: "Product",
       render: (row: InventoryItem) => (
-        
+
         <Link
           href={`/admin/inventory/${row.id}/batches`}
           className="flex items-center gap-3 group"
@@ -96,150 +96,113 @@ export default function InventoryList({
       ),
     },
 
-    // {
-    //   key: "stock",
-    //   header: "Stock Levels",
-    //   render: (row: InventoryItem) => {
-    //     const tabletsPerStrip = row.product.tabletsPerStrip || 0;
-    //     const totalTablets = row.availableQuantity * tabletsPerStrip;
+    {
+      key: "stock",
+      header: "Stock Levels",
+      render: (row: InventoryItem) => {
+        const tabletsPerStrip = row.product.tabletsPerStrip || 0;
 
-    //     return (
-    //       <div className="space-y-1 text-sm">
-    //         <div>
-    //           <span className="font-medium">Total: </span>
-    //           {row.totalQuantity}{" "}
-    //           {row.totalQuantity > 1 ? "units" : "unit"}
-    //         </div>
+        const activeBatches =
+          row.batches?.filter((b) => b.status === "ACTIVE") || [];
 
-    //         <div>
-    //           <span className="font-medium">Available: </span>
-    //           {row.availableQuantity}{" "}
-    //           {row.availableQuantity > 1 ? "units" : "unit"}
-    //           {tabletsPerStrip > 0 && (
-    //             <span className="text-gray-500">
-    //               {" "}
-    //               ({totalTablets} tablets)
-    //             </span>
-    //           )}
-    //         </div>
+        const inactiveBatches =
+          row.batches?.filter((b) => b.status === "INACTIVE") || [];
 
-    //         {row.reservedQuantity > 0 && (
-    //           <div>
-    //             <span className="font-medium">Reserved: </span>
-    //             {row.reservedQuantity} units
-    //           </div>
-    //         )}
-    //       </div>
-    //     );
-    //   },
-    // },
+        const expiredBatches =
+          row.batches?.filter((b) => b.status === "EXPIRED") || [];
 
+        const soldOutBatches =
+          row.batches?.filter((b) => b.status === "SOLD_OUT") || [];
 
-  {
-  key: "stock",
-  header: "Stock Levels",
-  render: (row: InventoryItem) => {
-    const tabletsPerStrip = row.product.tabletsPerStrip || 0;
+        // Calculate available units and tablets including partial strips
+        let availableUnits = 0;
+        let remainingTablets = 0;
 
-    const activeBatches =
-      row.batches?.filter((b) => b.status === "ACTIVE") || [];
+        if (tabletsPerStrip > 0) {
+          // For tablet products, calculate units and remaining tablets separately
+          availableUnits = activeBatches.reduce((sum, b) => sum + b.quantity, 0);
+          remainingTablets = activeBatches.reduce((sum, b) => sum + (b.remainingTablets || 0), 0);
+        } else {
+          // For non-tablet products, use regular calculation
+          availableUnits = activeBatches.reduce((sum, b) => sum + b.quantity, 0);
+        }
 
-    const inactiveBatches =
-      row.batches?.filter((b) => b.status === "INACTIVE") || [];
+        const inactiveUnits = inactiveBatches.reduce(
+          (sum, b) => sum + b.quantity,
+          0
+        );
 
-    const expiredBatches =
-      row.batches?.filter((b) => b.status === "EXPIRED") || [];
+        const expiredUnits = expiredBatches.reduce(
+          (sum, b) => sum + b.quantity,
+          0
+        );
 
-    const soldOutBatches =
-      row.batches?.filter((b) => b.status === "SOLD_OUT") || [];
+        const soldOutUnits = soldOutBatches.reduce(
+          (sum, b) => sum + b.quantity,
+          0
+        );
 
-    // Calculate available units and tablets including partial strips
-    let availableUnits = 0;
-    let remainingTablets = 0;
-    
-    if (tabletsPerStrip > 0) {
-      // For tablet products, calculate units and remaining tablets separately
-      availableUnits = activeBatches.reduce((sum, b) => sum + b.quantity, 0);
-      remainingTablets = activeBatches.reduce((sum, b) => sum + (b.remainingTablets || 0), 0);
-    } else {
-      // For non-tablet products, use regular calculation
-      availableUnits = activeBatches.reduce((sum, b) => sum + b.quantity, 0);
-    }
+        // Total units = sum of active & inactive batches quantities (excludes expired and sold out)
+        const totalUnits = availableUnits + inactiveUnits;
 
-    const inactiveUnits = inactiveBatches.reduce(
-      (sum, b) => sum + b.quantity,
-      0
-    );
+        return (
+          <div className="space-y-1 text-sm">
+            <div>
+              <span className="font-medium">Total Available: </span>
+              {tabletsPerStrip > 0 && remainingTablets > 0 ? (
+                <>
+                  {/* {totalUnits} {totalUnits > 1 ? "units" : "unit"}
+                  <span className="text-gray-500">
+                    {" "}& {remainingTablets} tablets
+                  </span> */}
+                  {remainingTablets} tablets
+                </>
+              ) : (
+                <>
+                  {totalUnits} {totalUnits > 1 ? "units" : "unit"}
+                </>
+              )}
+            </div>
 
-    const expiredUnits = expiredBatches.reduce(
-      (sum, b) => sum + b.quantity,
-      0
-    );
+            <div>
+              <span className="font-medium text-green-600">Available: </span>
+              {tabletsPerStrip > 0 && remainingTablets > 0 ? (
+                <>
+                  {/* {availableUnits} {availableUnits > 1 ? "units" : "unit"} */}
+                  {/* <span className="text-gray-500">
+                   {" "}& {remainingTablets} tablets
+                   </span> */}
+                  {remainingTablets} tablets
+                </>
+              ) : (
+                <>
+                  {availableUnits} {availableUnits > 1 ? "units" : "unit"}
+                </>
+              )}
+            </div>
 
-    const soldOutUnits = soldOutBatches.reduce(
-      (sum, b) => sum + b.quantity,
-      0
-    );
+            <div>
+              <span className="font-medium text-blue-600">Reserved: </span>
+              {inactiveUnits} {inactiveUnits > 1 ? "units" : "unit"}
+            </div>
 
-    // Total units = sum of active & inactive batches quantities (excludes expired and sold out)
-    const totalUnits = availableUnits + inactiveUnits;
+            {expiredUnits > 0 && (
+              <div>
+                <span className="font-medium text-red-500">Expired: </span>
+                {expiredUnits} units
+              </div>
+            )}
 
-    return (
-      <div className="space-y-1 text-sm">
-        <div>
-          <span className="font-medium">Total Available: </span>
-          {tabletsPerStrip > 0 && remainingTablets > 0 ? (
-            <>
-              {totalUnits} {totalUnits > 1 ? "units" : "unit"}
-              <span className="text-gray-500">
-                {" "}& {remainingTablets} tablets
-              </span>
-            </>
-          ) : (
-            <>
-              {totalUnits} {totalUnits > 1 ? "units" : "unit"}
-            </>
-          )}
-        </div>
-
-        <div>
-          <span className="font-medium text-green-600">Available: </span>
-          {tabletsPerStrip > 0 && remainingTablets > 0 ? (
-            <>
-              {availableUnits} {availableUnits > 1 ? "units" : "unit"}
-              <span className="text-gray-500">
-                {" "}& {remainingTablets} tablets
-              </span>
-            </>
-          ) : (
-            <>
-              {availableUnits} {availableUnits > 1 ? "units" : "unit"}
-            </>
-          )}
-        </div>
-
-        <div>
-          <span className="font-medium text-blue-600">Reserved: </span>
-          {inactiveUnits} {inactiveUnits > 1 ? "units" : "unit"}
-        </div>
-
-        {expiredUnits > 0 && (
-          <div>
-            <span className="font-medium text-red-500">Expired: </span>
-            {expiredUnits} units
+            {soldOutUnits > 0 && (
+              <div>
+                <span className="font-medium text-gray-500">Sold Out Batches: </span>
+                {soldOutUnits} units
+              </div>
+            )}
           </div>
-        )}
-
-        {soldOutBatches.length > 0 && (
-          <div>
-            <span className="font-medium text-gray-500">Sold Out Batches: </span>
-            {soldOutBatches.length} batches
-          </div>
-        )}
-      </div>
-    );
-  },
-},
+        );
+      },
+    },
 
 
     {
@@ -256,9 +219,9 @@ export default function InventoryList({
       render: (row: InventoryItem) => {
         const tabletsPerStrip = row.product.tabletsPerStrip || 0;
         const activeBatches = row.batches?.filter((b) => b.status === "ACTIVE") || [];
-        
+
         let effectiveQuantity = 0;
-        
+
         if (tabletsPerStrip > 0) {
           // For tablet products, calculate total tablets including remaining tablets
           const totalTablets = activeBatches.reduce((sum, b) => {
@@ -266,10 +229,10 @@ export default function InventoryList({
             const partialTablets = b.remainingTablets || 0;
             return sum + completeStripTablets + partialTablets;
           }, 0);
-          
+
           // Convert total tablets back to equivalent strips for threshold comparison
           effectiveQuantity = Math.floor(totalTablets / tabletsPerStrip);
-          
+
           // If there are remaining tablets but no complete strips, still show as having some stock
           if (effectiveQuantity === 0 && totalTablets > 0) {
             effectiveQuantity = 0.1; // Small value to indicate partial stock
@@ -278,10 +241,10 @@ export default function InventoryList({
           // For non-tablet products, use regular quantity calculation
           effectiveQuantity = activeBatches.reduce((sum, b) => sum + b.quantity, 0);
         }
-        
+
         // Calculate dynamic stock status based on effective quantity
         const dynamicStatus = getStockStatus(effectiveQuantity, row.lowStockThreshold);
-        
+
         return (
           <Badge variant={getStatusVariant(dynamicStatus)}>
             {dynamicStatus.replace("_", " ")}
@@ -372,7 +335,7 @@ export default function InventoryList({
           currentPage={currentPage}
           totalPages={totalPages}
         />
-      </div>      
+      </div>
     </div>
   );
 }
