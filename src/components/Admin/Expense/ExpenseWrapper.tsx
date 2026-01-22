@@ -9,6 +9,7 @@ import { Calendar } from 'lucide-react';
 import ExpenseForm from './ExpenseForm';
 import SearchExpense from './SearchExpense';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { ImSpinner2 } from "react-icons/im";
 
 interface Option {
   label: string;
@@ -225,7 +226,8 @@ export default function ExpenseWrapper() {
               >
                 {isPending ? (
                   <>
-                    <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin"></div>
+                    {/* <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin"></div> */}
+                    <ImSpinner2 />
                     <span>Applying</span>
                   </>
                 ) : (
