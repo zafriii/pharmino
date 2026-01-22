@@ -260,6 +260,7 @@ export default function SingleItemInventoryForm({
                 required: 'Selling price is required'
               })}
               error={errors.sellingPrice?.message}
+              readOnly
             />
             <CustomInput
               label="Expiry Date (Optional)"

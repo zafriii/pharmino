@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/shared ui/Button';
 import CustomDropdown from '@/components/shared ui/CustomDropdown';
 import { GoPlus } from 'react-icons/go';
+import { Calendar } from 'lucide-react';
 import ExpenseForm from './ExpenseForm';
 import SearchExpense from './SearchExpense';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
@@ -19,6 +20,7 @@ const chartPeriodOptions: Option[] = [
   { label: 'Weekly Chart', value: 'week' },
   { label: 'Monthly Chart', value: 'month' },
   { label: 'Yearly Chart', value: 'year' },
+  { label: 'Custom Range', value: 'custom' },
 ];
 
 // List filter options (normal filter with URL change)
@@ -36,14 +38,24 @@ export default function ExpenseWrapper() {
   const [openForm, setOpenForm] = useState(false);
   const currentPeriod = searchParams.get('period');
   const currentListFilter = searchParams.get('listFilter');
+  const currentStartDate = searchParams.get('startDate') || '';
+  const currentEndDate = searchParams.get('endDate') || '';
+
+  const [showCustomRange, setShowCustomRange] = useState(currentPeriod === 'custom');
+  const [startDate, setStartDate] = useState(currentStartDate);
+  const [endDate, setEndDate] = useState(currentEndDate);
 
   // Initialize dates if missing for a period (for chart)
   useEffect(() => {
+    setShowCustomRange(currentPeriod === 'custom');
+    setStartDate(currentStartDate);
+    setEndDate(currentEndDate);
+
     if (!searchParams.has('period')) {
       updateURL('period', 'week');
       return;
     }
-    if (currentPeriod && !searchParams.has('startDate')) {
+    if (currentPeriod && currentPeriod !== 'custom' && !searchParams.has('startDate')) {
       const now = new Date();
       let start: Date | null = null;
       let end: Date | null = null;
@@ -90,6 +102,12 @@ export default function ExpenseWrapper() {
 
       // Handle date calculation for chart period change
       if (key === 'period') {
+        if (value === 'custom') {
+          setShowCustomRange(true);
+          return; // Don't push yet, wait for manual apply
+        }
+
+        setShowCustomRange(false);
         const now = new Date();
         let start: Date | null = null;
         let end: Date | null = null;
@@ -127,6 +145,7 @@ export default function ExpenseWrapper() {
       if (key === 'period') {
         params.delete('startDate');
         params.delete('endDate');
+        setShowCustomRange(false);
       }
     }
     params.set('page', '1');
@@ -134,6 +153,20 @@ export default function ExpenseWrapper() {
       router.push(`?${params.toString()}`, { scroll: false });
     });
   }, [searchParams, router]);
+
+  const handleCustomDateApply = useCallback(() => {
+    if (startDate && endDate) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('period', 'custom');
+      params.set('startDate', new Date(startDate).toISOString());
+      params.set('endDate', new Date(endDate).toISOString());
+      params.set('page', '1');
+
+      startTransition(() => {
+        router.push(`?${params.toString()}`, { scroll: false });
+      });
+    }
+  }, [startDate, endDate, searchParams, router]);
 
   const handleSearch = useCallback((query: string) => {
     updateURL('search', query);
@@ -151,6 +184,41 @@ export default function ExpenseWrapper() {
             onSelect={(value) => updateURL('period', value.toString())}
             placeholder="Weekly Chart"
           />
+
+          {showCustomRange && (
+            <div className="flex items-center gap-1.5 px-2 py-1.5 border border-gray-200 rounded-md bg-gray-50 text-sm">
+              <Calendar className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+              <input
+                type="date"
+                value={startDate.split('T')[0]}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="text-xs border-0 bg-transparent focus:outline-none w-24"
+                placeholder="Start Date"
+              />
+              <span className="text-gray-400 text-xs">to</span>
+              <input
+                type="date"
+                value={endDate.split('T')[0]}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="text-xs border-0 bg-transparent focus:outline-none w-24"
+                placeholder="End Date"
+              />
+              <button
+                onClick={handleCustomDateApply}
+                disabled={!startDate || !endDate || isPending}
+                className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 ml-1"
+              >
+                {isPending ? (
+                  <>
+                    <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Applying</span>
+                  </>
+                ) : (
+                  'Apply'
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

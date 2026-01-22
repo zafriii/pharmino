@@ -1,9 +1,10 @@
 'use client';
 
-import { useTransition, useCallback, useEffect } from 'react';
+import { useTransition, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/shared ui/Button';
 import { IoIosGitCompare } from "react-icons/io";
+import { Calendar } from 'lucide-react';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 export default function ProfitLossWrapper() {
@@ -15,14 +16,24 @@ export default function ProfitLossWrapper() {
   const rawPeriod = searchParams.get('period') || 'week';
   const currentPeriod = rawPeriod === 'today' ? 'week' : rawPeriod;
   const currentCompare = searchParams.get('compare') === 'true';
+  const currentStartDate = searchParams.get('startDate') || '';
+  const currentEndDate = searchParams.get('endDate') || '';
+
+  const [showCustomRange, setShowCustomRange] = useState(currentPeriod === 'custom');
+  const [startDate, setStartDate] = useState(currentStartDate);
+  const [endDate, setEndDate] = useState(currentEndDate);
 
   // Auto-initialize dates if missing
   useEffect(() => {
+    setShowCustomRange(currentPeriod === 'custom');
+    setStartDate(currentStartDate);
+    setEndDate(currentEndDate);
+
     if (!searchParams.has('period')) {
       updateURL('period', 'week');
       return;
     }
-    if (currentPeriod && !searchParams.has('startDate')) {
+    if (currentPeriod && currentPeriod !== 'custom' && !searchParams.has('startDate')) {
       const now = new Date();
       let start: Date | null = null;
       let end: Date | null = null;
@@ -59,6 +70,10 @@ export default function ProfitLossWrapper() {
       if (currentValue === value) return;
 
       if (value && value.trim() !== '') {
+        if (value === 'custom') {
+          setShowCustomRange(true);
+          return;
+        }
         params.set(key, value.trim());
       } else {
         params.delete(key);
@@ -66,6 +81,7 @@ export default function ProfitLossWrapper() {
 
       // Calculate start/end dates for local time period
       if (key === 'period') {
+        setShowCustomRange(false);
         const now = new Date();
         let start: Date | null = null;
         let end: Date | null = null;
@@ -105,6 +121,21 @@ export default function ProfitLossWrapper() {
     },
     [searchParams, router]
   );
+
+  const handleCustomDateApply = useCallback(() => {
+    if (startDate && endDate) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('period', 'custom');
+      params.set('startDate', new Date(startDate).toISOString());
+      params.set('endDate', new Date(endDate).toISOString());
+
+      const newUrl = `?${params.toString()}`;
+
+      startTransition(() => {
+        router.replace(newUrl, { scroll: false });
+      });
+    }
+  }, [startDate, endDate, searchParams, router]);
 
   const toggleCompare = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
@@ -149,6 +180,41 @@ export default function ProfitLossWrapper() {
         >
           This Year
         </Button>
+        <Button
+          variant={currentPeriod === 'custom' ? 'primary' : 'secondary'}
+          onClick={() => updateURL('period', 'custom')}
+          className="text-sm whitespace-nowrap"
+        >
+          Custom
+        </Button>
+
+        {showCustomRange && (
+          <div className="flex items-center gap-1.5 px-2 py-1.5 border border-gray-200 rounded-md bg-gray-50 text-sm h-9">
+            <Calendar className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+            <input
+              type="date"
+              value={startDate.split('T')[0]}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="text-xs border-0 bg-transparent focus:outline-none w-24"
+              placeholder="Start Date"
+            />
+            <span className="text-gray-400 text-xs">to</span>
+            <input
+              type="date"
+              value={endDate.split('T')[0]}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="text-xs border-0 bg-transparent focus:outline-none w-24"
+              placeholder="End Date"
+            />
+            <button
+              onClick={handleCustomDateApply}
+              disabled={!startDate || !endDate}
+              className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 ml-1 h-6"
+            >
+              Apply
+            </button>
+          </div>
+        )}
 
         {/* Divider */}
         <div className="h-8 w-px bg-gray-300 mx-1"></div>
