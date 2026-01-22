@@ -307,8 +307,8 @@ export default function DamageForm({
                   Damage Type *
                 </label>
                 <div className="flex gap-4 p-2 bg-gray-50 rounded-lg">
-                  {hasOnlyTablets ? (
-                    // Only show tablet option when no strips available
+                  {selectedBatch && selectedBatch.quantity === 0 && (selectedBatch.remainingTablets || 0) > 0 ? (
+                    // Only show tablet option when batch has no strips, only remaining tablets
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
@@ -320,7 +320,7 @@ export default function DamageForm({
                       <span className="text-sm font-medium">Single Tablet</span>
                     </label>
                   ) : (
-                    // Show both options when strips are available
+                    // Show both options when no batch selected or when batch has strips
                     <>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
