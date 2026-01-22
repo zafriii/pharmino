@@ -12,10 +12,9 @@ interface CustomDropdownProps {
   selectedValue: string | number;
   onSelect: (value: string | number) => void;
   placeholder: string;
-  disabled?: boolean;
 }
 
-const CustomDropdown = ({ options, selectedValue, onSelect, placeholder, disabled }: CustomDropdownProps) => {
+const CustomDropdown = ({ options, selectedValue, onSelect, placeholder }: CustomDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -42,20 +41,18 @@ const CustomDropdown = ({ options, selectedValue, onSelect, placeholder, disable
       {/* Dropdown Button */}
       <button
         type="button"
-        disabled={disabled}
-        className={`
+        className="
           inline-flex justify-between items-center 
           rounded-full bg-[#F1F5F9] px-4 py-2 text-sm font-medium text-gray-700
           transition-colors hover:bg-gray-200
           focus:outline-none focus:ring-0 focus:border-transparent
           whitespace-nowrap overflow-hidden text-ellipsis
           max-w-[150px] md:max-w-[200px]
-          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-        `}
+        "
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
       >
-        <span>{currentLabel}</span>
+        {currentLabel}
         <ChevronDown
           className={`-mr-1 ml-2 h-4 w-4 text-gray-600 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
           aria-hidden="true"
