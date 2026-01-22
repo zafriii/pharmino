@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
         totalStock = availableBatches.reduce((sum, batch) => sum + batch.quantity, 0);
       }
 
-      const stockForThreshold = product.tabletsPerStrip ? Math.floor(totalTablets / product.tabletsPerStrip) : totalStock;
-      const stockStatus = stockForThreshold === 0 ? "OUT_OF_STOCK" :
+      const stockForThreshold = product.tabletsPerStrip ? totalTablets / product.tabletsPerStrip : totalStock;
+      const stockStatus = totalTablets === 0 && totalStock === 0 ? "OUT_OF_STOCK" :
         stockForThreshold <= product.lowStockThreshold ? "LOW_STOCK" : "IN_STOCK";
 
       return {

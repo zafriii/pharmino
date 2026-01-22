@@ -12,7 +12,7 @@ interface SaleState {
   selectedProducts: SaleItem[];
   isCreatingSale: boolean;
   toast: ToastState;
-  
+
   // Actions
   addProduct: (product: ProductForSale) => void;
   updateQuantity: (itemId: number, quantity: number, sellType?: "FULL_STRIP" | "SINGLE_TABLET" | "ML") => void;
@@ -38,29 +38,45 @@ export const useSaleStore = create<SaleState>((set, get) => ({
 
   addProduct: (product: ProductForSale) => {
     const { selectedProducts, showToast } = get();
-    
-    // Calculate available stock from ACTIVE and non-expired batches only
-    let availableStock = 0;
+
+    // Calculate available tablets for tablet products, or regular quantity for others
+    let totalAvailableUnits = 0;
+    const isTablet = product.baseUnit === "TABLET" && product.tabletsPerStrip;
+
     if (product.batches) {
       product.batches.forEach((batch: any) => {
         if (isBatchAvailableForSale(batch)) {
-          availableStock += batch.quantity;
+          if (isTablet) {
+            totalAvailableUnits += (batch.quantity * product.tabletsPerStrip!) + (batch.remainingTablets || 0);
+          } else {
+            totalAvailableUnits += batch.quantity;
+          }
         }
       });
     }
-    
-    if (availableStock === 0) {
+
+    if (totalAvailableUnits <= 0) {
       showToast(`${product.itemName} has no active stock available`, 'error');
       return;
     }
-    
+
     // Check if product is already selected
     const existingItem = selectedProducts.find(item => item.itemId === product.id);
-    
+
     if (existingItem) {
-      // Check if we can increase quantity based on available stock from active batches
-      if (existingItem.quantity >= availableStock) {
-        showToast(`Cannot add more ${product.itemName}. Only ${availableStock} available in active batches`, 'error');
+      // For tablets, we need to compare apples to apples (everything in tablets)
+      let currentSelectionUnits = existingItem.quantity;
+      if (isTablet && existingItem.sellType === "FULL_STRIP") {
+        currentSelectionUnits = existingItem.quantity * product.tabletsPerStrip!;
+      }
+
+      if (currentSelectionUnits >= totalAvailableUnits) {
+        const unitLabel = isTablet ? (existingItem.sellType === "FULL_STRIP" ? "strips" : "tablets") : "units";
+        const availableDisplay = isTablet && existingItem.sellType === "FULL_STRIP"
+          ? Math.floor(totalAvailableUnits / product.tabletsPerStrip!)
+          : totalAvailableUnits;
+
+        showToast(`Cannot add more ${product.itemName}. Only ${availableDisplay} ${unitLabel} available`, 'error');
         return;
       }
       // If already selected, increase quantity
@@ -75,11 +91,11 @@ export const useSaleStore = create<SaleState>((set, get) => ({
       const hasCompleteStrips = product.batches.some(batch => {
         return isBatchAvailableForSale(batch) && batch.quantity > 0;
       });
-      
+
       const hasPartialTablets = product.batches.some(batch => {
         return isBatchAvailableForSale(batch) && (batch.remainingTablets || 0) > 0;
       });
-      
+
       return !hasCompleteStrips && hasPartialTablets;
     };
 
@@ -132,7 +148,7 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     set(state => ({
       selectedProducts: [...state.selectedProducts, newItem]
     }));
-    
+
     if (!hasOnlyRemainingTablets(product)) {
       showToast(`${product.itemName} added to sale`);
     }
@@ -140,7 +156,7 @@ export const useSaleStore = create<SaleState>((set, get) => ({
 
   updateQuantity: (itemId: number, quantity: number, sellType?: "FULL_STRIP" | "SINGLE_TABLET" | "ML") => {
     console.log("Store updateQuantity called:", { itemId, quantity, sellType });
-    
+
     set(state => ({
       selectedProducts: state.selectedProducts.map(item => {
         if (item.itemId === itemId) {
@@ -150,7 +166,7 @@ export const useSaleStore = create<SaleState>((set, get) => ({
           // Recalculate unit price if sell type changed
           if (sellType && sellType !== item.sellType && item.item) {
             console.log("Recalculating price for sell type change:", { from: item.sellType, to: sellType });
-            
+
             if (sellType === "SINGLE_TABLET") {
               if (item.item.pricePerUnit) {
                 // Use per tablet price if available
@@ -177,7 +193,7 @@ export const useSaleStore = create<SaleState>((set, get) => ({
           }
 
           const totalPrice = unitPrice * newQuantity;
-          
+
           const updatedItem = {
             ...item,
             quantity: newQuantity,
@@ -185,7 +201,7 @@ export const useSaleStore = create<SaleState>((set, get) => ({
             unitPrice,
             totalPrice
           };
-          
+
           console.log("Updated item:", updatedItem);
           return updatedItem;
         }

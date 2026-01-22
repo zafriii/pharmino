@@ -15,12 +15,12 @@ import { TabletSaleConfig } from "@/types/tablet-sale.types";
 
 
 const SalePanel: React.FC = () => {
-  const { 
-    selectedProducts, 
+  const {
+    selectedProducts,
     toast,
-    updateQuantity, 
-    removeProduct, 
-    clearSale, 
+    updateQuantity,
+    removeProduct,
+    clearSale,
     showToast,
     hideToast
   } = useSaleStore();
@@ -32,7 +32,7 @@ const SalePanel: React.FC = () => {
   const [tabletConfigs, setTabletConfigs] = useState<Record<number, TabletSaleConfig>>({});
   const [isPending, startTransition] = useTransition();
 
- 
+
   // Calculate subtotal
   const subtotal = selectedProducts.reduce((sum, item) => {
     const price = typeof item.totalPrice === 'number' ? item.totalPrice : 0;
@@ -69,7 +69,7 @@ const SalePanel: React.FC = () => {
         showToast(`Cannot set quantity to ${newQuantity}. Only ${availableTablets} tablets available`, 'error');
         return;
       }
-      
+
       handleTabletConfigChange(item.itemId, {
         enabled: true,
         quantity: newQuantity
@@ -82,16 +82,16 @@ const SalePanel: React.FC = () => {
         showToast(`Cannot set quantity to ${newQuantity}. Only ${availableTablets} tablets available`, 'error');
         return;
       }
-      
+
       updateQuantity(item.itemId, newQuantity, "SINGLE_TABLET");
       return;
     }
 
     // Regular quantity change logic for strips/units
-    let availableStock = 0;
+    let availableStockTablets = 0;
     if (item.item?.batches) {
       item.item.batches.forEach((batch: any) => {
-        if (batch.status === "ACTIVE" && batch.quantity > 0) {
+        if (batch.status === "ACTIVE") {
           // Check if batch is not expired
           let isNotExpired = true;
           if (batch.expiryDate) {
@@ -101,20 +101,26 @@ const SalePanel: React.FC = () => {
             expiryDate.setHours(0, 0, 0, 0);
             isNotExpired = expiryDate >= currentDate;
           }
-          
+
           if (isNotExpired) {
-            availableStock += batch.quantity;
+            const completeStripTablets = (batch.quantity || 0) * (item.item?.tabletsPerStrip || 1);
+            const partialTablets = batch.remainingTablets || 0;
+            availableStockTablets += completeStripTablets + partialTablets;
           }
         }
       });
     }
-    
+
+    // For regular strip sales, we need to know how many full strips we can still make
+    const tabletsPerStrip = item.item?.tabletsPerStrip || 1;
+    const availableFullStrips = Math.floor(availableStockTablets / tabletsPerStrip);
+
     const otherSelectedQuantity = selectedProducts
       .filter(p => p.itemId !== item.itemId)
       .reduce((sum, p) => p.itemId === item.itemId ? sum + p.quantity : sum, 0);
-    
-    const maxAllowedQuantity = availableStock - otherSelectedQuantity;
-    
+
+    const maxAllowedQuantity = availableFullStrips - otherSelectedQuantity;
+
     if (newQuantity > maxAllowedQuantity) {
       showToast(`Cannot set quantity to ${newQuantity}. Only ${maxAllowedQuantity} available in stock`, 'error');
       return;
@@ -145,18 +151,18 @@ const SalePanel: React.FC = () => {
   };
 
   const isInTabletMode = (item: SaleItem): boolean => {
-    return Boolean(tabletConfigs[item.itemId]?.enabled) || 
-           Boolean(item.sellType === "SINGLE_TABLET" && item.item?.tabletsPerStrip);
+    return Boolean(tabletConfigs[item.itemId]?.enabled) ||
+      Boolean(item.sellType === "SINGLE_TABLET" && item.item?.tabletsPerStrip);
   };
 
   // Check if product has complete strips available (not just remaining tablets)
   const hasCompleteStripsAvailable = (item: SaleItem): boolean => {
     if (!item.item?.batches || !item.item?.tabletsPerStrip) return false;
-    
+
     return item.item.batches.some((batch: any) => {
       const hasStock = batch.quantity > 0 && batch.status === "ACTIVE";
       if (!hasStock) return false;
-      
+
       // Check if batch is not expired
       if (!batch.expiryDate) return true; // No expiry date means it doesn't expire
       const currentDate = new Date();
@@ -170,13 +176,13 @@ const SalePanel: React.FC = () => {
   // Check if product has active batches available for selling
   const hasActiveBatchesAvailable = (item: SaleItem): boolean => {
     if (!item.item?.batches) return false;
-    
+
     return item.item.batches.some((batch: any) => {
       // Check if batch is active and has stock
       const isActiveWithStock = batch.status === "ACTIVE" && (batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0));
-      
+
       if (!isActiveWithStock) return false;
-      
+
       // Check if batch is not expired
       if (!batch.expiryDate) return true; // No expiry date means it doesn't expire
       const currentDate = new Date();
@@ -190,11 +196,11 @@ const SalePanel: React.FC = () => {
   // Check if product has only remaining tablets (no complete strips)
   const hasOnlyRemainingTablets = (item: SaleItem): boolean => {
     if (!item.item?.batches || !item.item?.tabletsPerStrip) return false;
-    
+
     const hasActiveCompleteStrips = item.item.batches.some((batch: any) => {
       const hasStock = batch.quantity > 0 && batch.status === "ACTIVE";
       if (!hasStock) return false;
-      
+
       // Check if batch is not expired
       if (!batch.expiryDate) return true; // No expiry date means it doesn't expire
       const currentDate = new Date();
@@ -203,11 +209,11 @@ const SalePanel: React.FC = () => {
       expiryDate.setHours(0, 0, 0, 0);
       return expiryDate >= currentDate;
     });
-    
+
     const hasActivePartialTablets = item.item.batches.some((batch: any) => {
       const hasTablets = (batch.remainingTablets || 0) > 0 && batch.status === "ACTIVE";
       if (!hasTablets) return false;
-      
+
       // Check if batch is not expired
       if (!batch.expiryDate) return true; // No expiry date means it doesn't expire
       const currentDate = new Date();
@@ -216,7 +222,7 @@ const SalePanel: React.FC = () => {
       expiryDate.setHours(0, 0, 0, 0);
       return expiryDate >= currentDate;
     });
-    
+
     return !hasActiveCompleteStrips && hasActivePartialTablets;
   };
 
@@ -236,7 +242,7 @@ const SalePanel: React.FC = () => {
 
   const getAvailableTabletsForProduct = (item: SaleItem): number => {
     if (!item.item?.tabletsPerStrip || !item.item?.batches) return 0;
-    
+
     // Calculate available tablets from ACTIVE and non-expired batches only
     let totalTablets = 0;
     item.item.batches.forEach((batch: any) => {
@@ -250,7 +256,7 @@ const SalePanel: React.FC = () => {
           expiryDate.setHours(0, 0, 0, 0);
           isNotExpired = expiryDate >= currentDate;
         }
-        
+
         if (isNotExpired) {
           // Add complete strips as tablets
           if (batch.quantity > 0 && item.item?.tabletsPerStrip) {
@@ -263,16 +269,16 @@ const SalePanel: React.FC = () => {
         }
       }
     });
-    
+
     return totalTablets;
   };
 
   const getMaxQuantityForItem = (item: SaleItem) => {
     // Get available stock from ACTIVE and non-expired batches only
-    let availableStock = 0;
+    let availableStockTablets = 0;
     if (item.item?.batches) {
       item.item.batches.forEach((batch: any) => {
-        if (batch.status === "ACTIVE" && batch.quantity > 0) {
+        if (batch.status === "ACTIVE") {
           // Check if batch is not expired
           let isNotExpired = true;
           if (batch.expiryDate) {
@@ -282,37 +288,42 @@ const SalePanel: React.FC = () => {
             expiryDate.setHours(0, 0, 0, 0);
             isNotExpired = expiryDate >= currentDate;
           }
-          
+
           if (isNotExpired) {
-            availableStock += batch.quantity;
+            const completeStripTablets = (batch.quantity || 0) * (item.item?.tabletsPerStrip || 1);
+            const partialTablets = batch.remainingTablets || 0;
+            availableStockTablets += completeStripTablets + partialTablets;
           }
         }
       });
     }
-    
+
+    const tabletsPerStrip = item.item?.tabletsPerStrip || 1;
+    const availableFullStrips = Math.floor(availableStockTablets / tabletsPerStrip);
+
     const otherSelectedQuantity = selectedProducts
       .filter(p => p.itemId !== item.itemId)
       .reduce((sum, p) => p.itemId === item.itemId ? sum + p.quantity : sum, 0);
-    
-    return availableStock - otherSelectedQuantity;
+
+    return availableFullStrips - otherSelectedQuantity;
   };
 
   const handleSellTypeChange = (item: SaleItem, sellType: "FULL_STRIP" | "SINGLE_TABLET" | "ML") => {
     console.log("handleSellTypeChange called:", { itemId: item.itemId, sellType, currentSellType: item.sellType });
-    
+
     // Check if product has active batches before allowing sell type changes
     if (!hasActiveBatchesAvailable(item)) {
       showToast(`Cannot change sell type: ${item.item?.itemName || 'Product'} has no active non-expired batches available`, 'error');
       return;
     }
-    
+
     // If trying to select FULL_STRIP but only tablets are available, force SINGLE_TABLET
     if (sellType === "FULL_STRIP" && hasOnlyRemainingTablets(item)) {
       console.log("Forcing SINGLE_TABLET mode - only remaining tablets available");
       sellType = "SINGLE_TABLET";
       showToast("Only individual tablets available for this product", 'info' as any);
     }
-    
+
     if (sellType === "SINGLE_TABLET" && item.item?.tabletsPerStrip) {
       // Check if product has pricePerUnit for enhanced tablet config
       if (item.item?.pricePerUnit) {
@@ -320,7 +331,7 @@ const SalePanel: React.FC = () => {
         // Enable tablet config when switching to SINGLE_TABLET (enhanced mode)
         const availableTablets = getAvailableTabletsForProduct(item);
         const tabletQuantity = Math.min(item.quantity, availableTablets);
-        
+
         handleTabletConfigChange(item.itemId, {
           enabled: true,
           quantity: tabletQuantity
@@ -353,7 +364,7 @@ const SalePanel: React.FC = () => {
       if (item.item?.tabletsPerStrip) {
         const hasCompleteStrips = hasCompleteStripsAvailable(item);
         const hasOnlyTablets = hasOnlyRemainingTablets(item);
-        
+
         // Only auto-select if no sell type is set yet or if forced by stock constraints
         if (hasOnlyTablets && item.sellType !== "SINGLE_TABLET") {
           console.log("Auto-selecting SINGLE_TABLET for product with only remaining tablets:", item.item.itemName);
@@ -423,7 +434,7 @@ const SalePanel: React.FC = () => {
         });
 
         console.log("Sale creation result:", result);
-        
+
         // Log debugging info if available
         if (result.data?.debugInfo) {
           console.log("API Debugging Info:", result.data.debugInfo);
@@ -458,13 +469,13 @@ const SalePanel: React.FC = () => {
     return (
       <>
         <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-          <div className="text-6xl mb-4"> <GiMedicines/></div>
+          <div className="text-6xl mb-4"> <GiMedicines /></div>
           <h3 className="text-lg font-medium mb-2">No Items Selected</h3>
           <p className="text-sm text-center">
             Select products from the left panel to add them to the sale.
           </p>
         </div>
-        
+
         {/* Toast */}
         {toast.show && (
           <Toast
@@ -483,11 +494,10 @@ const SalePanel: React.FC = () => {
         {/* Selected Products */}
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {selectedProducts.map((item) => (
-            <div key={item.itemId} className={`border rounded-lg p-4 ${
-              !hasActiveBatchesAvailable(item) 
-                ? "border-red-200 bg-red-50" 
+            <div key={item.itemId} className={`border rounded-lg p-4 ${!hasActiveBatchesAvailable(item)
+                ? "border-red-200 bg-red-50"
                 : "border-gray-200 bg-gray-50"
-            }`}>
+              }`}>
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -541,13 +551,12 @@ const SalePanel: React.FC = () => {
                         type="button"
                         onClick={() => handleSellTypeChange(item, "FULL_STRIP")}
                         disabled={!hasActiveBatchesAvailable(item)}
-                        className={`px-3 py-1 text-xs rounded-md border ${
-                          !hasActiveBatchesAvailable(item)
+                        className={`px-3 py-1 text-xs rounded-md border ${!hasActiveBatchesAvailable(item)
                             ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                             : item.sellType === "FULL_STRIP"
-                            ? "bg-blue-500 text-white border-blue-500"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
+                              ? "bg-blue-500 text-white border-blue-500"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                          }`}
                       >
                         Full
                       </button>
@@ -556,13 +565,12 @@ const SalePanel: React.FC = () => {
                       type="button"
                       onClick={() => handleSellTypeChange(item, "SINGLE_TABLET")}
                       disabled={!hasActiveBatchesAvailable(item)}
-                      className={`px-3 py-1 text-xs rounded-md border ${
-                        !hasActiveBatchesAvailable(item)
+                      className={`px-3 py-1 text-xs rounded-md border ${!hasActiveBatchesAvailable(item)
                           ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                           : item.sellType === "SINGLE_TABLET"
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      }`}
+                            ? "bg-blue-500 text-white border-blue-500"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}
                     >
                       Tablet
                     </button>
@@ -596,11 +604,10 @@ const SalePanel: React.FC = () => {
                         handleQuantityChange(item, currentQty - 1);
                       }}
                       disabled={!hasActiveBatchesAvailable(item)}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${
-                        !hasActiveBatchesAvailable(item)
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${!hasActiveBatchesAvailable(item)
                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                           : "bg-gray-200 hover:bg-gray-300"
-                      }`}
+                        }`}
                     >
                       -
                     </button>
@@ -609,11 +616,10 @@ const SalePanel: React.FC = () => {
                       value={getCurrentQuantity(item)}
                       onChange={(e) => handleQuantityChange(item, parseInt(e.target.value) || 1)}
                       disabled={!hasActiveBatchesAvailable(item)}
-                      className={`w-16 text-center text-sm border border-gray-300 rounded px-2 py-1 ${
-                        !hasActiveBatchesAvailable(item)
+                      className={`w-16 text-center text-sm border border-gray-300 rounded px-2 py-1 ${!hasActiveBatchesAvailable(item)
                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                           : ""
-                      }`}
+                        }`}
                       min="1"
                       max={getMaxQuantityForCurrentMode(item)}
                     />
@@ -624,11 +630,10 @@ const SalePanel: React.FC = () => {
                         handleQuantityChange(item, currentQty + 1);
                       }}
                       disabled={!hasActiveBatchesAvailable(item) || getCurrentQuantity(item) >= getMaxQuantityForCurrentMode(item)}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${
-                        !hasActiveBatchesAvailable(item) || getCurrentQuantity(item) >= getMaxQuantityForCurrentMode(item)
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${!hasActiveBatchesAvailable(item) || getCurrentQuantity(item) >= getMaxQuantityForCurrentMode(item)
                           ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                           : "bg-gray-200 hover:bg-gray-300"
-                      }`}
+                        }`}
                     >
                       +
                     </button>
@@ -700,66 +705,64 @@ const SalePanel: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPaymentMethod("CASH")}
-                className={`flex-1 py-2 px-3 text-sm rounded-md border transition-colors ${
-                  paymentMethod === "CASH"
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-            }`}
-          >
-            Cash
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentMethod("CARD")}
-            className={`flex-1 py-2 px-3 text-sm rounded-md border transition-colors ${
-              paymentMethod === "CARD"
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-            }`}
-          >
-            Card
-          </button>
+                className={`flex-1 py-2 px-3 text-sm rounded-md border transition-colors ${paymentMethod === "CASH"
+                    ? "bg-blue-500 text-white border-blue-500"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+              >
+                Cash
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("CARD")}
+                className={`flex-1 py-2 px-3 text-sm rounded-md border transition-colors ${paymentMethod === "CARD"
+                    ? "bg-blue-500 text-white border-blue-500"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+              >
+                Card
+              </button>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleClearSale}
+              disabled={isPending}
+              className="flex-1"
+            >
+              Clear
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              leftIcon={isPending ? <ImSpinner2 className="animate-spin" /> : <GoCheck />}
+              disabled={
+                selectedProducts.length === 0 ||
+                grandTotal <= 0 ||
+                isPending ||
+                selectedProducts.some(item => !hasActiveBatchesAvailable(item))
+              }
+              className="flex-1"
+            >
+              {isPending ? 'Creating' : 'Create Sale'}
+            </Button>
+          </div>
         </div>
-      </div>
+      </form>
 
-      {/* Action Buttons */}
-      <div className="flex gap-2 pt-2">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handleClearSale}
-          disabled={isPending}
-          className="flex-1"
-        >
-          Clear
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          leftIcon={isPending ? <ImSpinner2 className="animate-spin" /> : <GoCheck />}
-          disabled={
-            selectedProducts.length === 0 || 
-            grandTotal <= 0 || 
-            isPending ||
-            selectedProducts.some(item => !hasActiveBatchesAvailable(item))
-          }
-          className="flex-1"
-        >
-          {isPending ? 'Creating' : 'Create Sale'}
-        </Button>
-      </div>
-    </div>
-  </form>
-
-  {/* Toast */}
-  {toast.show && (
-    <Toast
-      message={toast.message}
-      type={toast.type}
-      onClose={hideToast}
-    />
-  )}
-</>
-);
+      {/* Toast */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
+    </>
+  );
 };
 export default SalePanel;
