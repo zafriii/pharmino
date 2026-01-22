@@ -27,21 +27,21 @@ const ProductCards: React.FC<ProductCardsProps> = ({ products, totalPages, curre
     if ((product.totalStock || 0) === 0) {
       return; // Don't add out of stock products
     }
-    
+
     // Check if product has active batches
-    const hasActiveBatches = product.batches?.some(batch => 
+    const hasActiveBatches = product.batches?.some(batch =>
       batch.status === "ACTIVE" && (batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0))
     );
-    
+
     if (!hasActiveBatches) {
       return; // Don't add products with no active batches
     }
-    
+
     // Check if product has non-expired active batches
     if (!hasAvailableBatches(product)) {
       return; // Don't add products with only expired batches
     }
-    
+
     addProduct(product);
   };
 
@@ -61,22 +61,21 @@ const ProductCards: React.FC<ProductCardsProps> = ({ products, totalPages, curre
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => {
           const isOutOfStock = (product.totalStock || 0) === 0;
-          const hasActiveBatches = product.batches?.some(batch => 
+          const hasActiveBatches = product.batches?.some(batch =>
             batch.status === "ACTIVE" && (batch.quantity > 0 || (batch.remainingTablets && batch.remainingTablets > 0))
           );
           const hasNonExpiredBatches = hasAvailableBatches(product);
-          
+
           const isUnavailable = isOutOfStock || !hasActiveBatches || !hasNonExpiredBatches;
-          
+
           return (
             <div
               key={product.id}
               onClick={() => handleProductClick(product)}
-              className={`group rounded-lg border p-4 transition-all duration-200 ${
-                isUnavailable 
-                  ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60" 
+              className={`group rounded-lg border p-4 transition-all duration-200 ${isUnavailable
+                  ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
                   : "border-gray-300 cursor-pointer hover:border-blue-500 hover:bg-blue-500 hover:shadow-md"
-              }`}
+                }`}
             >
               {/* Product Image */}
               <div className="mb-3 flex h-32 w-full items-center justify-center overflow-hidden rounded-md bg-gray-100">
@@ -95,21 +94,19 @@ const ProductCards: React.FC<ProductCardsProps> = ({ products, totalPages, curre
               <div className="space-y-1">
                 {/* Name + Price */}
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className={`line-clamp-1 text-sm font-medium ${
-                    isUnavailable 
-                      ? "text-gray-500" 
+                  <h3 className={`line-clamp-1 text-sm font-medium ${isUnavailable
+                      ? "text-gray-500"
                       : "text-gray-900 group-hover:text-white"
-                  }`}>
+                    }`}>
                     {product.itemName}
                   </h3>
 
-                  <div className={`whitespace-nowrap text-sm font-semibold ${
-                    isUnavailable 
-                      ? "text-gray-400" 
+                  <div className={`whitespace-nowrap text-sm font-semibold ${isUnavailable
+                      ? "text-gray-400"
                       : "text-blue-600 group-hover:text-white"
-                  }`}>
+                    }`}>
                     {product.sellingPrice}
-                    {product.baseUnit === "TABLET" && product.tabletsPerStrip && (
+                    {product.baseUnit?.toUpperCase() === "TABLET" && product.tabletsPerStrip && (
                       <span className="ml-1 text-xs text-gray-200">/strip</span>
                     )}
                   </div>
@@ -117,11 +114,10 @@ const ProductCards: React.FC<ProductCardsProps> = ({ products, totalPages, curre
 
                 {/* Brand + Strength */}
                 {(product.brand || product.strength) && (
-                  <p className={`line-clamp-1 text-xs ${
-                    isUnavailable 
-                      ? "text-gray-400" 
+                  <p className={`line-clamp-1 text-xs ${isUnavailable
+                      ? "text-gray-400"
                       : "text-gray-600 group-hover:text-gray-100"
-                  }`}>
+                    }`}>
                     {product.brand}
                     {product.brand && product.strength && " • "}
                     {product.strength}

@@ -41,14 +41,17 @@ export const useSaleStore = create<SaleState>((set, get) => ({
 
     // Calculate available tablets for tablet products, or regular quantity for others
     let totalAvailableUnits = 0;
-    const isTablet = product.baseUnit === "TABLET" && product.tabletsPerStrip;
+    // A product is treated as a tablet product if it has tabletsPerStrip defined, regardless of baseUnit capitalization
+    const isTablet = !!product.tabletsPerStrip && (product.tabletsPerStrip > 0);
 
     if (product.batches) {
       product.batches.forEach((batch: any) => {
         if (isBatchAvailableForSale(batch)) {
           if (isTablet) {
+            // totalAvailableUnits will be the total number of individual tablets
             totalAvailableUnits += (batch.quantity * product.tabletsPerStrip!) + (batch.remainingTablets || 0);
           } else {
+            // totalAvailableUnits will be the total number of base units
             totalAvailableUnits += batch.quantity;
           }
         }
@@ -103,20 +106,17 @@ export const useSaleStore = create<SaleState>((set, get) => ({
     let sellType: "FULL_STRIP" | "SINGLE_TABLET" | "ML" | undefined;
     let unitPrice = Number(product.sellingPrice) || 0;
 
-    if (product.baseUnit === "TABLET" && product.tabletsPerStrip) {
+    if (isTablet) {
       // Check if only remaining tablets are available
       if (hasOnlyRemainingTablets(product)) {
         sellType = "SINGLE_TABLET";
-        unitPrice = product.pricePerUnit ? Number(product.pricePerUnit) : Number(product.sellingPrice) / product.tabletsPerStrip;
+        unitPrice = product.pricePerUnit ? Number(product.pricePerUnit) : Number(product.sellingPrice) / product.tabletsPerStrip!;
         showToast(`${product.itemName} added - only individual tablets available`, 'info');
       } else {
         sellType = "FULL_STRIP"; // Default to strip for tablets
         unitPrice = Number(product.sellingPrice) || 0; // Strip price
       }
-    } else if (product.baseUnit === "TABLET" && product.pricePerUnit) {
-      sellType = "SINGLE_TABLET";
-      unitPrice = Number(product.pricePerUnit) || Number(product.sellingPrice) || 0; // Per tablet price
-    } else if (product.baseUnit === "ML") {
+    } else if (product.baseUnit?.toUpperCase() === "ML") {
       sellType = "ML";
       unitPrice = Number(product.pricePerUnit) || Number(product.sellingPrice) || 0;
     }
@@ -163,6 +163,9 @@ export const useSaleStore = create<SaleState>((set, get) => ({
           const newQuantity = Math.max(1, quantity); // Ensure minimum quantity is 1
           let unitPrice = Number(item.unitPrice) || 0;
 
+          const isTablet = item.item ? (!!item.item.tabletsPerStrip && item.item.tabletsPerStrip > 0) : false;
+          // const isMl = item.item?.baseUnit?.toUpperCase() === "ML";
+
           // Recalculate unit price if sell type changed
           if (sellType && sellType !== item.sellType && item.item) {
             console.log("Recalculating price for sell type change:", { from: item.sellType, to: sellType });
@@ -185,6 +188,9 @@ export const useSaleStore = create<SaleState>((set, get) => ({
               // Use strip price
               unitPrice = Number(item.item.sellingPrice);
               console.log("Using strip price:", unitPrice);
+            } else if (sellType === "ML") {
+              unitPrice = Number(item.item.pricePerUnit) || Number(item.item.sellingPrice) || 0;
+              console.log("Using ML price:", unitPrice);
             } else {
               // Default to selling price
               unitPrice = Number(item.item.sellingPrice) || 0;
