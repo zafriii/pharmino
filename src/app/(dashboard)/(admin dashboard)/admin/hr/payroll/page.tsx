@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import PageContainer from "@/components/shared ui/PageContainer";
 import Load from "@/components/Load";
-import FetchPayroll from "@/components/Admin/HR Management/Payroll/FetchPayroll";
-import PayrollWrapper from "@/components/Admin/HR Management/Payroll/PayrollWrapper";
-import HRTabs from "@/components/Admin/HR Management/HRTabs";
+import FetchPayroll from "@/components/HR Management/Payroll/FetchPayroll";
+import PayrollWrapper from "@/components/HR Management/Payroll/PayrollWrapper";
+import HRTabs from "@/components/HR Management/HRTabs";
 
 interface PayrollPageProps {
   searchParams: Promise<{
