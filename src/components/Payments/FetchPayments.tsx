@@ -23,7 +23,15 @@ interface FetchPaymentsProps {
 // Fetch payments from API with caching
 async function fetchPayments(
   params: FetchPaymentsProps["searchParams"]
-): Promise<{ payments: Payment[]; totalPages: number; currentPage: number }> {
+): Promise<{ payments: Payment[]; totalPages: number; currentPage: number; stats: {
+  total: number;
+  paid: number;
+  refunded: number;
+  partiallyRefunded: number;
+  totalRevenue: number;
+  totalRefunded: number;
+  totalPartialRefunds: number;
+} }> {
   const page = Number(params.page) || 1;
 
   const queryParams = new URLSearchParams({
@@ -76,6 +84,15 @@ async function fetchPayments(
       payments: data.payments || [],
       totalPages: data.pagination?.totalPages || 1,
       currentPage: page,
+      stats: data.stats || {
+        total: 0,
+        paid: 0,
+        refunded: 0,
+        partiallyRefunded: 0,
+        totalRevenue: 0,
+        totalRefunded: 0,
+        totalPartialRefunds: 0,
+      },
     };
   } catch (error) {
     console.error("Fetch Payments Error:", error);
@@ -83,16 +100,25 @@ async function fetchPayments(
       payments: [],
       totalPages: 1,
       currentPage: 1,
+      stats: {
+        total: 0,
+        paid: 0,
+        refunded: 0,
+        partiallyRefunded: 0,
+        totalRevenue: 0,
+        totalRefunded: 0,
+        totalPartialRefunds: 0,
+      },
     };
   }
 }
 
 export default async function FetchPayments({ searchParams }: FetchPaymentsProps) {
-  const { payments, totalPages, currentPage } = await fetchPayments(searchParams);
+  const { payments, totalPages, currentPage, stats } = await fetchPayments(searchParams);
 
   return (
     <>
-      <PaymentStats payments={payments} />
+      <PaymentStats stats={stats} />
       {payments.length === 0 ? (
         <EmptyState message="No payments found" />
       ) : (

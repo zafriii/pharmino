@@ -110,7 +110,33 @@ export async function GET(request: NextRequest) {
       ].filter(condition => Object.values(condition).some(value => value !== undefined));
     }
 
-    const total = await prisma.payment.count({ where });
+    // Get stats for all filtered payments (not paginated)
+    const [
+      total,
+      paid,
+      refunded,
+      partiallyRefunded,
+      totalRevenue,
+      totalRefunded,
+      totalPartialRefunds
+    ] = await Promise.all([
+      prisma.payment.count({ where }),
+      prisma.payment.count({ where: { ...where, status: "PAID" } }),
+      prisma.payment.count({ where: { ...where, status: "REFUNDED" } }),
+      prisma.payment.count({ where: { ...where, status: "PARTIALLY_REFUNDED" } }),
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: { ...where, status: { in: ["PAID", "PARTIALLY_REFUNDED"] } }
+      }).then(res => res._sum.amount || 0),
+      prisma.payment.aggregate({
+        _sum: { refundedAmount: true },
+        where: { ...where, status: "REFUNDED" }
+      }).then(res => res._sum.refundedAmount || 0),
+      prisma.payment.aggregate({
+        _sum: { refundedAmount: true },
+        where: { ...where, status: "PARTIALLY_REFUNDED" }
+      }).then(res => res._sum.refundedAmount || 0)
+    ]);
 
     const payments = await prisma.payment.findMany({
       where,
@@ -137,6 +163,15 @@ export async function GET(request: NextRequest) {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+      stats: {
+        total,
+        paid,
+        refunded,
+        partiallyRefunded,
+        totalRevenue,
+        totalRefunded,
+        totalPartialRefunds
+      }
     });
   } catch (error) {
     if (error instanceof Error) {
