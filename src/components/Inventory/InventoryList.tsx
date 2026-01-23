@@ -48,7 +48,7 @@ export default function InventoryList({
       render: (row: InventoryItem) => (
 
         <Link
-          href={`/admin/inventory/${row.id}/batches`}
+          href={`/inventory/${row.id}/batches`}
           className="flex items-center gap-3 group"
         >
           <div className="w-10 h-10 rounded-[8px] bg-[#C0C0C0] overflow-hidden flex items-center justify-center">
