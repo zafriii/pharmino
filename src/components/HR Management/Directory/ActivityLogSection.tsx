@@ -57,7 +57,7 @@ export default function ActivityLogSection({ auditLogs }: ActivityLogSectionProp
     };
 
     return (
-        <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <Card className="bg-white rounded-xl border border-gray-200">
             <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <div className="flex items-center gap-2">
                     <History className="h-5 w-5 text-[#4a90e2]" />

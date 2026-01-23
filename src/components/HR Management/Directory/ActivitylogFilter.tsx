@@ -19,7 +19,7 @@ export default function ActivitylogFilter({
   onClear,
 }: ActivitylogFilterProps) {
   return (
-    <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-200 shadow-sm">
+    <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-200">
       <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded border border-gray-200">
         <CalendarIcon className="h-3.5 w-3.5 text-gray-400" />
         <input

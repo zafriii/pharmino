@@ -258,7 +258,7 @@ export default async function EmployeeFullProfile({ employeeId }: { employeeId: 
       </div>
 
       {/* ATTENDANCE */}
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="bg-white rounded-xl border border-gray-200">
         <CardHeader>
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-[#4a90e2]" />
@@ -304,7 +304,7 @@ export default async function EmployeeFullProfile({ employeeId }: { employeeId: 
       </Card>
 
       {/*PAYROLL */}
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <Card className="bg-white rounded-xl border border-gray-200">
         <CardHeader>
           <div className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-[#4a90e2]" />
