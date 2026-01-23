@@ -47,6 +47,7 @@ async function fetchSales(
         sales: [],
         totalPages: 1,
         currentPage: 1,
+        stats: { total: 0, completed: 0, returned: 0, totalDiscount: 0 },
       };
     }
 
@@ -84,6 +85,7 @@ async function fetchSales(
       sales: [],
       totalPages: 1,
       currentPage: 1,
+      stats: { total: 0, completed: 0, returned: 0, totalDiscount: 0 },
     };
   }
 }
