@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { TabletSaleConfig } from "../../../../types/tablet-sale.types";
+import { TabletSaleConfig } from "../../../types/tablet-sale.types";
 
 interface TabletSellSectionProps {
   product: {
