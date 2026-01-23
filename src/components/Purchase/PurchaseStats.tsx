@@ -14,6 +14,8 @@ interface PurchaseStatsProps {
 
 
 export default function PurchaseStats({ stats }: PurchaseStatsProps) {
+  // Ensure totalAmount is always a number
+  const totalAmount = Number(stats.totalAmount) || 0;
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatsCard
@@ -24,7 +26,7 @@ export default function PurchaseStats({ stats }: PurchaseStatsProps) {
       />
       <StatsCard
         title="Total Amount"
-        value={stats.totalAmount.toFixed(2)}
+        value={totalAmount.toFixed(2)}
         description="Total purchase value"
         variant="green"
       />
