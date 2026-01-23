@@ -152,7 +152,18 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const total = await prisma.user.count({ where });
+    // Get stats for all filtered employees (not paginated)
+    const [
+      total,
+      active,
+      onLeave,
+      inactive
+    ] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.count({ where: { ...where, status: "ACTIVE" } }),
+      prisma.user.count({ where: { ...where, status: "ON_LEAVE" } }),
+      prisma.user.count({ where: { ...where, status: "INACTIVE" } })
+    ]);
 
     const employees = await prisma.user.findMany({
       where,
@@ -184,6 +195,12 @@ export async function GET(request: NextRequest) {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+      stats: {
+        total,
+        active,
+        onLeave,
+        inactive
+      }
     });
   } catch (error) {
     if (error instanceof Error) {

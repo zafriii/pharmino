@@ -2,39 +2,38 @@ import React from "react";
 import StatsCard from "@/components/shared ui/StatsCard";
 import type { Employee } from "@/types/employees.types";
 
+
 interface EmployeeStatsProps {
-  employees: Employee[];
+  stats: {
+    total: number;
+    active: number;
+    onLeave: number;
+    inactive: number;
+  };
 }
 
-const EmployeeStats: React.FC<EmployeeStatsProps> = ({ employees = [] }) => {
-  const total = employees.length;
-  const active = employees.filter((e) => e.status === "ACTIVE").length;
-  const onLeave = employees.filter((e) => e.status === "ON_LEAVE").length;
-  const inactive = employees.filter((e) => e.status === "INACTIVE").length;
 
+const EmployeeStats: React.FC<EmployeeStatsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
       <StatsCard
         title="Total Employees"
-        value={total.toString()}
+        value={stats.total.toString()}
         variant="blue"
       />
-
       <StatsCard
         title="Active"
-        value={active.toString()}
+        value={stats.active.toString()}
         variant="green"
       />
-
       <StatsCard
         title="On Leave"
-        value={onLeave.toString()}
+        value={stats.onLeave.toString()}
         variant="yellow"
       />
-
       <StatsCard
         title="Inactive"
-        value={inactive.toString()}
+        value={stats.inactive.toString()}
         variant="red"
       />
     </div>

@@ -20,7 +20,7 @@ interface FetchEmployeesProps {
 // Fetch employees from API with caching
 async function fetchEmployees(
   params: FetchEmployeesProps["searchParams"]
-): Promise<{ employees: Employee[]; totalPages: number; currentPage: number }> {
+): Promise<{ employees: Employee[]; totalPages: number; currentPage: number; stats: { total: number; active: number; onLeave: number; inactive: number } }> {
   const page = Number(params.page) || 1;
 
   const queryParams = new URLSearchParams({
@@ -43,6 +43,7 @@ async function fetchEmployees(
         employees: [],
         totalPages: 1,
         currentPage: 1,
+        stats: { total: 0, active: 0, onLeave: 0, inactive: 0 },
       };
     }
 
@@ -81,6 +82,7 @@ async function fetchEmployees(
       employees: employees as Employee[],
       totalPages: data.pagination?.totalPages || 1,
       currentPage: page,
+      stats: data.stats || { total: 0, active: 0, onLeave: 0, inactive: 0 },
     };
   } catch (error) {
     console.error("Fetch Employees Error:", error);
@@ -88,16 +90,17 @@ async function fetchEmployees(
       employees: [],
       totalPages: 1,
       currentPage: 1,
+      stats: { total: 0, active: 0, onLeave: 0, inactive: 0 },
     };
   }
 }
 
 export default async function FetchEmployees({ searchParams }: FetchEmployeesProps) {
-  const { employees, totalPages, currentPage } = await fetchEmployees(searchParams);
+  const { employees, totalPages, currentPage, stats } = await fetchEmployees(searchParams);
 
   return (
     <>
-      <EmployeeStats employees={employees} />
+      <EmployeeStats stats={stats} />
       {employees.length === 0 ? (
         <EmptyState message="No employees found" />
       ) : (
