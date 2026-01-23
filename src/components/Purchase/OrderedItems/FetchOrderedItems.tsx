@@ -14,7 +14,7 @@ interface FetchOrderedItemsProps {
 
 async function fetchOrderedItems(
   params: FetchOrderedItemsProps["searchParams"]
-): Promise<{ purchases: PurchaseOrder[]; totalPages: number; currentPage: number }> {
+): Promise<{ purchases: PurchaseOrder[]; totalPages: number; currentPage: number; stats: { totalOrders: number; totalAmount: number; listedOrders: number; totalItems: number } }> {
   const page = Number(params.page) || 1;
 
   const queryParams = new URLSearchParams({
@@ -34,6 +34,7 @@ async function fetchOrderedItems(
         purchases: [],
         totalPages: 1,
         currentPage: 1,
+        stats: { totalOrders: 0, totalAmount: 0, listedOrders: 0, totalItems: 0 },
       };
     }
 
@@ -70,6 +71,7 @@ async function fetchOrderedItems(
       purchases: sortedPurchases,
       totalPages: data.pagination?.totalPages || 1,
       currentPage: page,
+      stats: data.stats || { totalOrders: 0, totalAmount: 0, listedOrders: 0, totalItems: 0 },
     };
   } catch (error) {
     console.error("Fetch Ordered Items Error:", error);
@@ -77,12 +79,13 @@ async function fetchOrderedItems(
       purchases: [],
       totalPages: 1,
       currentPage: 1,
+      stats: { totalOrders: 0, totalAmount: 0, listedOrders: 0, totalItems: 0 },
     };
   }
 }
 
 export default async function FetchOrderedItems({ searchParams }: FetchOrderedItemsProps) {
-  const { purchases, totalPages, currentPage } = await fetchOrderedItems(searchParams);
+  const { purchases, totalPages, currentPage, stats } = await fetchOrderedItems(searchParams);
 
   if (purchases.length === 0) {
     return <EmptyState message="No ordered items found" />;
@@ -90,7 +93,7 @@ export default async function FetchOrderedItems({ searchParams }: FetchOrderedIt
 
   return (
     <>
-      <PurchaseStats purchases={purchases} />
+      <PurchaseStats stats={stats} />
       <PurchaseHistoryList
         purchases={purchases}
         totalPages={totalPages}
