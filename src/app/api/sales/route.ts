@@ -118,7 +118,21 @@ export async function GET(request: NextRequest) {
     if (paymentMethod) where.paymentMethod = paymentMethod;
     if (paymentStatus) where.paymentStatus = paymentStatus;
 
-    const total = await prisma.sale.count({ where });
+    // Get stats for all filtered sales (not paginated)
+    const [
+      total,
+      completed,
+      returned,
+      totalDiscount
+    ] = await Promise.all([
+      prisma.sale.count({ where }),
+      prisma.sale.count({ where: { ...where, status: "COMPLETED" } }),
+      prisma.sale.count({ where: { ...where, status: "RETURNED" } }),
+      prisma.sale.aggregate({
+        _sum: { discountAmount: true },
+        where
+      }).then(res => res._sum.discountAmount || 0)
+    ]);
 
     const sales = await prisma.sale.findMany({
       where,
@@ -155,6 +169,12 @@ export async function GET(request: NextRequest) {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+      stats: {
+        total,
+        completed,
+        returned,
+        totalDiscount
+      }
     });
   } catch (error) {
     if (error instanceof Error) {

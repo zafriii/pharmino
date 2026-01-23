@@ -22,7 +22,7 @@ interface FetchSaleProps {
 // Fetch sales from API with caching
 async function fetchSales(
   params: FetchSaleProps["searchParams"]
-): Promise<{ sales: Sale[]; totalPages: number; currentPage: number }> {
+): Promise<{ sales: Sale[]; totalPages: number; currentPage: number; stats: { total: number; completed: number; returned: number; totalDiscount: number } }> {
   const page = Number(params.page) || 1;
 
   const queryParams = new URLSearchParams({
@@ -76,6 +76,7 @@ async function fetchSales(
       sales: data.sales || [],
       totalPages: data.pagination?.totalPages || 1,
       currentPage: page,
+      stats: data.stats || { total: 0, completed: 0, returned: 0, totalDiscount: 0 },
     };
   } catch (error) {
     console.error("Fetch Sales Error:", error);
@@ -88,11 +89,11 @@ async function fetchSales(
 }
 
 export default async function FetchSale({ searchParams }: FetchSaleProps) {
-  const { sales, totalPages, currentPage } = await fetchSales(searchParams);
+  const { sales, totalPages, currentPage, stats } = await fetchSales(searchParams);
 
   return (
     <>
-      <SaleStats sales={sales} />
+      <SaleStats stats={stats} />
       {sales.length === 0 ? (
         <EmptyState message="No sales found" />
       ) : (
