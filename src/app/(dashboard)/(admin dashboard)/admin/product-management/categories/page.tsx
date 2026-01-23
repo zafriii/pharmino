@@ -1,9 +1,9 @@
 import React from "react";
 import { Suspense } from "react";
 import PageContainer from "@/components/shared ui/PageContainer";
-import MenuTabs from "@/components/Admin/Product Management/ProductTabs";
-import CategoryWrapper from "@/components/Admin/Product Management/Category/CategoryWrapper";
-import FetchCategories from "@/components/Admin/Product Management/Category/FetchCategories";
+import MenuTabs from "@/components/Product Management/ProductTabs";
+import CategoryWrapper from "@/components/Product Management/Category/CategoryWrapper";
+import FetchCategories from "@/components/Product Management/Category/FetchCategories";
 import Load from "@/components/Load";
 
 interface PageProps {

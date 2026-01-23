@@ -44,7 +44,7 @@ export async function updatePayrollAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/payrolls/${id}`, {
+    const response = await fetch(`${baseUrl}/api/payrolls/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -86,7 +86,7 @@ export async function markPayrollPaidAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/payrolls/${id}`, {
+    const response = await fetch(`${baseUrl}/api/payrolls/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -128,7 +128,7 @@ export async function deletePayrollAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/payrolls/${id}`, {
+    const response = await fetch(`${baseUrl}/api/payrolls/${id}`, {
       method: "DELETE",
       headers: {
         Cookie: cookieHeader,
@@ -174,7 +174,7 @@ export async function fetchEmployeePayrollStatsAction(
     const cookieHeader = cookieStore.toString();
 
     const response = await fetch(
-      `${baseUrl}/api/admin/payrolls?userId=${userId}`,
+      `${baseUrl}/api/payrolls?userId=${userId}`,
       {
         headers: {
           Cookie: cookieHeader,

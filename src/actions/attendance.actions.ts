@@ -41,8 +41,8 @@ export async function markAttendanceAction(
 
     // If attendanceId exists, update; otherwise create
     const url = attendanceId 
-      ? `${baseUrl}/api/admin/attendance/${attendanceId}`
-      : `${baseUrl}/api/admin/attendance`;
+      ? `${baseUrl}/api/attendance/${attendanceId}`
+      : `${baseUrl}/api/attendance`;
     
     const method = attendanceId ? "PUT" : "POST";
     const body = attendanceId 
@@ -92,7 +92,7 @@ export async function updateAttendanceAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/attendance/${id}`, {
+    const response = await fetch(`${baseUrl}/api/attendance/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -134,7 +134,7 @@ export async function deleteAttendanceAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/attendance/${id}`, {
+    const response = await fetch(`${baseUrl}/api/attendance/${id}`, {
       method: "DELETE",
       headers: {
         Cookie: cookieHeader,
@@ -179,7 +179,7 @@ export async function fetchEmployeeAttendanceStatsAction(
     const cookieHeader = cookieStore.toString();
 
     const response = await fetch(
-      `${baseUrl}/api/admin/attendance?userId=${userId}`,
+      `${baseUrl}/api/attendance?userId=${userId}`,
       {
         headers: {
           Cookie: cookieHeader,

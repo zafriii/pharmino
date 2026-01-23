@@ -17,7 +17,7 @@ export async function fetchExpensesForGraph(period: string = 'month'): Promise<E
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/expenses?period=${period}&limit=1000`, {
+    const response = await fetch(`${baseUrl}/api/expenses?period=${period}&limit=1000`, {
       headers: {
         "Content-Type": "application/json",
         Cookie: cookieHeader,

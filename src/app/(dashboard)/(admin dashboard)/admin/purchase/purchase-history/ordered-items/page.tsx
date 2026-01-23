@@ -1,9 +1,9 @@
 import React, { Suspense } from 'react';
 import PageContainer from "@/components/shared ui/PageContainer";
 import Load from '@/components/Load';
-import PurchaseTabs from '@/components/Admin/Purchase/PurchaseTabs';
-import OrderedItemsWrapper from '@/components/Admin/Purchase/OrderedItems/OrderedItemsWrapper';
-import FetchOrderedItems from '@/components/Admin/Purchase/OrderedItems/FetchOrderedItems';
+import PurchaseTabs from '@/components/Purchase/PurchaseTabs';
+import OrderedItemsWrapper from '@/components/Purchase/OrderedItems/OrderedItemsWrapper';
+import FetchOrderedItems from '@/components/Purchase/OrderedItems/FetchOrderedItems';
 
 
 interface OrderedItemsPageProps {

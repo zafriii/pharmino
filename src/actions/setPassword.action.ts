@@ -49,7 +49,7 @@ export async function setPasswordAction(
 
     // Call your API route
     const response = await fetch(
-      `${baseUrl}/api/admin/employees/${userId}/set-password`,
+      `${baseUrl}/api/employees/${userId}/set-password`,
       {
         method: "POST",
         headers: {

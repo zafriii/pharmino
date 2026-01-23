@@ -35,7 +35,7 @@ export async function updateBatchAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/batches/${batchId}`, {
+    const response = await fetch(`${baseUrl}/api/batches/${batchId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -53,12 +53,12 @@ export async function updateBatchAction(
     // Revalidate relevant caches
     // revalidateTag('batches');
     // revalidateTag(`item-${result.batch?.itemId}`);
-    revalidatePath('/admin/inventory');
-    revalidatePath('/admin/sale/pos');
+    revalidatePath('/inventory');
+    revalidatePath('/sale/pos');
     
     // Revalidate batches page for the specific item if itemId is available
     if (result.batch?.itemId) {
-      revalidatePath(`/admin/inventory/${result.batch.itemId}/batches`);
+      revalidatePath(`/inventory/${result.batch.itemId}/batches`);
     }
 
 

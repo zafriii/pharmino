@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import PageContainer from "@/components/shared ui/PageContainer";
 import Load from "@/components/Load";
-import ReceivedProductsWrapper from "@/components/Admin/Purchase/ReceivedProducts/ReceivedProductsWrapper";
-import FetchReceivedProducts from "@/components/Admin/Purchase/ReceivedProducts/FetchReceivedProducts";
+import ReceivedProductsWrapper from "@/components/Purchase/ReceivedProducts/ReceivedProductsWrapper";
+import FetchReceivedProducts from "@/components/Purchase/ReceivedProducts/FetchReceivedProducts";
 
 interface ReceivedProductsPageProps {
   searchParams: Promise<{

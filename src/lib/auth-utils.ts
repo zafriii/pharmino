@@ -27,20 +27,6 @@ export async function requireAdmin() {
   return user;
 }
 
-
-/**
- * Require pharmacy roles (Owner, Pharmacist, Cashier, Storekeeper) or admin - returns user or throws error
- */
-export async function requirePharmacyOrAdmin() {
-  const user = await requireAuth();
-
-  if (!["ADMIN", "OWNER", "PHARMACIST", "CASHIER", "STOREKEEPER"].includes(user.role)) {
-    throw new Error("Forbidden - Pharmacy access required");
-  }
-
-  return user;
-}
-
 /**
  * Require pharmacist, owner or admin role - returns user or throws error
  */
@@ -53,6 +39,21 @@ export async function requirePharmacistOrOwnerOrAdmin() {
 
   return user;
 }
+
+/**
+ * Require pharmacy roles (Owner, Pharmacist, Cashier, Storekeeper) or admin - returns user or throws error
+ */
+export async function requireEvery() {
+  const user = await requireAuth();
+
+  if (!["ADMIN", "OWNER", "PHARMACIST", "CASHIER", "STOREKEEPER"].includes(user.role)) {
+    throw new Error("Forbidden - Pharmacy access required");
+  }
+
+  return user;
+}
+
+
 
 /**
  * Check if user has specific role

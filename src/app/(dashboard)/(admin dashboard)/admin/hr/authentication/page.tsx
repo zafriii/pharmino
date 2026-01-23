@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import PageContainer from "@/components/shared ui/PageContainer";
-import HRTabs from "@/components/Admin/HR Management/HRTabs";
-import FetchUsers from "@/components/Admin/HR Management/Authentication/FetchUsers";
+import HRTabs from "@/components/HR Management/HRTabs";
+import FetchUsers from "@/components/HR Management/Authentication/FetchUsers";
 import Load from "@/components/Load";
 
 interface PageProps {

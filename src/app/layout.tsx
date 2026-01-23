@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import { startCronJobs } from "@/lib/cron-service";
+import { getServerSession } from "@/lib/get-session";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +31,15 @@ if (typeof window === "undefined") {
   startCronJobs();
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Trigger throttled batch expiration check globally
+  // This runs on every page load (throttled to once per hour in get-session.ts)
+  await getServerSession();
+
   return (
     <html lang="en">
       <body

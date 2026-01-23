@@ -1,9 +1,9 @@
 import React from 'react';
 import PageContainer from "@/components/shared ui/PageContainer";
-import ProductWrapper from '@/components/Admin/Product Management/Products/ProductWrapper';
-import FetchProducts from '@/components/Admin/Product Management/Products/FetchProducts';
+import ProductWrapper from '@/components/Product Management/Products/ProductWrapper';
+import FetchProducts from '@/components/Product Management/Products/FetchProducts';
 import { fetchCategoriesAction } from '@/actions/product.actions';
-import MenuTabs from '@/components/Admin/Product Management/ProductTabs';
+import MenuTabs from '@/components/Product Management/ProductTabs';
 
 interface PageProps {
   searchParams: Promise<{

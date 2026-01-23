@@ -36,7 +36,7 @@ export async function createCategoryAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/categories`, {
+    const response = await fetch(`${baseUrl}/api/categories`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -86,7 +86,7 @@ export async function updateCategoryAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/categories/${id}`, {
+    const response = await fetch(`${baseUrl}/api/categories/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -130,8 +130,8 @@ export async function deleteCategoryAction(
     const cookieHeader = cookieStore.toString();
 
     const url = transferToId 
-      ? `${baseUrl}/api/admin/categories/${id}?transferToId=${transferToId}`
-      : `${baseUrl}/api/admin/categories/${id}`;
+      ? `${baseUrl}/api/categories/${id}?transferToId=${transferToId}`
+      : `${baseUrl}/api/categories/${id}`;
 
     const response = await fetch(url, {
       method: "DELETE",

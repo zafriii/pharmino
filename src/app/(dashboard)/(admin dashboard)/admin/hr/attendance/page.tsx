@@ -1,8 +1,8 @@
 import React, { Suspense } from "react";
-import FetchAttendance from "@/components/Admin/HR Management/Attendance/FetchAttendance";
-import AttendanceWrapper from "@/components/Admin/HR Management/Attendance/AttendanceWrapper";
+import FetchAttendance from "@/components/HR Management/Attendance/FetchAttendance";
+import AttendanceWrapper from "@/components/HR Management/Attendance/AttendanceWrapper";
 import PageContainer from "@/components/shared ui/PageContainer";
-import HRTabs from "@/components/Admin/HR Management/HRTabs";
+import HRTabs from "@/components/HR Management/HRTabs";
 import Load from "@/components/Load";
 
 interface PageProps {

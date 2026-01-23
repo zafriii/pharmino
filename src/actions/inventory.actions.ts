@@ -71,7 +71,7 @@ export async function addSingleItemToInventoryAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/stock-entry`, {
+    const response = await fetch(`${baseUrl}/api/stock-entry`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,12 +87,12 @@ export async function addSingleItemToInventoryAction(
     }
 
     // Revalidate all relevant paths and tags
-    revalidatePath('/admin/inventory');
-    revalidatePath('/admin/purchase/received-products');
-    revalidatePath('/admin/sale/pos');
+    revalidatePath('/inventory');
+    revalidatePath('/purchase/received-products');
+    revalidatePath('/sale/pos');
     
     // Revalidate batches page for the specific item
-    revalidatePath(`/admin/inventory/${validatedStockData.itemId}/batches`);
+    revalidatePath(`/inventory/${validatedStockData.itemId}/batches`);
     
     // Revalidate the received-items cache tag
     // revalidateTag('received-items');

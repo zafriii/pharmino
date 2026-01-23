@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import PageContainer from "@/components/shared ui/PageContainer";
-import PurchaseWrapper from '@/components/Admin/Purchase/Purchase List/PurchaseWrapper';
-import FetchPurchases from '@/components/Admin/Purchase/Purchase List/FetchPurchases';
-import { fetchCategories } from '@/components/Admin/Product Management/Category/FetchCategories';
+import PurchaseWrapper from '@/components/Purchase/Purchase List/PurchaseWrapper';
+import FetchPurchases from '@/components/Purchase/Purchase List/FetchPurchases';
+import { fetchCategories } from '@/components/Product Management/Category/FetchCategories';
 import Load from '@/components/Load';
 
 

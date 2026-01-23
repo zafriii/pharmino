@@ -48,7 +48,7 @@ export async function recordDamageAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/damage`, {
+    const response = await fetch(`${baseUrl}/api/damage`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,10 +68,10 @@ export async function recordDamageAction(
     // revalidateTag('batches');
     // revalidateTag('damages');
     // revalidateTag(`item-${itemId}`);
-    revalidatePath('/admin/inventory');
-    revalidatePath('/admin/damage-records');
-    revalidatePath(`/admin/inventory/${itemId}/batches`);
-    revalidatePath(`/admin/dashboard-overview`);
+    revalidatePath('/inventory');
+    revalidatePath('/damage-records');
+    revalidatePath(`/inventory/${itemId}/batches`);
+    revalidatePath(`/dashboard-overview`);
 
     return {
       success: true,

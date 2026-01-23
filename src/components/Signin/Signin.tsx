@@ -36,7 +36,7 @@ function Signin() {
 
       // Use window.location.href for full page reload to ensure the session cookie
       // is sent with the next request. This fixes the first-time login routing issue.
-      window.location.href = "/admin/dashboard-overview";
+      window.location.href = "/dashboard-overview";
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
     }

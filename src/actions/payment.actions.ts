@@ -32,7 +32,7 @@ export async function refundPaymentAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/payments`, {
+    const response = await fetch(`${baseUrl}/api/payments`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -50,8 +50,8 @@ export async function refundPaymentAction(
 
     // revalidateTag("payments");
     // revalidateTag("sales");
-    revalidatePath("/admin/payments");
-    revalidatePath("/admin/sale/all-sale");
+    revalidatePath("/payments");
+    revalidatePath("/sale/all-sale");
 
     return { 
       success: true, 

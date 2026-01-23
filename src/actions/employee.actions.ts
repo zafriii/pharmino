@@ -54,7 +54,7 @@ export async function createEmployeeAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/employees`, {
+    const response = await fetch(`${baseUrl}/api/employees`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -73,7 +73,7 @@ export async function createEmployeeAction(
 
     // Instant cache clear 
     // revalidateTag("employees");
-    revalidatePath("/admin/hr/directory");
+      revalidatePath("/admin/employees");
 
     return {
       success: true,
@@ -115,7 +115,7 @@ export async function updateEmployeeAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/employees/${id}`, {
+    const response = await fetch(`${baseUrl}/api/employees/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -131,7 +131,7 @@ export async function updateEmployeeAction(
 
     //  Instant cache clear
     // revalidateTag("employees");
-    revalidatePath("/admin/hr/directory");
+      revalidatePath("/admin/employees");
 
     return {
       success: true,
@@ -157,7 +157,7 @@ export async function deleteEmployeeAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/employees/${id}`, {
+    const response = await fetch(`${baseUrl}/api/employees/${id}`, {
       method: "DELETE",
       headers: {
         Cookie: cookieHeader,
@@ -171,7 +171,7 @@ export async function deleteEmployeeAction(
 
     // Instant cache clear
     // revalidateTag("employees");
-    revalidatePath("/admin/hr/directory");
+      revalidatePath("/admin/employees");
 
     return {
       success: true,

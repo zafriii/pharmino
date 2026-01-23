@@ -37,7 +37,7 @@ export async function createExpenseAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/expenses`, {
+    const response = await fetch(`${baseUrl}/api/expenses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,9 +51,9 @@ export async function createExpenseAction(
       throw new Error(error.message || "Failed to create expense");
     }
 
-    revalidatePath("/admin/analytics/profit-loss");
-    revalidatePath("/admin/analytics/expenses");
-    revalidatePath("/admin/analytics/dashboard-overview");
+    revalidatePath("/analytics/profit-loss");
+    revalidatePath("/analytics/expenses");
+    revalidatePath("/dashboard-overview");
 
     return {
       success: true,
@@ -87,7 +87,7 @@ export async function updateExpenseAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/expenses/${id}`, {
+    const response = await fetch(`${baseUrl}/api/expenses/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -101,9 +101,9 @@ export async function updateExpenseAction(
       throw new Error(error.message || "Failed to update expense");
     }
 
-    revalidatePath("/admin/analytics/profit-loss");
-    revalidatePath("/admin/analytics/expenses");
-    revalidatePath("/admin/analytics/dashboard-overview");
+    revalidatePath("/analytics/profit-loss");
+    revalidatePath("/analytics/expenses");
+    revalidatePath("/dashboard-overview");
 
     return {
       success: true,
@@ -128,7 +128,7 @@ export async function deleteExpenseAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/expenses/${id}`, {
+    const response = await fetch(`${baseUrl}/api/expenses/${id}`, {
       method: "DELETE",
       headers: {
         Cookie: cookieHeader,
@@ -140,9 +140,9 @@ export async function deleteExpenseAction(
       throw new Error(error.message || "Failed to delete expense");
     }
 
-    revalidatePath("/admin/analytics/profit-loss");
-    revalidatePath("/admin/analytics/expenses");
-    revalidatePath("/admin/analytics/dashboard-overview");
+    revalidatePath("/analytics/profit-loss");
+    revalidatePath("/analytics/expenses");
+    revalidatePath("/dashboard-overview");
 
     return {
       success: true,

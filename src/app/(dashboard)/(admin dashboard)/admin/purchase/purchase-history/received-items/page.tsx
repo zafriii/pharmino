@@ -1,9 +1,9 @@
 import React, { Suspense } from 'react';
 import PageContainer from "@/components/shared ui/PageContainer";
 import Load from '@/components/Load';
-import PurchaseTabs from '@/components/Admin/Purchase/PurchaseTabs';
-import ReceivedItemsWrapper from '@/components/Admin/Purchase/ReceivedItems/ReceivedItemsWrapper';
-import FetchReceivedItems from '@/components/Admin/Purchase/ReceivedItems/FetchReceivedItems';
+import PurchaseTabs from '@/components/Purchase/PurchaseTabs';
+import ReceivedItemsWrapper from '@/components/Purchase/ReceivedItems/ReceivedItemsWrapper';
+import FetchReceivedItems from '@/components/Purchase/ReceivedItems/FetchReceivedItems';
 // import FetchReceivedItems from '@/components/Admin/Purchase/ReceivedItems/FetchReceivedItems';
 
 interface ReceivedItemsPageProps {

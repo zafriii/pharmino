@@ -1,4 +1,4 @@
-import EmployeeFullProfile from "@/components/Admin/HR Management/Directory/EmployeeFullProfile";
+import EmployeeFullProfile from "@/components/HR Management/Directory/EmployeeFullProfile";
 
 interface PageProps {
   params: {

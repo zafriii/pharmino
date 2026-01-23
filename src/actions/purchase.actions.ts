@@ -34,7 +34,7 @@ export async function getProductsForPurchaseAction(): Promise<ActionResponse> {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/products`, {
+    const response = await fetch(`${baseUrl}/api/products`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export async function createPurchaseOrderAction(formData: FormData): Promise<Act
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/purchases`, {
+    const response = await fetch(`${baseUrl}/api/purchases`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export async function updatePurchaseOrderAction(id: string, formData: FormData):
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/purchases/${id}`, {
+    const response = await fetch(`${baseUrl}/api/purchases/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ export async function deletePurchaseOrderAction(id: string) {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/purchases/${id}`, {
+    const response = await fetch(`${baseUrl}/api/purchases/${id}`, {
       method: 'DELETE',
       headers: {
         Cookie: cookieHeader,
@@ -229,7 +229,7 @@ export async function updatePurchaseOrderStatusAction(id: string, status: string
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/purchases/${id}/status`, {
+    const response = await fetch(`${baseUrl}/api/purchases/${id}/status`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

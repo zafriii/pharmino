@@ -66,7 +66,7 @@ export async function fetchCategoriesAction() {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/categories`, {
+    const response = await fetch(`${baseUrl}/api/categories`, {
       method: "GET",
       headers: {
         Cookie: cookieHeader,
@@ -120,7 +120,7 @@ export async function createProductAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/products`, {
+    const response = await fetch(`${baseUrl}/api/products`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -178,7 +178,7 @@ export async function updateProductAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/products/${id}`, {
+    const response = await fetch(`${baseUrl}/api/products/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -217,7 +217,7 @@ export async function deleteProductAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/products/${id}`, {
+    const response = await fetch(`${baseUrl}/api/products/${id}`, {
       method: "DELETE",
       headers: {
         Cookie: cookieHeader,

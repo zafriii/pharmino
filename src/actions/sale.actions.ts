@@ -38,7 +38,7 @@ export async function fetchProductsForSaleAction() {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/products?status=ACTIVE`, {
+    const response = await fetch(`${baseUrl}/api/products?status=ACTIVE`, {
       method: "GET",
       headers: {
         Cookie: cookieHeader,
@@ -76,7 +76,7 @@ export async function createSaleAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/sales`, {
+    const response = await fetch(`${baseUrl}/api/sales`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -94,12 +94,12 @@ export async function createSaleAction(
 
     // revalidateTag("sales");
     // revalidateTag("products-for-sale");
-    revalidatePath("/admin/sale/all-sale");
-    revalidatePath("/admin/sale/pos");
-    revalidatePath("/admin/inventory");
-    revalidatePath("/admin/payments");
-    revalidatePath("/admin/analytics/profit-loss");
-    revalidatePath("/admin/analytics/dashboard-overview");
+    revalidatePath("/sale/all-sale");
+    revalidatePath("/sale/pos");
+    revalidatePath("/inventory");
+    revalidatePath("/payments");
+    revalidatePath("/analytics/profit-loss");
+    revalidatePath("/dashboard-overview");
     
     // Revalidate batches pages for all items in the sale
     validatedData.items.forEach(item => {
@@ -133,7 +133,7 @@ export async function returnSaleAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/sales/${saleId}/return`, {
+    const response = await fetch(`${baseUrl}/api/sales/${saleId}/return`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -153,14 +153,15 @@ export async function returnSaleAction(
 
     // revalidateTag("sales");
     // revalidateTag("products-for-sale");
-    revalidatePath("/admin/sale/all-sale");
-    revalidatePath("/admin/inventory");
-    revalidatePath("/admin/payments");
+    revalidatePath("/sale/pos");
+    revalidatePath("/sale/all-sale");
+    revalidatePath("/inventory");
+    revalidatePath("/payments");
     
     // Revalidate batches pages for returned items
     if (result.data?.saleItems) {
       result.data.saleItems.forEach((item: any) => {
-        revalidatePath(`/admin/inventory/${item.itemId}/batches`);
+        revalidatePath(`/inventory/${item.itemId}/batches`);
       });
     }
 
@@ -188,7 +189,7 @@ export async function backToInventoryAction(
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`${baseUrl}/api/admin/sales/${saleId}/back-to-inventory`, {
+    const response = await fetch(`${baseUrl}/api/sales/${saleId}/back-to-inventory`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -205,15 +206,16 @@ export async function backToInventoryAction(
 
     // revalidateTag("sales");
     // revalidateTag("products-for-sale");
-    revalidatePath("/admin/sale/all-sale");
-    revalidatePath("/admin/inventory");
-    revalidatePath("/admin/analytics/profit-loss");
-    revalidatePath("/admin/analytics/dashboard-overview");
+    revalidatePath("/sale/pos");
+    revalidatePath("/sale/all-sale");
+    revalidatePath("/inventory");
+    revalidatePath("/analytics/profit-loss");
+    revalidatePath("/dashboard-overview");
     
     // Revalidate batches pages for restored items
     if (result.data?.saleItems) {
       result.data.saleItems.forEach((item: any) => {
-        revalidatePath(`/admin/inventory/${item.itemId}/batches`);
+        revalidatePath(`/inventory/${item.itemId}/batches`);
       });
     }
 
