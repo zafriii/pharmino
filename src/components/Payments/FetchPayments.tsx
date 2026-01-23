@@ -55,6 +55,15 @@ async function fetchPayments(
         payments: [],
         totalPages: 1,
         currentPage: 1,
+        stats: {
+          total: 0,
+          paid: 0,
+          refunded: 0,
+          partiallyRefunded: 0,
+          totalRevenue: 0,
+          totalRefunded: 0,
+          totalPartialRefunds: 0,
+        },
       };
     }
 
