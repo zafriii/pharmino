@@ -72,33 +72,44 @@ export default function ActivityLogSection({ auditLogs }: ActivityLogSectionProp
                 />
             </CardHeader>
             <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                     {filteredLogs.length > 0 ? (
-                        filteredLogs.slice(0, 10).map((log) => (
+                        filteredLogs.map((log) => (
                             <div
                                 key={log.id}
-                                className="flex items-start gap-3 p-4 rounded-lg bg-gray-50 border border-gray-200 shadow-sm"
+                                className="flex items-start gap-4 p-4 rounded-xl bg-gray-50/50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-200 shadow-sm"
                             >
-                                <Activity className="h-5 w-5 text-emerald-600 mt-1" />
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <p className="font-medium text-gray-800">{log.action}</p>
-                                        <span className="text-xs text-gray-500">
+                                <div className="flex-shrink-0 mt-1">
+                                    <Activity className="h-5 w-5 text-blue-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-4 mb-1">
+                                        <p className="font-semibold text-gray-900 truncate">
+                                            {log.action}
+                                        </p>
+                                        <span className="flex-shrink-0 text-[11px] font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-full uppercase tracking-wider">
                                             {formatDate(log.createdAt)}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        {log.entity} • {log.entityId}
-                                    </p>
+                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                        <span className="font-medium text-gray-700">{log.entity}</span>
+                                        <span className="text-gray-300">•</span>
+                                        <span className="font-mono text-xs">{log.entityId}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <div className="text-center text-gray-500 py-8">
-                            <p>No activity logs found</p>
-                            {(startDate || endDate) && (
-                                <p className="text-xs mt-1">Try adjusting your date filters</p>
-                            )}
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="h-12 w-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
+                                <History className="h-6 w-6 text-gray-300" />
+                            </div>
+                            <p className="font-medium text-gray-900">No activities found</p>
+                            <p className="text-sm text-gray-500 mt-1 max-w-[200px] mx-auto">
+                                {(startDate || endDate) 
+                                    ? "No activities match your date filters. Try adjusting them."
+                                    : "Activities will appear here once recorded."}
+                            </p>
                         </div>
                     )}
                 </div>
