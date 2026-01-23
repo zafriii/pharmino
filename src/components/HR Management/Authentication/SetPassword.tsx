@@ -8,6 +8,8 @@ import Toast from "@/components/shared ui/Toast";
 import { useForm } from "react-hook-form";
 import { setPasswordAction } from "@/actions/setPassword.action";
 import EmployeePagination from "../Directory/EmployeePagination";
+import { GoCheck } from 'react-icons/go';
+import { ImSpinner2 } from 'react-icons/im';
 
 interface Props {
   employees: Employee[];
@@ -26,7 +28,7 @@ export default function SetPassword({
   currentPage,
 }: Props) {
   const [visible, setVisible] = useState<Record<string, boolean>>({});
-  const [pending, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error" | "fail"; message: string } | null>(null);
 
   const grouped: Record<string, Employee[]> = {};
@@ -128,8 +130,18 @@ export default function SetPassword({
                         <p className="text-red-500 text-xs">{formState.errors.confirmPassword.message}</p>
                       )}
 
-                      <Button type="submit" variant="primary" disabled={pending}>
-                        {pending ? "Saving..." : "Set Password"}
+                      <Button 
+                      type="submit" 
+                      variant="primary"
+                      leftIcon={
+                      isPending ? (
+                      <ImSpinner2 className="animate-spin" />
+                      ) : (
+                      <GoCheck />
+                      )
+                      } 
+                      disabled={isPending}>
+                      {isPending ? "Saving" : "Set Password"}
                       </Button>
                     </>
                   )}

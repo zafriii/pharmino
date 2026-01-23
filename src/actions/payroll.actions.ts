@@ -61,6 +61,7 @@ export async function updatePayrollAction(
     // Instant cache clear
     // revalidateTag("payrolls");
     revalidatePath("/admin/hr/payroll");
+    
 
     return {
       success: true,
@@ -103,6 +104,9 @@ export async function markPayrollPaidAction(
     // Instant cache clear
     // revalidateTag("payrolls");
     revalidatePath("/admin/hr/payroll");
+    revalidatePath("/admin/analytics/profit-loss");
+    revalidatePath("/admin/analytics/dashboard-overview");
+    revalidatePath("/admin/analytics/expenses");
 
     return {
       success: true,
