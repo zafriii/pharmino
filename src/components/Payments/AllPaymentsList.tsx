@@ -120,20 +120,7 @@ export default function AllPaymentsList({
         </span>
       ),
     },
-
-    // {
-    //   key: "createdAt",
-    //   header: "Payment Date",
-    //   render: (row: Payment) =>
-    //     new Date(row.createdAt).toLocaleDateString("en-US", {
-    //       year: 'numeric',
-    //       month: 'short',
-    //       day: 'numeric',
-    //       hour: '2-digit',
-    //       minute: '2-digit'
-    //     }),
-    // },
-
+    
     {
       key: "createdAt",
       header: "Payment date",

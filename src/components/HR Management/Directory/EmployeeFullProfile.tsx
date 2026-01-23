@@ -17,6 +17,8 @@ import {
   CreditCard,
   History,
 } from "lucide-react";
+import LocalDate from "@/components/shared ui/LocalDate";
+import ActivityLogSection from "./ActivityLogSection";
 
 interface EmployeeData {
   employee: {
@@ -87,7 +89,7 @@ async function fetchEmployeeProfile(id: string): Promise<EmployeeData | null> {
       headers: {
         "Content-Type": "application/json",
         // ...(sessionToken ? { Cookie: `better-auth.session_token=${sessionToken}` } : {}),
-        Cookie:cookieHeader
+        Cookie: cookieHeader
       },
     });
 
@@ -284,7 +286,8 @@ export default async function EmployeeFullProfile({ employeeId }: { employeeId: 
                     <div>
                       <p className="font-medium text-gray-800">{formatDate(attendance.date)}</p>
                       <p className="text-sm text-gray-500">
-                        Marked at {new Date(attendance.createdAt).toLocaleTimeString()}
+                        {/* Marked at {new Date(attendance.createdAt).toLocaleTimeString()} */}
+                        Marked at <LocalDate date={attendance.createdAt} />
                       </p>
                     </div>
                   </div>
@@ -354,39 +357,7 @@ export default async function EmployeeFullProfile({ employeeId }: { employeeId: 
       </Card>
 
       {/*ACTIVITY LOG*/}
-      <Card className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-[#4a90e2]" />
-            <CardTitle className="text-xl text-gray-800">Activity Log</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {employee.auditLogs.length > 0 ? (
-              employee.auditLogs.slice(0, 10).map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-start gap-3 p-4 rounded-lg bg-gray-50 border border-gray-200 shadow-sm"
-                >
-                  <Activity className="h-5 w-5 text-emerald-600 mt-1" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-gray-800">{log.action}</p>
-                      <span className="text-xs text-gray-500">{formatDate(log.createdAt)}</span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {log.entity} • {log.entityId}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-500 py-8">No activity logs</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <ActivityLogSection auditLogs={employee.auditLogs} />
 
     </div>
   );
