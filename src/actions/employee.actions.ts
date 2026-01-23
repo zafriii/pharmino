@@ -73,7 +73,7 @@ export async function createEmployeeAction(
 
     // Instant cache clear 
     // revalidateTag("employees");
-      revalidatePath("/admin/employees");
+    revalidatePath("/admin/hr/directory");
 
     return {
       success: true,
@@ -131,7 +131,7 @@ export async function updateEmployeeAction(
 
     //  Instant cache clear
     // revalidateTag("employees");
-      revalidatePath("/admin/employees");
+    revalidatePath("/admin/hr/directory");
 
     return {
       success: true,
@@ -171,7 +171,7 @@ export async function deleteEmployeeAction(
 
     // Instant cache clear
     // revalidateTag("employees");
-      revalidatePath("/admin/employees");
+    revalidatePath("/admin/hr/directory");
 
     return {
       success: true,
