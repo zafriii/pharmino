@@ -15,7 +15,7 @@ interface FetchPurchasesProps {
 
 async function fetchPurchases(
   params: FetchPurchasesProps["searchParams"]
-): Promise<{ purchases: PurchaseOrder[]; totalPages: number; currentPage: number }> {
+): Promise<{ purchases: PurchaseOrder[]; totalPages: number; currentPage: number; stats: { totalOrders: number; totalAmount: number; listedOrders: number; totalItems: number } }> {
   const page = Number(params.page) || 1;
 
   const queryParams = new URLSearchParams({
@@ -35,6 +35,7 @@ async function fetchPurchases(
         purchases: [],
         totalPages: 1,
         currentPage: 1,
+        stats: { totalOrders: 0, totalAmount: 0, listedOrders: 0, totalItems: 0 },
       };
     }
 
@@ -65,6 +66,7 @@ async function fetchPurchases(
       purchases: items as PurchaseOrder[],
       totalPages: data.pagination?.totalPages || 1,
       currentPage: page,
+      stats: data.stats || { totalOrders: 0, totalAmount: 0, listedOrders: 0, totalItems: 0 },
     };
   } catch (error) {
     console.error("Fetch Purchases Error:", error);
@@ -72,16 +74,17 @@ async function fetchPurchases(
       purchases: [],
       totalPages: 1,
       currentPage: 1,
+      stats: { totalOrders: 0, totalAmount: 0, listedOrders: 0, totalItems: 0 },
     };
   }
 }
 
 export default async function FetchPurchases({ searchParams }: FetchPurchasesProps) {
-  const { purchases, totalPages, currentPage } = await fetchPurchases(searchParams);
+  const { purchases, totalPages, currentPage, stats } = await fetchPurchases(searchParams);
 
   return (
     <>
-      <PurchaseStats purchases={purchases} />
+      <PurchaseStats stats={stats} />
       {purchases.length === 0 ? (
         <EmptyState message="No purchase lists found" />
       ) : (

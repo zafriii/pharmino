@@ -37,7 +37,18 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const total = await prisma.purchaseOrder.count({ where });
+    // Get stats for all filtered purchases (not paginated)
+    const [
+      totalOrders,
+      totalAmount,
+      listedOrders,
+      totalItems
+    ] = await Promise.all([
+      prisma.purchaseOrder.count({ where }),
+      prisma.purchaseOrder.aggregate({ _sum: { totalAmount: true }, where }).then(res => res._sum.totalAmount || 0),
+      prisma.purchaseOrder.count({ where: { ...where, status: "LISTED" } }),
+      prisma.purchaseOrder.findMany({ where, include: { items: true } }).then(orders => orders.reduce((sum, order) => sum + (order.items?.length || 0), 0))
+    ]);
 
     const purchaseOrders = await prisma.purchaseOrder.findMany({
       where,
@@ -58,11 +69,17 @@ export async function GET(request: NextRequest) {
     return successResponse({
       items: purchaseOrders,
       pagination: {
-        total,
+        total: totalOrders,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(totalOrders / limit),
       },
+      stats: {
+        totalOrders,
+        totalAmount,
+        listedOrders,
+        totalItems
+      }
     });
   } catch (error) {
     if (error instanceof Error) {
