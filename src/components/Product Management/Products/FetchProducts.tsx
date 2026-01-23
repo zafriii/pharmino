@@ -20,7 +20,7 @@ interface FetchProductsProps {
 // Fetch products from API with caching
 async function fetchProducts(
   params: FetchProductsProps["searchParams"]
-): Promise<{ products: Product[]; totalPages: number; currentPage: number }> {
+): Promise<{ products: Product[]; totalPages: number; currentPage: number; stats: { total: number; active: number; inactive: number } }> {
   const page = Number(params.page) || 1;
 
   const queryParams = new URLSearchParams({
@@ -42,6 +42,7 @@ async function fetchProducts(
         products: [],
         totalPages: 1,
         currentPage: 1,
+        stats: { total: 0, active: 0, inactive: 0 },
       };
     }
 
@@ -80,6 +81,7 @@ async function fetchProducts(
       products: formattedProducts as Product[],
       totalPages: data.pagination?.totalPages || 1,
       currentPage: page,
+      stats: data.stats || { total: 0, active: 0, inactive: 0 },
     };
   } catch (error) {
     console.error("Fetch Products Error:", error);
@@ -87,17 +89,18 @@ async function fetchProducts(
       products: [],
       totalPages: 1,
       currentPage: 1,
+      stats: { total: 0, active: 0, inactive: 0 },
     };
   }
 }
 
 export default async function FetchProducts({ searchParams, categories }: FetchProductsProps) {
   // Fetch products only
-  const { products, totalPages, currentPage } = await fetchProducts(searchParams);
+  const { products, totalPages, currentPage, stats } = await fetchProducts(searchParams);
 
   return (
     <>
-      <ProductStats products={products} />
+      <ProductStats stats={stats} />
       {products.length === 0 ? (
         <EmptyState message="No products found" />
       ) : (

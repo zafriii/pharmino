@@ -2,32 +2,36 @@ import React from 'react';
 import StatsCard from '@/components/shared ui/StatsCard';
 import { Product } from '@/types/products.types';
 
+
 interface ProductStatsProps {
-  products: Product[];
+  stats: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
 }
 
-export default function ProductStats({ products = [] }: ProductStatsProps) {
-  const stats = [
+export default function ProductStats({ stats }: ProductStatsProps) {
+  const statList = [
     {
       title: 'Total Products',
-      value: products.length.toString(),     
+      value: stats.total.toString(),
       variant: 'blue',
     },
     {
       title: 'Active Products',
-      value: products.filter(p => p.status === 'ACTIVE').length.toString(),     
+      value: stats.active.toString(),
       variant: 'green',
     },
     {
       title: 'Inactive Products',
-      value: products.filter(p => p.status === 'INACTIVE').length.toString(),
+      value: stats.inactive.toString(),
       variant: 'gray',
-    },       
+    },
   ];
-
   return (
     <div className="grid grid-cols-3 md:grid-cols-3 gap-4 mb-6">
-      {stats.map((stat, index) => (
+      {statList.map((stat, index) => (
         <StatsCard
           key={index}
           title={stat.title}

@@ -74,8 +74,16 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Total count for pagination
-    const total = await prisma.product.count({ where });
+    // Get stats for all filtered products (not paginated)
+    const [
+      total,
+      active,
+      inactive
+    ] = await Promise.all([
+      prisma.product.count({ where }),
+      prisma.product.count({ where: { ...where, status: "ACTIVE" } }),
+      prisma.product.count({ where: { ...where, status: "INACTIVE" } })
+    ]);
 
     // Fetch products with category and batch information for sale
     const products = await prisma.product.findMany({
@@ -148,6 +156,11 @@ export async function GET(request: NextRequest) {
     return successResponse({
       items: productsWithStock,
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      stats: {
+        total,
+        active,
+        inactive
+      }
     });
 
   } catch (error) {
