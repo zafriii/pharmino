@@ -68,9 +68,10 @@ export default function PurchaseList({ purchases, totalPages, currentPage }: Pur
     {
       key: "totalAmount",
       header: "Total Amount",
-      render: (row: PurchaseOrder) => (
-        <div className="font-medium">{(row.totalAmount)}</div>
-      ),
+      render: (row: PurchaseOrder) => {
+        const amount = Number(row.totalAmount) || 0;
+        return <div className="font-medium">{amount.toFixed(2)}</div>;
+      },
     },
     {
       key: "status",
