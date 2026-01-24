@@ -1,12 +1,12 @@
-import LoadingSpinner from '@/components/shared ui/LoadingSpinner'
-import React from 'react'
+// import LoadingSpinner from '@/components/shared ui/LoadingSpinner'
+// import React from 'react'
 
-function loading() {
-  return (
-    <>
-    <LoadingSpinner/>
-    </>
-  )
-}
+// function loading() {
+//   return (
+//     <>
+//     <LoadingSpinner/>
+//     </>
+//   )
+// }
 
-export default loading
+// export default loading
