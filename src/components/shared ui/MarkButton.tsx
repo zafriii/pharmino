@@ -6,7 +6,7 @@ import { GoCheck } from "react-icons/go";
 interface MarkButtonProps {
   onClick: () => void;
   ariaLabel: string;
-  title?: string; // Custom tooltip title
+  title?: string; 
   variant?: "secondary" | "success";
   className?: string;
   isActive?: boolean;

@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface EmptyStateProps {
-  message?: string; // optional prop
+  message?: string; 
 }
 
 function EmptyState({ message}: EmptyStateProps) {

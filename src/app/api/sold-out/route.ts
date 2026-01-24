@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireEvery, errorResponse, successResponse } from "@/lib/auth-utils";
 
-// GET /api/admin/pharmacy-sold-out - Get all sold-out and expired batches
+// GET /api/pharmacy-sold-out - Get all sold-out and expired batches
 export async function GET(request: NextRequest) {
   try {
     await requireEvery();

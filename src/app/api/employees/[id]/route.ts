@@ -53,7 +53,7 @@ export async function GET(
   }
 }
 
-/* UPDATE Employee*/
+/* UPDATE Employee - /api/employees*/
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -124,7 +124,7 @@ export async function PUT(
   }
 }
 
-/*DELETE Employee (Soft)*/
+/*DELETE Employee (Soft) - /api/employees*/
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

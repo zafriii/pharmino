@@ -10,7 +10,7 @@ const createAttendanceSchema = z.object({
   status: z.enum(["PRESENT", "ABSENT", "LATE"]),
 });
 
-// POST /api/admin/attendance - Mark attendance
+// POST /api/attendance - Mark attendance
 export async function POST(request: NextRequest) {
   try {
     // Check if user is admin
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/admin/attendance - Get attendance records
+// GET /api/attendance - Get attendance records
 export async function GET(request: NextRequest) {
   try {
     // Check if user is admin

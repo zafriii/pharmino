@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { requireEvery, errorResponse, successResponse } from "@/lib/auth-utils";
 import { checkAndUpdateExpiredBatches, getBatchesWithExpiryWarnings } from "@/lib/batch-expiry-utils";
 
-// POST /api/admin/inventory/check-expiry - Check and update expired batches
+// POST /api/inventory/check-expiry - Check and update expired batches
 export async function POST(request: NextRequest) {
   try {
     await requireEvery();
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/admin/inventory/check-expiry - Get batches with expiry warnings
+// GET /api/inventory/check-expiry - Get batches with expiry warnings
 export async function GET(request: NextRequest) {
   try {
     await requireEvery();

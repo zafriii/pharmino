@@ -4,28 +4,7 @@ import { requireAdmin, requireEvery, errorResponse, successResponse } from "@/li
 import { z } from "zod";
 
 // Schema validation
-// const productSchema = z.object({
 
-//   categoryId: z.number().int().positive("Category ID is required"),
-//   itemName: z.string().min(1, "Item name is required"),
-
-//   imageUrl: z.string().url().nullable().optional(),
-//   genericName: z.string().nullable().optional(),
-//   brand: z.string().nullable().optional(),
-//   strength: z.string().nullable().optional(), 
-
-//   tabletsPerStrip: z.number().int().positive().nullable().optional(), 
-//   // baseUnit: z.string().nullable().optional(), 
-//   baseUnit: z.string().min(1, "Base Unit is required"),
-//   rackLocation: z.string().nullable().optional(),
-
-//   lowStockThreshold: z.number().int().min(0).default(0),
-
-//   pricePerUnit: z.number().positive().nullable().optional(), 
-//   sellingPrice: z.number().positive("Selling price must be positive"),
-//   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-
-// });
 
 const productSchema = z.object({
   categoryId: z.number().int().positive("Category ID is required"),
@@ -46,7 +25,7 @@ const productSchema = z.object({
 
 
 
-// GET /api/admin/products - Get products (simplified)
+// GET /api/products - Get products (simplified)
 export async function GET(request: NextRequest) {
   try {
     // await requireAdmin();
@@ -169,7 +148,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/products/ - Create Product 
+// POST /api/products/ - Create Product 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAdmin();

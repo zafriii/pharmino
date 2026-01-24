@@ -8,7 +8,7 @@ const updateAttendanceSchema = z.object({
   status: z.enum(["PRESENT", "ABSENT", "LATE"]),
 });
 
-// GET /api/admin/attendance/:id
+// GET /api/attendance/:id
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -59,7 +59,7 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/attendance/:id
+// PUT /api/attendance/:id
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -160,7 +160,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/attendance/:id
+// DELETE /api/attendance/:id
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

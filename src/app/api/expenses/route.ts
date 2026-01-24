@@ -10,7 +10,7 @@ const expenseSchema = z.object({
   date: z.string().min(1, "Date is required"),
 });
 
-// GET - Fetch expenses with pagination and filters
+// GET - /api/expenses Fetch expenses with pagination and filters
 export async function GET(request: NextRequest) {
   try {
 
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new expense
+// POST - Create new expense - /api/expenses
 export async function POST(request: NextRequest) {
   try {
     // const session = await auth.api.getSession({

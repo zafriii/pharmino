@@ -7,7 +7,7 @@ const returnSchema = z.object({
   returnReason: z.string().min(1, "Return reason is required"),
 });
 
-// PUT /api/admin/sales/[id]/return - Process return for a sale (WITHOUT inventory restoration)
+// PUT /api/sales/[id]/return - Process return for a sale (WITHOUT inventory restoration)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

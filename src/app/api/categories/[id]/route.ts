@@ -14,7 +14,8 @@ const updateCategorySchema = z.object({
   sortOrder: z.number().int().min(0).optional(),
 });
 
-/* GET */
+// GET api/categories
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -49,7 +50,8 @@ export async function GET(
   }
 }
 
-/*  PUT  */
+// PUT api/categories
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -99,7 +101,8 @@ export async function PUT(
   }
 }
 
-/*  DELETE  */
+// DELETE  api/categories
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

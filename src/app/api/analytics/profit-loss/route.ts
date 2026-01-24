@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { SalePaymentStatus } from "@/generated/prisma";
 import { requireEvery, errorResponse, successResponse } from "@/lib/auth-utils";
 
-// GET - Fetch profit loss analytics
+// GET api/analytics/profit-loss
+
+// Fetch profit loss analytics
 export async function GET(request: NextRequest) {
   try {
     // const session = await auth.api.getSession({

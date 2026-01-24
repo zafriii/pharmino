@@ -10,7 +10,7 @@ import {
   getBatchExpiryInfo,
 } from "@/lib/batch-expiry-utils";
 
-// GET /api/admin/inventory/[id]/batches
+// GET /api/inventory/[id]/batches
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

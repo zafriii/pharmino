@@ -8,7 +8,7 @@ interface ReturnButtonProps {
   ariaLabel: string;
   title?: string; 
   isActive?: boolean; 
-  disabled?: boolean;   // ⭐ Added
+  disabled?: boolean;   
   className?: string;
 }
 
@@ -17,7 +17,7 @@ const ReturnButton = ({
   ariaLabel,
   title = "Mark Absent",
   isActive = false,
-  disabled = false,   // ⭐ Added
+  disabled = false,   
   className = ""
 }: ReturnButtonProps) => {
   return (
@@ -25,7 +25,7 @@ const ReturnButton = ({
       onClick={onClick}
       aria-label={ariaLabel}
       title={title}
-      disabled={disabled}  // ⭐ Added
+      disabled={disabled}  
       className={`
         p-2
         rounded-xl

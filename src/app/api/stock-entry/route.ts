@@ -13,7 +13,7 @@ const stockEntrySchema = z.object({
   supplier: z.string().min(1, "Supplier is required"),
 });
 
-// GET /api/admin/stock-entry - Get received items ready for stock entry
+// GET /api/stock-entry - Get received items ready for stock entry
 export async function GET(_request: NextRequest) {
   try {
     await requireEvery();

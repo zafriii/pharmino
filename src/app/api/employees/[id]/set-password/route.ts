@@ -21,7 +21,7 @@ const setPasswordSchema = z
     path: ["confirmPassword"],
   });
 
-// POST /api/admin/employees/[id]/set-password
+// POST /api/employees/[id]/set-password
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

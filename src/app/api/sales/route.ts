@@ -27,7 +27,7 @@ const returnSaleSchema = z.object({
   returnReason: z.string().min(1, "Return reason is required")
 });
 
-// GET /api/admin/sales - Get all sales
+// GET /api/sales - Get all sales
 export async function GET(request: NextRequest) {
   try {
     await requireEvery();
@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/sales - Create a new sale
+// POST /api/sales - Create a new sale
 export async function POST(request: NextRequest) {
   let requestBody: any = null;
 
@@ -519,96 +519,98 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/admin/sales - Return a sale
-export async function PUT(request: NextRequest) {
-  try {
-    const user = await requireEvery();
-    const body = await request.json();
 
-    const validatedData = returnSaleSchema.parse(body);
 
-    const sale = await prisma.sale.findUnique({
-      where: { id: validatedData.saleId },
-      include: {
-        saleItems: {
-          include: {
-            batches: true
-          }
-        }
-      }
-    });
+// // PUT /api/sales - Return a sale
+// export async function PUT(request: NextRequest) {
+//   try {
+//     const user = await requireEvery();
+//     const body = await request.json();
 
-    if (!sale) {
-      return errorResponse("Sale not found", 404);
-    }
+//     const validatedData = returnSaleSchema.parse(body);
 
-    if (sale.status === 'RETURNED') {
-      return errorResponse("Sale is already returned", 400);
-    }
+//     const sale = await prisma.sale.findUnique({
+//       where: { id: validatedData.saleId },
+//       include: {
+//         saleItems: {
+//           include: {
+//             batches: true
+//           }
+//         }
+//       }
+//     });
 
-    const result = await prisma.$transaction(async (tx) => {
-      // Update sale status
-      const updatedSale = await tx.sale.update({
-        where: { id: validatedData.saleId },
-        data: {
-          status: 'RETURNED',
-          returnReason: validatedData.returnReason
-          // Don't automatically refund - let admin handle through payment form
-        }
-      });
+//     if (!sale) {
+//       return errorResponse("Sale not found", 404);
+//     }
 
-      // Add quantities back to inventory for each sale item in parallel
-      await Promise.all(
-        sale.saleItems.map(async (saleItem) => {
-          if (saleItem.batches.length > 0) {
-            const batchDeductions = saleItem.batches.map(sb => ({
-              batchId: sb.batchId,
-              quantity: sb.quantity
-            }));
+//     if (sale.status === 'RETURNED') {
+//       return errorResponse("Sale is already returned", 400);
+//     }
 
-            return addBackToInventory(batchDeductions, tx);
-          }
-        })
-      );
+//     const result = await prisma.$transaction(async (tx) => {
+//       // Update sale status
+//       const updatedSale = await tx.sale.update({
+//         where: { id: validatedData.saleId },
+//         data: {
+//           status: 'RETURNED',
+//           returnReason: validatedData.returnReason
+//           // Don't automatically refund - let admin handle through payment form
+//         }
+//       });
 
-      return updatedSale;
-    }, {
-      timeout: 10000, // 10 second timeout for returns
-    });
+//       // Add quantities back to inventory for each sale item in parallel
+//       await Promise.all(
+//         sale.saleItems.map(async (saleItem) => {
+//           if (saleItem.batches.length > 0) {
+//             const batchDeductions = saleItem.batches.map(sb => ({
+//               batchId: sb.batchId,
+//               quantity: sb.quantity
+//             }));
 
-    // Log the action outside the transaction
-    try {
-      await prisma.auditLog.create({
-        data: {
-          userId: user.id,
-          action: "RETURN_SALE",
-          entity: "Sale",
-          entityId: sale.id.toString(),
-          details: {
-            returnReason: validatedData.returnReason,
-            grandTotal: sale.grandTotal
-          },
-        },
-      });
-    } catch (auditError) {
-      // Log audit error but don't fail the return
-      console.error("Failed to create audit log:", auditError);
-    }
+//             return addBackToInventory(batchDeductions, tx);
+//           }
+//         })
+//       );
 
-    return successResponse(result);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return errorResponse(error.issues[0].message, 400);
-    }
-    if (error instanceof Error) {
-      if (error.message === "Unauthorized") {
-        return errorResponse("Unauthorized", 401);
-      }
-      if (error.message.includes("Forbidden")) {
-        return errorResponse("Forbidden - Admin access required", 403);
-      }
-    }
-    console.error("Error returning sale:", error);
-    return errorResponse("Failed to return sale", 500);
-  }
-}
+//       return updatedSale;
+//     }, {
+//       timeout: 10000, // 10 second timeout for returns
+//     });
+
+//     // Log the action outside the transaction
+//     try {
+//       await prisma.auditLog.create({
+//         data: {
+//           userId: user.id,
+//           action: "RETURN_SALE",
+//           entity: "Sale",
+//           entityId: sale.id.toString(),
+//           details: {
+//             returnReason: validatedData.returnReason,
+//             grandTotal: sale.grandTotal
+//           },
+//         },
+//       });
+//     } catch (auditError) {
+//       // Log audit error but don't fail the return
+//       console.error("Failed to create audit log:", auditError);
+//     }
+
+//     return successResponse(result);
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return errorResponse(error.issues[0].message, 400);
+//     }
+//     if (error instanceof Error) {
+//       if (error.message === "Unauthorized") {
+//         return errorResponse("Unauthorized", 401);
+//       }
+//       if (error.message.includes("Forbidden")) {
+//         return errorResponse("Forbidden - Admin access required", 403);
+//       }
+//     }
+//     console.error("Error returning sale:", error);
+//     return errorResponse("Failed to return sale", 500);
+//   }
+// }

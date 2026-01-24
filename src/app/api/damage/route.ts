@@ -12,7 +12,7 @@ const damageSchema = z.object({
   reason: z.string().min(1, "Reason is required")
 });
 
-// GET /api/admin/damage - Get all damage records
+// GET /api/damage - Get all damage records
 export async function GET(request: NextRequest) {
   try {
     await requireEvery();
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/damage - Record damage/loss
+// POST /api/damage - Record damage/loss
 export async function POST(request: NextRequest) {
   try {
     const user = await requireEvery();

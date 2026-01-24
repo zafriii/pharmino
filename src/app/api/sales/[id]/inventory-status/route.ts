@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 
-// GET /api/admin/sales/[id]/inventory-status - Check if sale items have been restored to inventory
+// GET /api/sales/[id]/inventory-status - Check if sale items have been restored to inventory
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

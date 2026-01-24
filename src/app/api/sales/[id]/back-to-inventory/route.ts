@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 
-// PUT /api/admin/sales/[id]/back-to-inventory
+// PUT /api/sales/[id]/back-to-inventory
 // Restore returned sale items back to inventory
 export async function PUT(
   request: NextRequest,

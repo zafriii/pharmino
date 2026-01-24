@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { SalePaymentStatus } from "@/generated/prisma";
 import { requireEvery, errorResponse, successResponse } from "@/lib/auth-utils";
 
-// GET - Fetch detailed expense analytics with daily breakdown by category
+// GET  api/analytics/expenses
+
+// Fetch detailed expense analytics with daily breakdown by category
 export async function GET(request: NextRequest) {
   try {
     // const session = await auth.api.getSession({

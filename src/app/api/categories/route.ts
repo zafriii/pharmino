@@ -10,7 +10,7 @@ const categorySchema = z.object({
   sortOrder: z.number().int().min(0).default(0),
 });
 
-// GET /api/admin/categories - Get all categories
+// GET /api/categories - Get all categories
 export async function GET() {
   try {
     await requireAdmin();
@@ -48,7 +48,7 @@ export async function GET() {
   }
 }
 
-// POST /api/admin/categories - Create category
+// POST /api/categories - Create category
 export async function POST(request: NextRequest) {
   try {
     const admin = await requireAdmin();

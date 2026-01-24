@@ -11,7 +11,7 @@ const updateStatusSchema = z.object({
   ),
 });
 
-// PATCH /api/admin/purchases/[id]/status - Update status from LISTED to ORDERED/RECEIVED
+// PATCH /api/purchases/[id]/status - Update status from LISTED to ORDERED/RECEIVED
 
 export async function PATCH(
   request: NextRequest,

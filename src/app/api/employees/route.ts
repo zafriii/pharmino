@@ -18,7 +18,7 @@ const createEmployeeSchema = z.object({
   imageUrl: z.string().url().optional().nullable(),
 });
 
-// POST /api/admin/employees - Create new employee
+// POST /api/employees - Create new employee
 export async function POST(request: NextRequest) {
   try {
     const admin = await requireAdmin();
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/admin/employees - Get all employees
+// GET /api/employees - Get all employees
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();

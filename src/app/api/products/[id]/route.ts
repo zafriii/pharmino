@@ -4,22 +4,6 @@ import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 import { z } from "zod";
 
 // Schema validation
-// const updateProductSchema = z.object({
-//   categoryId: z.number().int().positive().optional(),
-//   itemName: z.string().min(1).optional(),
-//   imageUrl: z.string().url().nullable().optional(),
-//   genericName: z.string().nullable().optional(),
-//   brand: z.string().nullable().optional(),
-//   strength: z.string().nullable().optional(),
-//   tabletsPerStrip: z.number().int().positive().nullable().optional(),
-//   // baseUnit: z.string().nullable().optional(),
-//   baseUnit: z.string().min(1, "Base Unit is required"),
-//   rackLocation: z.string().nullable().optional(),
-//   lowStockThreshold: z.number().int().min(0).nullable().optional(),
-//   pricePerUnit: z.number().positive().nullable().optional(),
-//   sellingPrice: z.number().positive().nullable().optional(),
-//   status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
-// });
 
 
 const updateProductSchema = z.object({
@@ -40,7 +24,7 @@ const updateProductSchema = z.object({
 });
 
 
-// GET  /api/admin/products/[id] - Single product
+// GET  /api/products/[id] - Single product
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -74,7 +58,7 @@ export async function GET(
   }
 }
 
-// PUT  /api/admin/products/[id] - Update product
+// PUT  /api/products/[id] - Update product
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -144,7 +128,7 @@ export async function PUT(
   }
 }
 
-// DELETE  /api/admin/products/[id] - Delete product
+// DELETE  /api/products/[id] - Delete product
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

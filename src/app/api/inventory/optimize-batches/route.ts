@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireEvery, errorResponse, successResponse } from "@/lib/auth-utils";
 import { optimizeBatchActivation, activateNextBestBatch } from "@/lib/batch-expiry-utils";
 
-// POST /api/admin/inventory/optimize-batches - Optimize batch activation for items
+// POST /api/inventory/optimize-batches - Optimize batch activation for items
 export async function POST(request: NextRequest) {
   try {
     await requireEvery();

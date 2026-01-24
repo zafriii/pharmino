@@ -2,7 +2,7 @@ import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
-// GET /api/admin/payrolls - Get payroll records
+// GET /api/payrolls - Get payroll records
 export async function GET(request: NextRequest) {
   try {
     // Check if user is admin
@@ -147,29 +147,3 @@ export async function GET(request: NextRequest) {
     return errorResponse("Internal server error", 500);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

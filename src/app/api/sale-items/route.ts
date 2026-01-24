@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireEvery, errorResponse, successResponse } from "@/lib/auth-utils";
 
-// GET /api/admin/pharmacy-pos-items - Get items for POS (only items with available stock)
+// GET /api/pharmacy-pos-items - Get items for POS (only items with available stock)
 export async function GET(request: NextRequest) {
   try {
     await requireEvery();

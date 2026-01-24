@@ -2,7 +2,7 @@ import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
-// GET /api/admin/employees/[id]/full - Get employee full profile
+// GET /api/employees/[id]/full - Get employee full profile
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

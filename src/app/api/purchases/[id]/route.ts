@@ -15,7 +15,7 @@ const updatePurchaseSchema = z.object({
   items: z.array(purchaseItemSchema).min(1, "At least one item is required"),
 });
 
-// GET /api/admin/purchases - Single Purcahse Order
+// GET /api/purchases - Single Purcahse Order
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -53,7 +53,7 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/purchases - Update PO 
+// PUT /api/purchases - Update PO 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -133,7 +133,7 @@ export async function PUT(
   }
 }
 
-//  DELETE  /api/admin/purchases - Delete PO
+//  DELETE  /api/purchases - Delete PO
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

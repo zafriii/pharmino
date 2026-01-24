@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 
-// GET /api/admin/received-items - Get all received order prodcucts
+// GET /api/received-items - Get all received order prodcucts
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();

@@ -15,7 +15,7 @@ const createPurchaseSchema = z.object({
   items: z.array(purchaseItemSchema).min(1, "At least one item is required"),
 });
 
-// GET /api/admin/purchases - Get all purchase orders
+// GET /api/purchases - Get all purchase orders
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin();
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/purchases - Create new purchase order
+// POST /api/purchases - Create new purchase order
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAdmin();

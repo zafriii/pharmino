@@ -17,7 +17,7 @@ const refundPaymentSchema = z.object({
   refundReason: z.string().min(1, "Refund reason is required")
 });
 
-// GET /api/admin/payments - Get all payments
+// GET /api/payments - Get all payments
 export async function GET(request: NextRequest) {
   try {
     await requireEvery();
@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/payments - Create a new payment (auto-created with sales)
+// POST /api/payments - Create a new payment (auto-created with sales)
 export async function POST(request: NextRequest) {
   try {
     const user = await requireEvery();
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT /api/admin/payments - Process refund
+// PUT /api/payments - Process refund
 export async function PUT(request: NextRequest) {
   try {
     const user = await requireEvery();

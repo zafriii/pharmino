@@ -9,7 +9,7 @@ interface CenteredModalProps {
   title: string;
   children: ReactNode;
   footerButtons?: ReactNode;
-  width?: string; // modal width
+  width?: string; 
 }
 
 const CenteredModal: React.FC<CenteredModalProps> = ({

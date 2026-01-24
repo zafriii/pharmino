@@ -10,7 +10,7 @@ const expenseSchema = z.object({
   date: z.string().min(1, "Date is required"),
 });
 
-// PUT - Update expense
+// PUT - Update expense - /api/expenses
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -73,7 +73,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete expense
+// DELETE - Delete expense - /api/expenses
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -7,7 +7,7 @@ import {
   successResponse,
 } from "@/lib/auth-utils";
 
-// PATCH /api/admin/batches/[id] - Update batch expiry date and status
+// PATCH /api/batches/[id] - Update batch expiry date and status
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -88,7 +88,7 @@ export async function PATCH(
   }
 }
 
-// GET /api/admin/batches/[id] - Get single batch details
+// GET /api/batches/[id] - Get single batch details
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
