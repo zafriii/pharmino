@@ -28,6 +28,7 @@ import { GoHistory } from "react-icons/go";
 import { TbHttpPost } from "react-icons/tb";
 import { LuReceipt } from "react-icons/lu";
 import { ImSpinner2 } from 'react-icons/im';
+import { SiChatbot } from "react-icons/si";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -57,6 +58,7 @@ const iconMap = {
   damage: RiFileDamageFill,
   expenses: LuReceipt,
   analytics: FiPieChart,
+  bot: SiChatbot,
   chevronDown: LuChevronDown,
   chevronUp: LuChevronUp,
   logout: HiOutlineLogout,
@@ -85,6 +87,7 @@ const getMenuItems = (): MenuItem[] => [
   { name: "Inventory", iconName: "inventory", path: "/inventory" },
   { name: "Damage Records", iconName: "damage", path: "/damage-records" },
   { name: "Expenses", iconName: "expenses", path: "/analytics/expenses" },
+  { name: "Business Assistant", iconName: "bot", path: "/admin/business-summary" },
 ];
 
 // Memoized Icon component
@@ -139,7 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         "/inventory",          // Inventory
         "/damage-records",      // Damage Records
         "/analytics/expenses",
-        "/analytics/profit-loss",     
+        "/analytics/profit-loss",
       ];
 
       return allMenuItems.filter(item => allowedPaths.includes(item.path));
@@ -315,15 +318,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
       {/* Logout */}
       <div className="p-5">
-        <Button 
-        onClick={handleLogout} 
-        leftIcon={
-        loggingOut ? (
-        <ImSpinner2 className="animate-spin" />
-        ) : (
-        ""
-        )
-        } disabled={loggingOut} variant="secondary">
+        <Button
+          onClick={handleLogout}
+          leftIcon={
+            loggingOut ? (
+              <ImSpinner2 className="animate-spin" />
+            ) : (
+              ""
+            )
+          } disabled={loggingOut} variant="secondary">
           <span className="ml-4">
             {loggingOut ? "Logging out" : "Log Out"}
           </span>
