@@ -1,10 +1,10 @@
 "use server";
 
-import { getBusinessSummaryData } from "@/lib/business-summary-service";
+import { getBusinessSummaryData, SummaryParams } from "@/lib/business-summary-service";
 
-export async function fetchBusinessSummary(date: string) {
+export async function fetchBusinessSummary(params: SummaryParams) {
     try {
-        const data = await getBusinessSummaryData(date);
+        const data = await getBusinessSummaryData(params);
         return { success: true, data };
     } catch (error) {
         console.error("Action Error:", error);

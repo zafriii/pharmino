@@ -3,7 +3,7 @@ import Badge from "@/components/shared ui/Badge";
 import PayrollAction from "./PayrollAction";
 import PayrollPagination from "./PayrollPagination";
 import PayrollEditableField from "./PayrollEditableField";
-import { Payroll} from "@/types/payroll.types";
+import { Payroll } from "@/types/payroll.types";
 import Image from "next/image";
 
 interface PayrollListProps {
@@ -22,20 +22,20 @@ export default function PayrollList({
       key: "employee",
       header: "Employee",
       render: (row: Payroll) => (
-        <div className="flex items-center gap-3">          
+        <div className="flex items-center gap-3">
           <span className="font-medium">{row.user.name}</span>
         </div>
       ),
     },
-    { 
-      key: "role", 
-      header: "Role", 
-      render: (row: Payroll) => <Badge variant="white">{row.user.role}</Badge> 
+    {
+      key: "role",
+      header: "Role",
+      render: (row: Payroll) => <Badge variant="white">{row.user.role}</Badge>
     },
-    { 
-      key: "baseSalary", 
-      header: "Base Salary", 
-      render: (row: Payroll) => Number(row.baseSalary).toLocaleString() 
+    {
+      key: "baseSalary",
+      header: "Base Salary",
+      render: (row: Payroll) => Number(row.baseSalary).toLocaleString()
     },
     {
       key: "allowances",
@@ -45,6 +45,7 @@ export default function PayrollList({
           payrollId={row.id}
           fieldName="allowances"
           currentValue={row.allowances}
+          paymentStatus={row.paymentStatus}
         />
       ),
     },
@@ -56,26 +57,27 @@ export default function PayrollList({
           payrollId={row.id}
           fieldName="deductions"
           currentValue={row.deductions}
+          paymentStatus={row.paymentStatus}
         />
       ),
     },
-    { 
-      key: "netPay", 
-      header: "Net Pay", 
+    {
+      key: "netPay",
+      header: "Net Pay",
       render: (row: Payroll) => (
         <span className="text-green-600">
           {Number(row.netPay).toLocaleString()}
         </span>
       )
     },
-    { 
-      key: "paymentStatus", 
-      header: "Status", 
+    {
+      key: "paymentStatus",
+      header: "Status",
       render: (row: Payroll) => (
         <Badge variant={row.paymentStatus === "PAID" ? "green" : "yellow"}>
           {row.paymentStatus}
         </Badge>
-      ) 
+      )
     },
     {
       key: "action",
@@ -92,11 +94,11 @@ export default function PayrollList({
 
     <div className="w-full">
       <ReusableTable columns={columns} data={payrolls} />
-      
+
       <div className="flex justify-end mt-4">
-        <PayrollPagination 
-          currentPage={currentPage} 
-          totalPages={totalPages} 
+        <PayrollPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
         />
       </div>
     </div>

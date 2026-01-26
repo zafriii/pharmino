@@ -74,6 +74,7 @@ export async function createEmployeeAction(
     // Instant cache clear 
     // revalidateTag("employees");
     revalidatePath("/admin/hr/directory");
+    revalidatePath("/admin/hr/payroll");
 
     return {
       success: true,

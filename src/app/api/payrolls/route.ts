@@ -33,16 +33,53 @@ export async function GET(request: NextRequest) {
       where.paymentStatus = statusValue as "PENDING" | "PAID";
     }
 
-    // Filter by month (YYYY-MM format)
+    // If month is specified, handle auto-generation of missing records
     if (month) {
       const [year, monthNum] = month.split('-').map(Number);
       if (year && monthNum) {
         const startOfMonth = new Date(year, monthNum - 1, 1);
         const endOfMonth = new Date(year, monthNum, 0, 23, 59, 59, 999);
+
+        // This filter will be used for both counting and fetching
         where.createdAt = {
           gte: startOfMonth,
           lte: endOfMonth,
         };
+
+        // Always ensure all active employees have a record for this month
+        const activeUsers = await prisma.user.findMany({
+          where: {
+            status: "ACTIVE",
+            role: { not: "ADMIN" },
+            joiningDate: { lte: endOfMonth },
+          },
+          select: { id: true, monthlySalary: true, name: true }
+        });
+
+        const existingPayrolls = await prisma.payroll.findMany({
+          where: {
+            userId: { in: activeUsers.map(u => u.id) },
+            createdAt: { gte: startOfMonth, lte: endOfMonth }
+          },
+          select: { userId: true }
+        });
+
+        const existingUserIds = new Set(existingPayrolls.map(p => p.userId));
+        const missingUsers = activeUsers.filter(u => !existingUserIds.has(u.id));
+
+        if (missingUsers.length > 0) {
+          await prisma.payroll.createMany({
+            data: missingUsers.map(u => ({
+              userId: u.id,
+              baseSalary: u.monthlySalary || 0,
+              allowances: 0,
+              deductions: 0,
+              netPay: u.monthlySalary || 0,
+              paymentStatus: "PENDING",
+              createdAt: startOfMonth,
+            }))
+          });
+        }
       }
     } else if (startDate || endDate) {
       // Filter by date range (if month is not specified)

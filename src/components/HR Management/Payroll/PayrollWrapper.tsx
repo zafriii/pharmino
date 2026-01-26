@@ -45,6 +45,16 @@ export default function PayrollWrapper() {
 
   const monthOptions = getMonthOptions();
 
+  React.useEffect(() => {
+    if (!searchParams.get('month')) {
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}`;
+      updateURL('month', currentMonth);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const updateURL = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -54,7 +64,7 @@ export default function PayrollWrapper() {
       params.delete(key);
     }
 
-    params.set('page', '1'); 
+    params.set('page', '1');
 
     startTransition(() => {
       router.push(`?${params.toString()}`);

@@ -10,6 +10,7 @@ interface PayrollEditableFieldProps {
   payrollId: number;
   fieldName: "allowances" | "deductions";
   currentValue: string;
+  paymentStatus: "PENDING" | "PAID";
   disabled?: boolean;
 }
 
@@ -17,6 +18,7 @@ export default function PayrollEditableField({
   payrollId,
   fieldName,
   currentValue,
+  paymentStatus,
   disabled = false,
 }: PayrollEditableFieldProps) {
   const router = useRouter();
@@ -25,8 +27,10 @@ export default function PayrollEditableField({
 
   const [isPending, startTransition] = useTransition();
 
+  const isActuallyDisabled = disabled || paymentStatus === "PAID";
+
   const handleEdit = () => {
-    if (disabled || isPending) return;
+    if (isActuallyDisabled || isPending) return;
     setIsEditing(true);
     setEditValue(currentValue);
   };
@@ -96,11 +100,13 @@ export default function PayrollEditableField({
 
   return (
     <div className="flex items-center gap-2">
-      <span>{Number(currentValue).toLocaleString()}</span>
+      <span className={paymentStatus === "PAID" ? "text-gray-400" : ""}>
+        {Number(currentValue).toLocaleString()}
+      </span>
 
       <EditButton
         onClick={handleEdit}
-        disabled={disabled || isPending}
+        disabled={isActuallyDisabled || isPending}
         variant="ghost"
         ariaLabel={`Edit ${fieldName}`}
       />
