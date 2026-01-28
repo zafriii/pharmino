@@ -34,7 +34,7 @@ interface EmployeeFormProps {
 
 const roleOptions = [
   { value: 'ADMIN', label: 'Admin' },
-  { value: 'OWNER', label: 'Owner' },
+  // { value: 'OWNER', label: 'Owner' },
   { value: 'PHARMACIST', label: 'Pharmacist' },
   { value: 'CASHIER', label: 'Cashier' },
   { value: 'DELIVERY', label: 'Delivery' },
@@ -173,13 +173,13 @@ function EmployeeForm({
               type="submit"
               variant="primary"
               // leftIcon={<GoCheck />}
-               leftIcon={
-                        isPending ? (
-                        <ImSpinner2 className="animate-spin" />
-                        ) : (
-                        <GoCheck />
-                         )
-                         }
+              leftIcon={
+                isPending ? (
+                  <ImSpinner2 className="animate-spin" />
+                ) : (
+                  <GoCheck />
+                )
+              }
               disabled={isPending}
             >
               {isPending
@@ -187,8 +187,8 @@ function EmployeeForm({
                   ? 'Updating'
                   : 'Creating'
                 : employee
-                ? 'Update'
-                : 'Create'}
+                  ? 'Update'
+                  : 'Create'}
             </Button>
           </>
         }
