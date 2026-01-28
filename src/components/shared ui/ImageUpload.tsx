@@ -4,7 +4,7 @@ import React, { forwardRef, useState, useRef, useImperativeHandle } from 'react'
 import { RxUpload } from 'react-icons/rx';
 import { useUploadThing } from '@/lib/uploadthing';
 import { ImSpinner2 } from 'react-icons/im';
-import toast from 'react-hot-toast';
+import Toast from '@/components/shared ui/Toast';
 
 interface ImageUploadProps {
   label?: string;
@@ -17,6 +17,10 @@ const ImageUpload = forwardRef<HTMLInputElement, ImageUploadProps>(
     const [preview, setPreview] = useState<string | null>(initialImage);
     const [isUploading, setIsUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [toastMessage, setToastMessage] = useState<{
+      message: string;
+      type: 'success' | 'error' | 'fail';
+    } | null>(null);
 
     // Internal ref for the hidden file input
     const internalInputRef = useRef<HTMLInputElement>(null);
@@ -31,12 +35,18 @@ const ImageUpload = forwardRef<HTMLInputElement, ImageUploadProps>(
           const url = res[0].url;
           setPreview(url);
           onUploadComplete?.(url);
-          toast.success("Image uploaded successfully");
+          setToastMessage({
+            message: "Image uploaded successfully",
+            type: "success"
+          });
         }
       },
       onUploadError: (error: Error) => {
         setIsUploading(false);
-        toast.error(`Upload failed: ${error.message}`);
+        setToastMessage({
+          message: `Upload failed: ${error.message}`,
+          type: "fail"
+        });
       },
       onUploadBegin: () => {
         setIsUploading(true);
@@ -45,11 +55,17 @@ const ImageUpload = forwardRef<HTMLInputElement, ImageUploadProps>(
 
     const handleFile = async (file: File) => {
       if (!file.type.startsWith('image/')) {
-        toast.error("Please upload an image file");
+        setToastMessage({
+          message: "Please upload an image file",
+          type: "error"
+        });
         return;
       }
       if (file.size > 4 * 1024 * 1024) {
-        toast.error("File size must be less than 4MB");
+        setToastMessage({
+          message: "File size must be less than 4MB",
+          type: "error"
+        });
         return;
       }
       await startUpload([file]);
@@ -63,59 +79,69 @@ const ImageUpload = forwardRef<HTMLInputElement, ImageUploadProps>(
     };
 
     return (
-      <div>
-        <label className="block text-gray-700 mb-1 text-[14px] font-medium">
-          {label}
-        </label>
+      <>
+        <div>
+          <label className="block text-gray-700 mb-1 text-[14px] font-medium">
+            {label}
+          </label>
 
-        <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition duration-150 ${isDragging ? 'border-[#4a90e2] bg-blue-50' : 'border-gray-300'
-            } ${isUploading ? 'opacity-50 pointer-events-none' : 'hover:border-[#4a90e2]'}`}
-          onClick={() => internalInputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={onDrop}
-        >
-          <div className="flex flex-col items-center justify-center">
-            {isUploading ? (
-              <ImSpinner2 size={24} className="text-[#4a90e2] animate-spin" />
-            ) : (
-              <RxUpload size={24} className={`${isDragging ? 'text-[#4a90e2]' : 'text-gray-600'}`} />
-            )}
-            <p className="text-gray-700 mt-2">
-              {isUploading ? 'Uploading...' : isDragging ? 'Drop image here' : 'Upload image'}
-            </p>
-            <p className="text-gray-700 mt-2 text-xs">Maximum size 4 MB, JPG, PNG, JPEG</p>
+          <div
+            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition duration-150 ${isDragging ? 'border-[#4a90e2] bg-blue-50' : 'border-gray-300'
+              } ${isUploading ? 'opacity-50 pointer-events-none' : 'hover:border-[#4a90e2]'}`}
+            onClick={() => internalInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={onDrop}
+          >
+            <div className="flex flex-col items-center justify-center">
+              {isUploading ? (
+                <ImSpinner2 size={24} className="text-[#4a90e2] animate-spin" />
+              ) : (
+                <RxUpload size={24} className={`${isDragging ? 'text-[#4a90e2]' : 'text-gray-600'}`} />
+              )}
+              <p className="text-gray-700 mt-2">
+                {isUploading ? 'Uploading...' : isDragging ? 'Drop image here' : 'Upload image'}
+              </p>
+              <p className="text-gray-700 mt-2 text-xs">Maximum size 4 MB, JPG, PNG, JPEG</p>
 
-            {preview && !isUploading && (
-              <div className="mt-3 relative group">
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="mx-auto w-28 h-28 object-cover rounded-md border"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
-                  <span className="text-white text-xs font-medium">Change image</span>
+              {preview && !isUploading && (
+                <div className="mt-3 relative group">
+                  <img
+                    src={preview}
+                    alt="preview"
+                    className="mx-auto w-28 h-28 object-cover rounded-md border"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
+                    <span className="text-white text-xs font-medium">Change image</span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            ref={internalInputRef}
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) await handleFile(file);
+            }}
+          />
         </div>
 
-        <input
-          type="file"
-          accept="image/*"
-          ref={internalInputRef}
-          className="hidden"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (file) await handleFile(file);
-          }}
-        />
-      </div>
+        {toastMessage && (
+          <Toast
+            message={toastMessage.message}
+            type={toastMessage.type}
+            onClose={() => setToastMessage(null)}
+          />
+        )}
+      </>
     );
   }
 );
