@@ -22,8 +22,12 @@ export const metadata: Metadata = {
     template: "Pharmino",
     absolute: "Pharmino",
   },
-  description:
-    "",
+  description: "",
+  icons: {
+    icon: "/images/favicon.png", // main favicon
+    shortcut: "/images/favicon.png", // for browser shortcut
+    apple: "/images/favicon.png", // for Apple devices
+  },
 };
 
 // Initialize cron jobs on server startup
@@ -41,7 +45,7 @@ export default async function RootLayout({
   await getServerSession();
 
   return (
-    <html lang="en">
+    <html lang="en">      
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

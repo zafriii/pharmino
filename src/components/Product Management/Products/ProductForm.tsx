@@ -8,6 +8,7 @@ import Button from '@/components/shared ui/Button';
 import CustomInput from '@/components/shared ui/CustomInput';
 import CustomSelector from '@/components/shared ui/CustomSelector';
 import SwitchButton from '@/components/shared ui/SwitchButton';
+import ImageUpload from '@/components/shared ui/ImageUpload';
 import Toast from '@/components/shared ui/Toast';
 
 import { GoCheck } from 'react-icons/go';
@@ -62,11 +63,11 @@ export default function ProductForm({
     ? { ...product }
     : { ...initialValues, categoryId: categories[0]?.id || 0 };
 
-  const { 
-    register, 
-    handleSubmit, 
-    reset, 
-    formState: { errors }, 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
     setValue,
     watch
   } = useForm<ProductFormValues>({
@@ -161,12 +162,6 @@ export default function ProductForm({
             error={errors.itemName?.message}
           />
 
-          <CustomInput
-            label="Image URL (Optional)"
-            placeholder="https://example.com/image.png"
-            {...register('imageUrl')}
-          />
-
           <div className="grid grid-cols-2 gap-3">
             <CustomInput label="Generic Name" placeholder="Paracetamol" {...register('genericName')} />
             <CustomInput label="Brand" placeholder="Beximo" {...register('brand')} />
@@ -243,6 +238,12 @@ export default function ProductForm({
               </span>
             </div>
           </div>
+
+          <ImageUpload
+            label="Product Image"
+            initialImage={watch('imageUrl')}
+            onUploadComplete={(url) => setValue('imageUrl', url)}
+          />
         </form>
       </SideDrawerModal>
 

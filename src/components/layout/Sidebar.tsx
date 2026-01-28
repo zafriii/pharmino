@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import Button from "../shared ui/Button";
 import { useOptimizedNavigation } from "@/hooks/useOptimizedNavigation";
+import Image from "next/image";
 
 // Optimized icon imports - only import what we need
 import {
@@ -306,11 +307,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     >
       {/* Logo */}
       <div className="h-17 flex items-center px-8">
-        <h1 className="text-[28px] font-bold text-[#4a90e2]">
-          Pharmino
-        </h1>
+        <img src='/images/pharmino-logo.png'/>
       </div>
-
+ 
       {/* Menu */}
       <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-0 custom-scrollbar">
         {menuItems.map((item, index) => renderMenuItem(item, index))}
@@ -326,7 +325,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             ) : (
               ""
             )
-          } disabled={loggingOut} variant="secondary">
+          } 
+          variant="secondary"
+          disabled={loggingOut} >
           <span className="ml-4">
             {loggingOut ? "Logging out" : "Log Out"}
           </span>
@@ -342,3 +343,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 // export default Sidebar;
 
 export default Sidebar;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
