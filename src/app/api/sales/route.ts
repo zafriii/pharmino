@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
         saleItems: {
           include: {
             item: {
-              select: { id: true, itemName: true, genericName: true, brand: true }
+              select: { id: true, itemName: true, genericName: true, brand: true, imageUrl: true }
             },
             batches: {
               include: {
@@ -463,7 +463,7 @@ export async function POST(request: NextRequest) {
         saleItems: {
           include: {
             item: {
-              select: { id: true, itemName: true, genericName: true, brand: true }
+              select: { id: true, itemName: true, genericName: true, brand: true, imageUrl: true }
             },
             batches: {
               include: {

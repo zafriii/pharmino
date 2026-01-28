@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         item: {
-          select: { id: true, itemName: true, genericName: true, brand: true }
+          select: { id: true, itemName: true, genericName: true, brand: true, imageUrl: true }
         },
         batch: {
           select: { id: true, batchNumber: true, expiryDate: true, supplier: true }
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         },
         include: {
           item: {
-            select: { id: true, itemName: true, genericName: true, brand: true }
+            select: { id: true, itemName: true, genericName: true, brand: true, imageUrl: true }
           },
           batch: {
             select: { id: true, batchNumber: true, expiryDate: true, supplier: true }

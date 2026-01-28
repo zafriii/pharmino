@@ -34,13 +34,13 @@ const ReturnForm: React.FC<ReturnFormProps> = ({
     startTransition(async () => {
       try {
         const result = await returnSaleAction(sale.id, reason);
-        
+
         if (result.success) {
           onClose();
           setReason("");
-          
+
           if (onSuccess) onSuccess();
-          
+
           // No alert - just silently update the status
         } else {
           alert(result.error || result.message);
@@ -62,17 +62,17 @@ const ReturnForm: React.FC<ReturnFormProps> = ({
           <Button variant="secondary" onClick={onClose}>
             No, Don't Return
           </Button>
-          <Button 
-          variant="danger" 
-          leftIcon={
-            isPending ? (
-            <ImSpinner2 className="animate-spin" />
-            ) : (
-            <GrFormRefresh size={20}/>
-            )
-           }
-          onClick={handleReturn} 
-          disabled={isPending}>
+          <Button
+            variant="danger"
+            leftIcon={
+              isPending ? (
+                <ImSpinner2 className="animate-spin" />
+              ) : (
+                <GrFormRefresh size={20} />
+              )
+            }
+            onClick={handleReturn}
+            disabled={isPending}>
             {isPending ? "Processing" : "Yes, Return"}
           </Button>
         </>
@@ -95,9 +95,9 @@ const ReturnForm: React.FC<ReturnFormProps> = ({
                   />
                 )}
               </div>
-              <div className="flex flex-col">
-                <span className="font-medium">{item.item?.itemName}</span>
-                <span className="text-sm text-gray-500">x {item.quantity}</span>
+              <div className="flex flex-row">
+                <span className="font-medium">{item.item?.itemName} </span>
+                <span className="text-sm text-gray-500 ml-1"> x {item.quantity}</span>
               </div>
             </div>
             <span className="font-medium">{item.totalPrice}</span>
