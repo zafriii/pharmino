@@ -38,7 +38,7 @@ const roleOptions = [
   { value: 'PHARMACIST', label: 'Pharmacist' },
   { value: 'CASHIER', label: 'Cashier' },
   { value: 'DELIVERY', label: 'Delivery' },
-  { value: '"STOREKEEPER"', label: 'Storekeeper' },
+  { value: 'STOREKEEPER', label: 'Storekeeper' },
 ];
 
 const statusOptions = [
