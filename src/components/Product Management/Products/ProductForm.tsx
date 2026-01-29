@@ -16,6 +16,8 @@ import { RxCross2 } from 'react-icons/rx';
 import { ImSpinner2 } from 'react-icons/im';
 
 import { createProductAction, updateProductAction } from '@/actions/product.actions';
+import { deleteImageAction } from '@/actions/upload.actions';
+import { uploadFiles } from '@/lib/uploadthing';
 import { Product, Category, ProductFormValues } from '@/types/products.types';
 
 interface ProductFormProps {
@@ -53,6 +55,8 @@ export default function ProductForm({
   onSuccess,
 }: ProductFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'fail';
@@ -94,28 +98,68 @@ export default function ProductForm({
 
     startTransition(async () => {
       try {
-        const formData = new FormData();
+        let finalImageUrl = data.imageUrl;
 
+        // 1. Handle Image Upload if a new file is selected
+        if (selectedFile) {
+          setIsUploading(true);
+          try {
+            const uploadRes = await uploadFiles("imageUploader", {
+              files: [selectedFile],
+            });
+
+            if (uploadRes && uploadRes[0]) {
+              finalImageUrl = uploadRes[0].url;
+            } else {
+              throw new Error("Failed to get upload URL");
+            }
+          } catch (uploadError: any) {
+            setToastMessage({
+              message: `Image upload failed: ${uploadError.message}`,
+              type: 'fail',
+            });
+            setIsUploading(false);
+            return;
+          }
+          setIsUploading(false);
+        }
+
+        // 2. Prepare Form Data
+        const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            formData.append(key, String(value));
+            // Use the new image URL if we just uploaded one
+            if (key === 'imageUrl') {
+              formData.append(key, finalImageUrl || '');
+            } else {
+              formData.append(key, String(value));
+            }
           }
         });
 
+        // 3. Save Product
         const result = product?.id
           ? await updateProductAction(product.id.toString(), formData)
           : await createProductAction(formData);
 
         if (result?.success) {
+          // 4. Cleanup old image if it was replaced
+          if (product?.imageUrl && product.imageUrl !== finalImageUrl) {
+            await deleteImageAction(product.imageUrl);
+          }
+
           setToastMessage({
             message: result.message || 'Product saved successfully',
             type: 'success',
           });
 
           reset({ ...initialValues, categoryId: categories[0]?.id || 0 });
+          setSelectedFile(null);
           setOpen(false);
           onSuccess?.();
         } else {
+          // If product save failed but image was uploaded, we might have an orphan image. 
+          // For now, we prioritize user feedback.
           setToastMessage({
             message: result?.error || result?.message || 'Something went wrong',
             type: 'fail',
@@ -242,7 +286,11 @@ export default function ProductForm({
           <ImageUpload
             label="Product Image"
             initialImage={watch('imageUrl')}
-            onUploadComplete={(url) => setValue('imageUrl', url)}
+            onFileSelect={(file) => {
+              setSelectedFile(file);
+              if (!file) setValue('imageUrl', '');
+            }}
+            isUploading={isUploading}
           />
         </form>
       </SideDrawerModal>
