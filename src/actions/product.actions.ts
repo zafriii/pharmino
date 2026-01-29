@@ -80,7 +80,7 @@ export async function fetchCategoriesAction() {
     const data = await response.json();
     return {
       success: true,
-      data: data, 
+      data: data,
     };
   } catch (error) {
     console.error("Fetch Categories Error:", error);
@@ -137,6 +137,7 @@ export async function createProductAction(
     // revalidateTag("products");
     revalidatePath("/admin/product-management/products");
     revalidatePath("/admin/purchase/purchase-list");
+    revalidatePath("/sale/pos");
 
     return { success: true, message: "Product created successfully!" };
   } catch (error: any) {
