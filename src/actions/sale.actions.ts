@@ -7,7 +7,7 @@ import { getSessionToken } from "@/lib/cookie-utils";
 
 const saleItemSchema = z.object({
   itemId: z.number().int().positive(),
-  sellType: z.enum(['FULL_STRIP', 'SINGLE_TABLET', 'ML']).optional(),
+  sellType: z.enum(['FULL_STRIP', 'SINGLE_TABLET']).optional(),
   quantity: z.number().int().positive(),
   unitPrice: z.number().positive(),
   totalPrice: z.number().positive(),
@@ -100,14 +100,14 @@ export async function createSaleAction(
     revalidatePath("/payments");
     revalidatePath("/analytics/profit-loss");
     revalidatePath("/dashboard-overview");
-    
+
     // Revalidate batches pages for all items in the sale
     validatedData.items.forEach(item => {
       revalidatePath(`/admin/inventory/${item.itemId}/batches`);
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "Sale created successfully!",
       data: result.data
     };
@@ -157,7 +157,7 @@ export async function returnSaleAction(
     revalidatePath("/sale/all-sale");
     revalidatePath("/inventory");
     revalidatePath("/payments");
-    
+
     // Revalidate batches pages for returned items
     if (result.data?.saleItems) {
       result.data.saleItems.forEach((item: any) => {
@@ -165,8 +165,8 @@ export async function returnSaleAction(
       });
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "Sale returned successfully!",
       data: result.data
     };
@@ -211,7 +211,7 @@ export async function backToInventoryAction(
     revalidatePath("/inventory");
     revalidatePath("/analytics/profit-loss");
     revalidatePath("/dashboard-overview");
-    
+
     // Revalidate batches pages for restored items
     if (result.data?.saleItems) {
       result.data.saleItems.forEach((item: any) => {
@@ -219,8 +219,8 @@ export async function backToInventoryAction(
       });
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "Items successfully restored to inventory!",
       data: result.data
     };

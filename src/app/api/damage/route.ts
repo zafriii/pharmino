@@ -8,7 +8,7 @@ const damageSchema = z.object({
   itemId: z.number().int().positive("Item ID is required"),
   batchId: z.number().int().positive("Batch ID is required"),
   quantity: z.number().int().positive("Quantity must be positive"),
-  damageType: z.enum(['FULL_STRIP', 'SINGLE_TABLET', 'ML']).default('FULL_STRIP'),
+  damageType: z.enum(['FULL_STRIP', 'SINGLE_TABLET']).default('FULL_STRIP'),
   reason: z.string().min(1, "Reason is required")
 });
 

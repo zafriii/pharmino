@@ -7,7 +7,7 @@ import { z } from "zod";
 
 const saleItemSchema = z.object({
   itemId: z.number().int().positive(),
-  sellType: z.enum(['FULL_STRIP', 'SINGLE_TABLET', 'ML']).optional(),
+  sellType: z.enum(['FULL_STRIP', 'SINGLE_TABLET']).optional(),
   quantity: z.number().int().positive(),
   unitPrice: z.number().positive(),
   totalPrice: z.number().positive()

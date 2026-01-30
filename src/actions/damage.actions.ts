@@ -9,7 +9,7 @@ import { getSessionToken } from '@/lib/cookie-utils';
 const damageFormSchema = z.object({
   batchId: z.number().int().positive("Batch ID is required"),
   quantity: z.number().int().positive("Quantity must be positive"),
-  damageType: z.enum(['FULL_STRIP', 'SINGLE_TABLET', 'ML']).default('FULL_STRIP'),
+  damageType: z.enum(['FULL_STRIP', 'SINGLE_TABLET']).default('FULL_STRIP'),
   reason: z.string().min(1, "Reason is required").max(500, "Reason must be less than 500 characters"),
 });
 
@@ -27,7 +27,7 @@ export async function recordDamageAction(
   damageData: {
     batchId: number;
     quantity: number;
-    damageType: 'FULL_STRIP' | 'SINGLE_TABLET' | 'ML';
+    damageType: 'FULL_STRIP' | 'SINGLE_TABLET';
     reason: string;
   }
 ): Promise<ActionResponse> {

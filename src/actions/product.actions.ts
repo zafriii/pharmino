@@ -5,24 +5,6 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { getSessionToken } from "@/lib/cookie-utils";
 
-// const productSchema = z.object({
-//   categoryId: z.number().int().positive("Category ID is required"),
-//   itemName: z.string().min(1, "Item name is required"),
-//   imageUrl: z.string().url().nullable().optional(),
-//   genericName: z.string().nullable().optional(),
-//   brand: z.string().nullable().optional(),
-//   strength: z.string().nullable().optional(),
-//   tabletsPerStrip: z.number().int().positive().nullable().optional(),
-//   // baseUnit: z.string().nullable().optional(),
-//   baseUnit: z.string().min(1, "Base Unit is required"),
-//   rackLocation: z.string().nullable().optional(),
-//   lowStockThreshold: z.number().int().min(0).default(0),
-//   pricePerUnit: z.number().positive().nullable().optional(),
-//   sellingPrice: z.number().positive("Selling price must be positive"),
-//   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-// });
-
-
 const productSchema = z.object({
   categoryId: z.number().int().positive("Category ID is required"),
   itemName: z.string().min(1, "Item name is required"),
@@ -39,7 +21,6 @@ const productSchema = z.object({
   sellingPrice: z.number().positive("Selling price must be positive"),
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
 });
-
 
 
 type ActionResponse = {
@@ -80,7 +61,7 @@ export async function fetchCategoriesAction() {
     const data = await response.json();
     return {
       success: true,
-      data: data, 
+      data: data,
     };
   } catch (error) {
     console.error("Fetch Categories Error:", error);
@@ -137,6 +118,7 @@ export async function createProductAction(
     // revalidateTag("products");
     revalidatePath("/admin/product-management/products");
     revalidatePath("/admin/purchase/purchase-list");
+    revalidatePath("/sale/pos");
 
     return { success: true, message: "Product created successfully!" };
   } catch (error: any) {

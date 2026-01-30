@@ -41,7 +41,10 @@ CREATE TYPE "PurchaseStatus" AS ENUM ('LISTED', 'ORDERED', 'RECEIVED');
 CREATE TYPE "BatchStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SOLD_OUT', 'EXPIRED');
 
 -- CreateEnum
-CREATE TYPE "SellType" AS ENUM ('FULL_STRIP', 'SINGLE_TABLET', 'ML');
+CREATE TYPE "SellType" AS ENUM ('FULL_STRIP', 'SINGLE_TABLET');
+
+-- CreateEnum
+CREATE TYPE "DamageType" AS ENUM ('FULL_STRIP', 'SINGLE_TABLET');
 
 -- CreateEnum
 CREATE TYPE "SaleStatus" AS ENUM ('COMPLETED', 'RETURNED');
@@ -271,6 +274,7 @@ CREATE TABLE "damage" (
     "itemId" INTEGER NOT NULL,
     "batchId" INTEGER NOT NULL,
     "quantity" INTEGER NOT NULL,
+    "damageType" "DamageType" NOT NULL DEFAULT 'FULL_STRIP',
     "reason" TEXT NOT NULL,
     "createdBy" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -365,6 +369,19 @@ CREATE TABLE "Delivery" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Delivery_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "expense" (
+    "id" SERIAL NOT NULL,
+    "reason" TEXT NOT NULL,
+    "amount" DECIMAL(10,2) NOT NULL,
+    "date" DATE NOT NULL,
+    "createdBy" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "expense_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -499,6 +516,12 @@ CREATE INDEX "Payment_saleId_idx" ON "Payment"("saleId");
 -- CreateIndex
 CREATE INDEX "Payment_status_idx" ON "Payment"("status");
 
+-- CreateIndex
+CREATE INDEX "expense_createdBy_idx" ON "expense"("createdBy");
+
+-- CreateIndex
+CREATE INDEX "expense_date_idx" ON "expense"("date");
+
 -- AddForeignKey
 ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -567,3 +590,6 @@ ALTER TABLE "sale_batch" ADD CONSTRAINT "sale_batch_batchId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "sale"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "expense" ADD CONSTRAINT "expense_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;

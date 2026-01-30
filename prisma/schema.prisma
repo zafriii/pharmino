@@ -96,7 +96,11 @@ enum BatchStatus {
 enum SellType {
   FULL_STRIP
   SINGLE_TABLET
-  ML
+}
+
+enum DamageType {
+  FULL_STRIP
+  SINGLE_TABLET
 }
 
 enum SaleStatus {
@@ -394,7 +398,7 @@ model Damage {
   itemId      Int
   batchId     Int
   quantity    Int
-  damageType  SellType @default(FULL_STRIP)
+  damageType  DamageType @default(FULL_STRIP)
   reason      String
   createdBy   String
   createdAt   DateTime @default(now())
