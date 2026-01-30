@@ -133,8 +133,8 @@ export default function CategoryForm({
                   ? "Updating"
                   : "Creating"
                 : category
-                ? "Update"
-                : "Create"}
+                  ? "Update"
+                  : "Create"}
             </Button>
           </>
         }
@@ -151,13 +151,6 @@ export default function CategoryForm({
               required: "Category name is required",
             })}
             error={errors.name?.message}
-          />
-
-          <CustomInput
-            label="Image URL (Optional)"
-            placeholder="https://example.com/image.png"
-            {...register("imageUrl")}
-            error={errors.imageUrl?.message}
           />
         </form>
       </SideDrawerModal>
