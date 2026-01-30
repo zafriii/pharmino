@@ -2,6 +2,9 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, errorResponse, successResponse } from "@/lib/auth-utils";
 import { z } from "zod";
+import { UTApi } from "uploadthing/server";
+
+const utapi = new UTApi();
 
 // Schema validation
 
@@ -161,6 +164,22 @@ export async function DELETE(
         },
       });
     });
+
+    // Delete image from UploadThing if it exists
+    if (product.imageUrl) {
+      const isUploadThingUrl = product.imageUrl.includes("utfs.io") || product.imageUrl.includes("uploadthing.com");
+      if (isUploadThingUrl) {
+        const fileKey = product.imageUrl.split("/").pop();
+        if (fileKey) {
+          try {
+            await utapi.deleteFiles(fileKey);
+            console.log(`Deleted image ${fileKey} for product ${productId}`);
+          } catch (err) {
+            console.error(`Failed to delete image ${fileKey} for product ${productId}:`, err);
+          }
+        }
+      }
+    }
 
     return successResponse({ message: "Product deleted successfully" });
   } catch (error) {
