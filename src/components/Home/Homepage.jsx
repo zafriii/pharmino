@@ -60,8 +60,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#4a90e2] to-[#357abd] rounded-lg flex items-center justify-center text-white text-2xl">
-                💊
+              <div className="h-17 flex items-center px-8">
+                <img src='/images/pharmino-logo.png'/>
               </div>
               <span className="text-2xl font-bold text-gray-800">Pharmino</span>
             </div>
@@ -262,9 +262,9 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="col-span-2">
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-[#4a90e2] rounded-lg flex items-center justify-center text-2xl">
-                  💊
-                </div>
+                <div className="h-17 flex items-center px-8">
+                <img src='/images/pharmino-logo.png'/>
+              </div>
                 <span className="text-2xl font-bold">Pharmino</span>
               </div>
               <p className="text-gray-400 mb-4">
