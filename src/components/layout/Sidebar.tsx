@@ -307,7 +307,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     >
       {/* Logo */}
       <div className="h-17 flex items-center px-8">
-        <img src='/images/pharmino-logo.png'/>
+        <img src='/images/pharmino-logo.png'
+         alt="Pharmino Logo"
+         />
       </div>
  
       {/* Menu */}

@@ -61,9 +61,11 @@ export default function HomePage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <div className="h-17 flex items-center px-8">
-                <img src='/images/pharmino-logo.png'/>
-              </div>
-              <span className="text-2xl font-bold text-gray-800">Pharmino</span>
+                <img src='/images/pharmino-logo.png'
+                 className="h-10 w-auto object-contain"
+                 alt="Pharmino Logo"
+                />
+              </div>            
             </div>
 
             <div className="hidden md:flex items-center space-x-8">
@@ -263,9 +265,11 @@ export default function HomePage() {
             <div className="col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="h-17 flex items-center px-8">
-                <img src='/images/pharmino-logo.png'/>
+                <img src='/images/pharmino-logo.png'
+                 className="h-10 w-auto object-contain"
+                 alt="Pharmino Logo"
+                />
               </div>
-                <span className="text-2xl font-bold">Pharmino</span>
               </div>
               <p className="text-gray-400 mb-4">
                 Complete pharmacy management system for modern healthcare businesses
