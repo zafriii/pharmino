@@ -264,7 +264,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="col-span-2">
               <div className="flex items-center space-x-2 mb-4">
-                <div className="h-17 flex items-center px-8">
+                <div className="h-17 flex items-center">
                 <img src='/images/pharmino-logo.png'
                  className="h-12 w-auto object-contain"
                  alt="Pharmino Logo"
