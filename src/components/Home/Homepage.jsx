@@ -133,7 +133,7 @@ export default function HomePage() {
             <div className="relative hidden md:block">
               <div className="relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition duration-500">
                 <img
-                  src="/images/pharmacy-dashboard.png"
+                  src="/images/medicine.png"
                   alt="Pharmino Dashboard Preview"
                   className="w-full h-full object-cover"
                 />

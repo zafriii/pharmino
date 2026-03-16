@@ -30,12 +30,8 @@ function Signin() {
         return;
       }
 
-      // Add a small delay to ensure the session cookie is fully set by the browser
-      // before navigating. This prevents race condition on first login.
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      // Use window.location.href for full page reload to ensure the session cookie
-      // is sent with the next request. This fixes the first-time login routing issue.
       window.location.href = "/dashboard-overview";
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
@@ -103,6 +99,13 @@ function Signin() {
               )}
             </Button>
           </form>
+
+          {/* Demo Credentials */}
+          <div className="mt-5 px-4 py-3 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl text-sm text-[#1D4ED8]">
+            <p className="font-semibold mb-1">Demo Credentials</p>
+            <p>Email: <span className="font-mono">admin@pharmacy.com</span></p>
+            <p>Password: <span className="font-mono">Admin@123</span></p>
+          </div>
         </div>
       </div>
     </div>
@@ -110,4 +113,3 @@ function Signin() {
 }
 
 export default Signin;
-
